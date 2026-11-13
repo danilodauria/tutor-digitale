@@ -31,6 +31,27 @@ Chi insegna tecnologia a domicilio o nelle associazioni ha bisogno di tre cose i
 | **Agenda e strumenti** | Appuntamenti con esportazione nel calendario (.ics), timer della lezione con promemoria della pausa, kit del tutor, idee per il lavoro e metodo in cinque tempi. |
 | **Impostazioni** | Profilo del docente con firma, listino, tema chiaro o scuro, caratteri grandi, copia di sicurezza (esporta e importa). |
 
+## Due app: Tutor e Allievo
+
+| | **Tutor Digitale** (il «server», per il tutor) | **Tutor Digitale · Allievo** (il «client», per il cliente) |
+|---|---|---|
+| Indirizzo | [danilodauria.github.io/tutor-digitale](https://danilodauria.github.io/tutor-digitale/) | [danilodauria.github.io/tutor-digitale/allievo](https://danilodauria.github.io/tutor-digitale/allievo/) |
+| Contiene | tutto: clienti, registro, documenti, attestati, listino, correzione | lezioni, compiti, quiz da consegnare, allenamento, palestra, aiuto a distanza |
+| Dati | archivio completo dei clienti | solo il profilo e i compiti di quell'allievo |
+
+Le due app si installano allo stesso modo e funzionano offline, ognuna con il proprio archivio.
+
+### Compiti a distanza con correzione automatica
+
+1. Nella scheda del cliente › **App allievo** il tutor sceglie i compiti e un quiz e crea il **kit**: un link personale (o un file) firmato con un codice segreto di quel cliente. Il quiz viaggia **senza soluzioni**.
+2. L'allievo apre il link: l'app si personalizza con il suo nome, i compiti e il quiz. Spunta i compiti fatti, risponde, aggiunge un messaggio o una foto e preme **Invia al tutor**: condivisione (WhatsApp, email…), email, codice da incollare, file o sessione a distanza.
+3. Il tutor apre il file in **Scambio con gli allievi**: il programma verifica la firma, **corregge il quiz da solo**, segna i compiti fatti nella scheda e registra il risultato.
+4. Il tutor aggiunge un commento e **rimanda la correzione**, che l'allievo vede domanda per domanda con le spiegazioni.
+
+### Assistenza a distanza
+
+Come un TeamViewer semplice e senza installazioni: chi apre la sessione manda un **codice** e detta una **password di 6 cifre** che cambia a ogni sessione e ogni 10 minuti; l'altro rimanda un codice di risposta e i due dispositivi si collegano **direttamente** (WebRTC, cifrato). Si vede lo schermo dell'altro, si scrive in chat, si scambiano file e compiti. Il browser permette di vedere lo schermo ma non di comandare il mouse dell'altro: per il controllo completo si affianca un programma dedicato come RustDesk. Per trovarsi in rete la sessione usa i server pubblici STUN di Google e Cloudflare, che vedono solo gli indirizzi di rete.
+
 ## Online e offline
 
 Il programma è una **PWA**: si apre dal browser e si installa come app su Windows, Linux, macOS, Android, iPhone e iPad. Al primo avvio salva sul dispositivo lezioni, quiz, esercizi, modelli e grafiche; da quel momento funziona **identico** anche senza Internet. In alto c'è una spia: **verde** quando c'è connessione, grigia quando non c'è — nient'altro cambia.
@@ -48,7 +69,7 @@ python3 -m http.server 8000      # poi apri http://localhost:8000
 node tests/verify.cjs            # verifiche automatiche
 ```
 
-Le verifiche controllano sintassi, file in cache, coerenza delle versioni, completezza delle 40 lezioni e della banca delle domande, e che in 40 partite consecutive la risposta giusta cambi sempre posizione e stile di numerazione.
+Le verifiche controllano sintassi, file in cache delle due app, coerenza delle versioni, completezza delle 40 lezioni e della banca delle domande, che in 40 partite consecutive la risposta giusta cambi sempre posizione e stile di numerazione, che il kit non contenga soluzioni, che la correzione automatica sia esatta, che un pacchetto alterato o una password sbagliata vengano rifiutati.
 
 ## Licenze
 

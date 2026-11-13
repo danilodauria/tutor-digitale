@@ -7,7 +7,7 @@
   "use strict";
 
   TD.logoImg = new Image();
-  TD.logoImg.src = "assets/img/icon-512.png";
+  TD.logoImg.src = (TD.MODO === "allievo" ? "../" : "") + "assets/img/icon-512.png";
 
   TD.applicaAspetto = function () {
     const imp = TD.db.impostazioni || {};
@@ -15,7 +15,7 @@
     if (t !== "dark" && t !== "light") t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     document.documentElement.setAttribute("data-theme", t);
     document.documentElement.setAttribute("data-font", imp.caratteri || "normale");
-    try { localStorage.setItem("tutor-digitale:v1:theme", t); } catch (e) {}
+    try { localStorage.setItem(TD.MODO === "allievo" ? "tutor-digitale-allievo:v1:theme" : "tutor-digitale:v1:theme", t); } catch (e) {}
   };
 
   function menu() {
@@ -34,7 +34,8 @@
       TD.db.impostazioni.caratteri = giro[TD.db.impostazioni.caratteri || "normale"]; TD.salva(); TD.applicaAspetto();
       TD.toast({ normale: "Caratteri normali", grande: "Caratteri grandi", enorme: "Caratteri molto grandi" }[TD.db.impostazioni.caratteri]);
     });
-    document.getElementById("timerPill").addEventListener("click", function () { TD.vai("#/strumenti"); });
+    const tp = document.getElementById("timerPill");
+    if (tp) tp.addEventListener("click", function () { TD.vai("#/strumenti"); });
     document.querySelectorAll("[data-versione]").forEach(function (el) { el.textContent = TD.VERSIONE; });
   }
 
@@ -50,7 +51,7 @@
         reg.addEventListener("updatefound", function () {
           const nw = reg.installing;
           if (nw) nw.addEventListener("statechange", function () {
-            if (nw.state === "installed" && navigator.serviceWorker.controller) TD.toast("È pronta una nuova versione: ricarica la pagina per usarla.");
+            if (nw.state === "installed" && navigator.serviceWorker.controller && navigator.serviceWorker.controller.scriptURL === nw.scriptURL) TD.toast("È pronta una nuova versione: ricarica la pagina per usarla.");
           });
         });
       }).catch(function () {});

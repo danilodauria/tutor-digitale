@@ -16,10 +16,24 @@ js.forEach((f) => { try { new vm.Script(leggi("assets/js/" + f), { filename: f }
 
 /* 2. index.html e service worker citano tutti i file, e i file esistono */
 const html = leggi("index.html"), sw = leggi("sw.js");
+const SOLO_ALLIEVO = ["app-allievo.js"];
+const SOLO_TUTOR = ["views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js"];
 js.forEach((f) => {
+  if (SOLO_ALLIEVO.includes(f)) return;
   ok(html.includes('src="assets/js/' + f + '"'), "index.html non carica " + f);
   ok(sw.includes('"assets/js/' + f + '"'), "sw.js non mette in cache " + f);
 });
+/* app Allievo */
+const htmlA = leggi("allievo/index.html"), swA = leggi("allievo/sw.js");
+const jsA = [...htmlA.matchAll(/src="\.\.\/assets\/js\/([^"]+)"/g)].map((m) => m[1]);
+ok(jsA.includes("app-allievo.js") && jsA.includes("scambio.js") && jsA.includes("remoto.js"), "l'app Allievo non carica i suoi moduli");
+ok(jsA.indexOf("app-allievo.js") < jsA.indexOf("views-lezioni.js"), "app-allievo.js deve venire prima di views-lezioni.js (pagina iniziale)");
+SOLO_TUTOR.forEach((f) => ok(!jsA.includes(f), "l'app Allievo non deve contenere " + f));
+jsA.forEach((f) => { ok(fs.existsSync(path.join(R, "assets/js", f)), "allievo: manca " + f); ok(swA.includes('"../assets/js/' + f + '"'), "allievo/sw.js non mette in cache " + f); });
+[...swA.matchAll(/^\s+"([^"]+)",?$/gm)].map((m) => m[1]).filter((a) => a !== "./").forEach((a) => ok(fs.existsSync(path.join(R, "allievo", a)), "allievo/sw.js cita un file che non esiste: " + a));
+ok(swA.includes('VERSION = "tda-v' + JSON.parse(leggi("package.json")).version + '"'), "versione di allievo/sw.js diversa da package.json");
+JSON.parse(leggi("allievo/manifest.webmanifest"));
+ok(htmlA.indexOf('MODO: "allievo"') > 0 && htmlA.indexOf('MODO: "allievo"') < htmlA.indexOf("core.js"), "l'app Allievo deve dichiarare la modalità prima di core.js");
 const asset = [...sw.matchAll(/^\s+"([^"]+)",?$/gm)].map((m) => m[1]).filter((a) => a !== "./");
 asset.forEach((a) => ok(fs.existsSync(path.join(R, a)), "sw.js cita un file che non esiste: " + a));
 const pkg = JSON.parse(leggi("package.json"));
@@ -31,15 +45,15 @@ JSON.parse(leggi("manifest.webmanifest"));
 const store = {};
 const ctx = {
   console, Date, Math, JSON, Promise, setTimeout, clearTimeout, setInterval: () => 0, Blob: class {}, TextEncoder,
-  crypto: globalThis.crypto, URL, navigator: { onLine: true },
+  crypto: globalThis.crypto, URL, navigator: { onLine: true }, Response, CompressionStream, DecompressionStream, TextDecoder, btoa, atob, Uint8Array, Uint32Array, ArrayBuffer, File,
   localStorage: { getItem: (k) => store[k] || null, setItem: (k, v) => { store[k] = String(v); } },
   location: { hash: "#/" }, history: { replaceState() {} },
   matchMedia: () => ({ matches: false }), addEventListener() {},
   document: { querySelectorAll: () => [], getElementById: () => null, addEventListener() {}, documentElement: { classList: { toggle() {}, add() {}, remove() {} }, setAttribute() {} }, createElement: () => ({ getContext: () => ({}) }) }
 };
-ctx.window = ctx; ctx.self = ctx;
+ctx.window = ctx; ctx.self = ctx; ctx.Blob = Blob;
 vm.createContext(ctx);
-["data-lezioni.js", "data-quiz.js", "data-documenti.js", "core.js", "pdf.js", "views-lezioni.js", "views-quiz.js", "views-palestra.js", "views-clienti.js", "views-documenti.js", "views-altro.js"]
+["data-lezioni.js", "data-quiz.js", "data-documenti.js", "core.js", "pdf.js", "scambio.js", "views-lezioni.js", "views-quiz.js", "views-palestra.js", "views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js", "remoto.js"]
   .forEach((f) => vm.runInContext(leggi("assets/js/" + f), ctx, { filename: f }));
 const TD = ctx.TD;
 
@@ -115,5 +129,48 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
   ok(!/<script[^>]+src="https?:/i.test(t) && !/@import\s+url\(["']?https?:/i.test(t) && !/fonts\.googleapis/i.test(t), f + " carica risorse esterne");
 });
 
+/* 9. scambio tutor ↔ allievo: kit senza soluzioni, firma, compressione, correzione automatica */
+(async () => {
+  const S = TD.scambio;
+  const segreto = S.segreto();
+  const domande = TD.generaQuiz({ liv: 2, dev: "tutti", n: 10, cumulativo: true });
+  const pub = S.senzaSoluzioni(domande);
+  const chiavi = new Set(); JSON.stringify(pub, (k, v) => { chiavi.add(k); return v; });
+  ok(!["ok", "giusto", "corrette", "spiegazione", "mescolato"].some((k) => chiavi.has(k)), "il kit per l'allievo non deve contenere le soluzioni");
+  ok(pub.every((q) => !q.opzioni || q.opzioni.every((o) => typeof o === "string")), "le opzioni pubbliche devono essere solo testo");
+  const kit = await S.impacchetta("kit", { id: "c1" }, { consegna: { quiz: pub } }, segreto);
+  const codice = await S.comprimi(kit);
+  ok(codice.startsWith("TD1."), "il kit deve essere compresso");
+  const letto = await S.leggi("https://x/allievo/#/attiva?k=" + codice);
+  ok(JSON.stringify(letto) === JSON.stringify(kit), "il kit letto dal link deve essere identico");
+  ok(await S.verifica(letto, segreto) === true, "la firma del kit deve risultare valida");
+  // l'allievo risponde tutto giusto usando solo i dati pubblici
+  const giuste = {};
+  domande.forEach((q, i) => {
+    if (q.tipo === "seq") giuste[i] = q.giusto.slice();
+    else if (q.tipo === "abbina") giuste[i] = q.corrette.slice();
+    else giuste[i] = q.opzioni.find((o) => o.ok).t;
+    if (q.opzioni) ok(pub[i].opzioni.includes(giuste[i]), "la risposta giusta deve essere tra le opzioni pubbliche");
+  });
+  const risp = await S.impacchetta("risposte", { id: "c1" }, { risposte: JSON.parse(JSON.stringify(giuste)) }, segreto);
+  const viaggio = await S.leggi(JSON.stringify(risp));
+  ok(await S.verifica(viaggio, segreto) === true, "firma delle risposte non valida");
+  const es = S.correggi(domande, viaggio.dati.risposte);
+  ok(es.perc === 100 && es.totale === 10, "risposte tutte giuste devono valere 100%, risulta " + es.perc + "%");
+  const sbagliate = JSON.parse(JSON.stringify(giuste)); const primo = domande.findIndex((q) => q.opzioni);
+  sbagliate[primo] = domande[primo].opzioni.find((o) => !o.ok).t;
+  ok(S.correggi(domande, sbagliate).giuste === 9, "una risposta sbagliata deve togliere un punto");
+  ok(S.correggi(domande, {}).giuste === 0, "nessuna risposta deve valere 0");
+  viaggio.dati.risposte[0] = "manomessa";
+  ok(await S.verifica(viaggio, segreto) === false, "un pacchetto modificato deve essere rifiutato");
+  ok(await S.verifica(risp, "altro-segreto") === false, "il segreto sbagliato deve essere rifiutato");
+  const cif = await S.cifraPin("123456", { sdp: { type: "offer", sdp: "v=0" } });
+  ok((await S.decifraPin("123456", cif)).sdp.sdp === "v=0", "decifratura con la password giusta");
+  let rif = false; try { await S.decifraPin("654321", cif); } catch (e) { rif = true; }
+  ok(rif, "la password sbagliata deve essere rifiutata");
+})().then(fine, (e) => { ok(false, "scambio: " + e.stack); fine(); });
+
+function fine() {
 console.log((errori ? "✗ " : "✓ ") + (prove - errori) + "/" + prove + " verifiche superate");
 process.exit(errori ? 1 : 0);
+}

@@ -1,0 +1,25 @@
+{
+  "name": "Tutor Digitale · Allievo",
+  "short_name": "Allievo",
+  "description": "Compiti, quiz, lezioni, palestra e aiuto a distanza per chi segue le lezioni di Tutor Digitale. Anche offline.",
+  "lang": "it",
+  "dir": "ltr",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f5f1e8",
+  "theme_color": "#1d3557",
+  "categories": ["education"],
+  "icons": [
+    { "src": "../assets/img/icon-allievo-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "../assets/img/icon-allievo-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "../assets/img/icon-allievo-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "I miei compiti", "url": "./#/compiti" },
+    { "name": "Invia al tutor", "url": "./#/invia" },
+    { "name": "Aiuto a distanza", "url": "./#/remoto" }
+  ]
+}

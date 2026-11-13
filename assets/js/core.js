@@ -8,8 +8,10 @@ window.TD = window.TD || {};
 (function () {
   "use strict";
 
-  TD.VERSIONE = "1.0.0";
-  const KEY = "tutor-digitale:v1:db";
+  TD.VERSIONE = "1.1.0";
+  TD.MODO = TD.MODO || "tutor";
+  const KEY = TD.MODO === "allievo" ? "tutor-digitale-allievo:v1:db" : "tutor-digitale:v1:db";
+  TD.CHIAVE = KEY;
 
   /* ------------------------------------------------------------ archivio */
   function vuoto() {
@@ -20,6 +22,7 @@ window.TD = window.TD || {};
       documenti: [],
       attestati: [],
       memo: {},
+      allievo: null, tutor: null, segreto: "", consegne: [], allenamenti: [], ripassate: [],
       impostazioni: { tema: "", caratteri: "normale", correzione: "subito" },
       creato: new Date().toISOString()
     };
@@ -225,7 +228,8 @@ window.TD = window.TD || {};
         TD.aggiornaSpia();
         window.scrollTo(0, 0);
         const h = app.querySelector("h1");
-        if (h) document.title = h.textContent + " · Tutor Digitale";
+        const marchio = TD.MODO === "allievo" ? "Tutor Digitale · Allievo" : "Tutor Digitale";
+        if (h) document.title = (h.textContent === "Tutor Digitale" || h.textContent.indexOf("Ciao") === 0 ? "" : h.textContent + " · ") + marchio;
         return;
       }
     }

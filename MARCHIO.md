@@ -1,7 +1,7 @@
 # Nome e marchio «Tutor Digitale»
 
 Il nome **«Tutor Digitale»**, il **logo** (quattro gradini verde, azzurro, ambra e viola con il
-puntatore bianco in cima) e la veste grafica del programma identificano il servizio di
+puntatore bianco in cima, anche nella variante con il libro aperto dell'app «Allievo») e la veste grafica del programma identificano il servizio di
 formazione di **Danilo D'Auria**.
 
 Le licenze MIT (codice) e CC BY-NC-SA 4.0 (contenuti) **non** concedono diritti sul nome e sul

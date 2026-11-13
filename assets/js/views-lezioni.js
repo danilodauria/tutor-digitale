@@ -67,11 +67,11 @@
           tile("#/percorsi", "book", "Lezioni", "40 lezioni in 4 livelli e 5 percorsi") +
           tile("#/quiz", "quiz", "Quiz casuali", "Domande e risposte sempre in ordine diverso") +
           tile("#/esercizi", "target", "Esercizi", "Facile, medio, esperto per ogni lezione") +
-          tile("#/palestra", "mouse", "Palestra", "Mouse, tastiera, truffe, password") +
+          tile("#/allievi", "upload", "App allievi", "Compiti a distanza, correzione automatica") +
           tile("#/clienti", "users", "Clienti", "Schede, registro, compiti, progressi") +
           tile("#/documenti", "doc", "Documenti", "Liberatoria, attestati, preventivi, ricevute") +
           tile("#/agenda", "calendar", "Agenda", "Appuntamenti ed esportazione calendario") +
-          tile("#/strumenti", "tool", "Strumenti", "Timer, test d'ingresso, kit, verifiche") +
+          tile("#/remoto", "screen", "Assistenza a distanza", "Codice e password che si rigenera") +
         "</section>" +
 
         (prossime.length ? '<section class="block"><div class="block-head"><h2>Prossimi appuntamenti</h2><a href="#/agenda">Agenda completa ' + I("arrow") + '</a></div><ul class="list">' +
@@ -190,12 +190,13 @@
           '<section class="card homework"><h2>' + I("pen") + "Compito a casa</h2><p class=\"read\">" + E(l.compito) + "</p></section>" +
         "</div>" +
         '<aside class="lesson-side no-print">' +
-          '<div class="card side-card"><h2>Con il cliente</h2>' +
+          (TD.MODO === "allievo" ? '<div class="card side-card"><h2>Il mio ripasso</h2><button class="btn btn-primary btn-block" id="ripassata">' + I("check") + ((TD.db.ripassate || []).indexOf(l.id) >= 0 ? "Ripassata ✓" : "Ho ripassato questa lezione") + '</button><a class="btn btn-block" href="#/invia">' + I("upload") + "Scrivi al tutor</a></div>" : "") +
+          (TD.MODO === "allievo" ? "" : '<div class="card side-card"><h2>Con il cliente</h2>' +
             '<label class="field"><span>Cliente</span><select id="selCliente">' + TD.opzioniClienti(c ? c.id : "") + "</select></label>" +
             '<button class="btn btn-primary btn-block" id="svolta">' + I("check") + (fatta ? "Già svolta · aggiorna registro" : "Segna come svolta") + "</button>" +
             '<button class="btn btn-block" id="assegna">' + I("pen") + "Assegna il compito</button>" +
             '<p class="muted text-small">«Segna come svolta» aggiunge la lezione al percorso del cliente e al registro di oggi.</p>' +
-          "</div>" +
+          "</div>") +
           '<div class="card side-card"><h2>Navigazione</h2>' +
             (prec ? '<a class="side-link" href="#/lezione/' + prec.id + '">' + I("back") + "<span>" + E(prec.titolo) + "</span></a>" : "") +
             (succ ? '<a class="side-link" href="#/lezione/' + succ.id + '"><span>' + E(succ.titolo) + "</span>" + I("arrow") + "</a>" : "") +
@@ -205,6 +206,13 @@
 
     document.getElementById("leggi").onclick = function () { TD.leggi(testoLezione(l)); };
     document.getElementById("stop").onclick = TD.zitto;
+    const rip = document.getElementById("ripassata");
+    if (rip) rip.onclick = function () {
+      TD.db.ripassate = TD.db.ripassate || [];
+      if (TD.db.ripassate.indexOf(l.id) < 0) TD.db.ripassate.push(l.id);
+      TD.salva(); rip.innerHTML = I("check") + "Ripassata ✓"; TD.toast("Bravo! Lo saprà anche il tutor con il prossimo invio.");
+    };
+    if (TD.MODO === "allievo") { document.getElementById("leggi").onclick = function () { TD.leggi(testoLezione(l)); }; document.getElementById("stop").onclick = TD.zitto; document.getElementById("schedaPdf").onclick = function () { TD.scaricaPdf(TD.schedaLezione(l), "lezione-" + l.id + ".pdf", { titolo: l.titolo }); }; return; }
     document.getElementById("selCliente").onchange = function () { TD.impostaClienteAttivo(this.value); TD.render(); };
     document.getElementById("svolta").onclick = function () {
       const cl = TD.clienteAttivo(); if (!cl) { TD.toast("Scegli prima il cliente."); return; }

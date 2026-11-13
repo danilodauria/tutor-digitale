@@ -153,9 +153,9 @@
         '<div class="grid-3">' +
           '<label class="check"><input type="checkbox" name="cumulativo" checked> Includi anche i livelli precedenti</label>' +
           '<label class="field"><span>Correzione</span><select name="correzione"><option value="subito"' + (imp.correzione !== "fine" ? " selected" : "") + '>Subito, con spiegazione (esercitazione)</option><option value="fine"' + (imp.correzione === "fine" ? " selected" : "") + ">Alla fine (verifica)</option></select></label>" +
-          '<label class="field"><span>Risultato da salvare per</span><select name="cliente">' + TD.opzioniClienti(c ? c.id : "") + "</select></label>" +
+          (TD.MODO === "allievo" ? "" : '<label class="field"><span>Risultato da salvare per</span><select name="cliente">' + TD.opzioniClienti(c ? c.id : "") + "</select></label>") +
         "</div>" +
-        '<div class="actions"><button class="btn btn-primary btn-lg" type="submit">' + I("play") + 'Inizia il quiz</button><button class="btn" type="button" id="stampaVer">' + I("print") + "Verifica stampabile + chiave</button></div>" +
+        '<div class="actions"><button class="btn btn-primary btn-lg" type="submit">' + I("play") + 'Inizia il quiz</button>' + (TD.MODO === "allievo" ? "" : '<button class="btn" type="button" id="stampaVer">' + I("print") + "Verifica stampabile + chiave</button>") + "</div>" +
       "</form>" +
       '<p class="muted text-small">Il programma ricorda in che posizione e con quale lettera è uscita ogni risposta giusta e la sposta la volta successiva; sceglie prima le domande che non escono da più tempo.</p></div>';
 
@@ -167,7 +167,8 @@
       imp.correzione = o.correzione; TD.salva();
       gioca(app, o);
     };
-    document.getElementById("stampaVer").onclick = function () {
+    const sv = document.getElementById("stampaVer");
+    if (sv) sv.onclick = function () {
       const o = TD.form(form);
       if (!o.tipi.length) { TD.toast("Scegli almeno un tipo di domanda."); return; }
       verificaStampabile(o);
@@ -256,6 +257,11 @@
       const giuste = esiti.filter(Boolean).length, tot = domande.length;
       const perc = Math.round(100 * giuste / tot);
       const cl = TD.cliente(o.cliente);
+      if (TD.MODO === "allievo") {
+        TD.db.allenamenti = TD.db.allenamenti || [];
+        TD.db.allenamenti.push({ data: TD.oggi(), liv: o.liv, dev: o.dev, giuste: giuste, totale: tot, perc: perc });
+        TD.salva();
+      }
       if (cl) {
         cl.quiz = cl.quiz || [];
         cl.quiz.push({ id: TD.uid("q"), data: TD.oggi(), liv: o.liv, dev: o.dev, giuste: giuste, totale: tot, perc: perc });

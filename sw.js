@@ -3,7 +3,7 @@
    Codice: © 2026 Danilo D'Auria · licenza MIT (vedi LICENSE)
    ========================================================================== */
 
-const VERSION = "td-v1.0.0";
+const VERSION = "td-v1.1.0";
 
 const ASSETS = [
   "./",
@@ -19,6 +19,9 @@ const ASSETS = [
   "assets/js/data-documenti.js",
   "assets/js/core.js",
   "assets/js/pdf.js",
+  "assets/js/scambio.js",
+  "assets/js/remoto.js",
+  "assets/js/views-allievi.js",
   "assets/js/views-lezioni.js",
   "assets/js/views-quiz.js",
   "assets/js/views-palestra.js",
@@ -32,7 +35,7 @@ const ASSETS = [
 ];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS.map((u) => new Request(u, { cache: "reload" })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (e) => {
@@ -46,7 +49,8 @@ self.addEventListener("activate", (e) => {
 /* prima la cache (così online e offline sono identici), poi la rete per aggiornare */
 self.addEventListener("fetch", (e) => {
   const req = e.request;
-  if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
+  const u = new URL(req.url);
+  if (req.method !== "GET" || u.origin !== location.origin || u.pathname.indexOf("/allievo/") >= 0) return;
   e.respondWith(
     caches.match(req, { ignoreSearch: true }).then((hit) => {
       const rete = fetch(req).then((res) => {

@@ -147,7 +147,7 @@
   TD.rotta("/cliente/:id/modifica", function (app, p) { const c = TD.cliente(p.id); if (!c) return TD.vai("#/clienti"); modulo(app, c); });
 
   /* ------------------------------------------------------------ scheda */
-  const TABS = [["panoramica", "Panoramica"], ["registro", "Registro lezioni"], ["percorso", "Percorso"], ["compiti", "Compiti"], ["quiz", "Quiz"], ["documenti", "Documenti"]];
+  const TABS = [["panoramica", "Panoramica"], ["registro", "Registro lezioni"], ["percorso", "Percorso"], ["compiti", "Compiti"], ["quiz", "Quiz"], ["allievo", "App allievo"], ["documenti", "Documenti"]];
 
   TD.rotta("/cliente/:id", function (app, p, q) {
     const c = TD.cliente(p.id);
@@ -173,7 +173,7 @@
       TD.render();
     };
     const body = document.getElementById("tabBody");
-    ({ panoramica: panoramica, registro: registro, percorso: percorso, compiti: compiti, quiz: quiz, documenti: documenti }[tab] || panoramica)(body, c, q);
+    ({ panoramica: panoramica, registro: registro, percorso: percorso, compiti: compiti, quiz: quiz, allievo: TD.tabAllievo, documenti: documenti }[tab] || panoramica)(body, c, q);
   });
 
   function panoramica(body, c, q) {
@@ -197,6 +197,7 @@
           azione("#/quiz", "quiz", "Quiz", "Il risultato si salva qui") +
           azione("#/attestato/" + c.id, "award", "Attestato finale", "PDF stampabile con competenze e codice") +
           azione("#/preventivo?cliente=" + c.id, "euro", "Preventivo o ricevuta", "Dal listino, numerazione automatica") +
+          azione("#/cliente/" + c.id + "?tab=allievo", "upload", "App allievo e compiti a distanza", "Kit personalizzato, correzione automatica") +
         "</div></section>" +
         '<section class="card"><h2>Progressi</h2>' + percorsi.map(function (d) {
           const tutte = TD.lezioniDi(d), fatte = tutte.filter(function (l) { return (c.completate || []).indexOf(l.id) >= 0; }).length;

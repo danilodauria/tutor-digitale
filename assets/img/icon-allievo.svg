@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Tutor Digitale · Allievo">
+  <!-- Tutor Digitale · marchio originale (versione Allievo) di Danilo D'Auria (vedi MARCHIO.md) -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1d3557"/>
+      <stop offset="1" stop-color="#0f1f36"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".07"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect x="16" y="16" width="480" height="240" rx="100" fill="url(#glow)"/>
+  <!-- quattro gradini: primi passi, principiante, medio, esperto -->
+  <rect x="78"  y="350" width="86" height="84"  rx="14" fill="#4caf72"/>
+  <rect x="170" y="296" width="86" height="138" rx="14" fill="#3a8fd0"/>
+  <rect x="262" y="242" width="86" height="192" rx="14" fill="#e3a23b"/>
+  <rect x="354" y="188" width="86" height="246" rx="14" fill="#9b6fd6"/>
+  <!-- tracce di cammino -->
+  <circle cx="121" cy="322" r="9" fill="#fff" opacity=".55"/>
+  <circle cx="213" cy="268" r="9" fill="#fff" opacity=".7"/>
+  <circle cx="305" cy="214" r="9" fill="#fff" opacity=".85"/>
+  <!-- tocco da allievo: libro aperto -->
+  <path d="M86 118 q70 -26 120 6 q50 -32 120 -6 v86 q-70 -26 -120 6 q-50 -32 -120 -6 Z" fill="#ffffff" opacity=".92"/>
+  <path d="M206 124 v86" stroke="#1d3557" stroke-width="6"/>
+  <!-- puntatore che arriva in cima -->
+  <path d="M372 64 L372 172 L398 148 L416 188 L436 179 L418 140 L452 138 Z" fill="#ffffff" stroke="#0f1f36" stroke-width="10" stroke-linejoin="round"/>
+</svg>

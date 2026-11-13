@@ -9,6 +9,7 @@ Sono contenuti, e quindi coperti da questa licenza:
 - le domande dei quiz, le frasi da completare, le sequenze, il glossario, i messaggi di «Truffa o no?»;
 - il test d'ingresso, il kit del tutor, le idee per il lavoro e il metodo in cinque tempi;
 - i testi della liberatoria, dell'attestato, del registro, dei preventivi e delle ricevute;
+- i testi e la grafica dell'app «Tutor Digitale · Allievo» e dell'assistenza a distanza;
 - le grafiche, l'impaginazione dei documenti e i testi delle pagine.
 
 © 2026 Danilo D'Auria — distribuiti con licenza
