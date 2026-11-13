@@ -16,25 +16,26 @@ js.forEach((f) => { try { new vm.Script(leggi("assets/js/" + f), { filename: f }
 
 /* 2. index.html e service worker citano tutti i file, e i file esistono */
 const html = leggi("index.html"), sw = leggi("sw.js");
+const VER = JSON.parse(leggi("package.json")).version;
 const SOLO_ALLIEVO = ["app-allievo.js"];
 const SOLO_TUTOR = ["views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js"];
 js.forEach((f) => {
   if (SOLO_ALLIEVO.includes(f)) return;
-  ok(html.includes('src="assets/js/' + f + '"'), "index.html non carica " + f);
-  ok(sw.includes('"assets/js/' + f + '"'), "sw.js non mette in cache " + f);
+  ok(html.includes('src="assets/js/' + f + '?v=' + VER + '"'), "index.html non carica " + f + " con ?v=" + VER);
+  ok(sw.includes('"assets/js/' + f + '?v=' + VER + '"'), "sw.js non mette in cache " + f + " con ?v=" + VER);
 });
 /* app Allievo */
 const htmlA = leggi("allievo/index.html"), swA = leggi("allievo/sw.js");
-const jsA = [...htmlA.matchAll(/src="\.\.\/assets\/js\/([^"]+)"/g)].map((m) => m[1]);
+const jsA = [...htmlA.matchAll(/src="\.\.\/assets\/js\/([^"?]+)\?v=([^"]+)"/g)].map((m) => { ok(m[2] === VER, "allievo: " + m[1] + " ha ?v=" + m[2]); return m[1]; });
 ok(jsA.includes("app-allievo.js") && jsA.includes("scambio.js") && jsA.includes("remoto.js"), "l'app Allievo non carica i suoi moduli");
 ok(jsA.indexOf("app-allievo.js") < jsA.indexOf("views-lezioni.js"), "app-allievo.js deve venire prima di views-lezioni.js (pagina iniziale)");
 SOLO_TUTOR.forEach((f) => ok(!jsA.includes(f), "l'app Allievo non deve contenere " + f));
-jsA.forEach((f) => { ok(fs.existsSync(path.join(R, "assets/js", f)), "allievo: manca " + f); ok(swA.includes('"../assets/js/' + f + '"'), "allievo/sw.js non mette in cache " + f); });
-[...swA.matchAll(/^\s+"([^"]+)",?$/gm)].map((m) => m[1]).filter((a) => a !== "./").forEach((a) => ok(fs.existsSync(path.join(R, "allievo", a)), "allievo/sw.js cita un file che non esiste: " + a));
+jsA.forEach((f) => { ok(fs.existsSync(path.join(R, "assets/js", f)), "allievo: manca " + f); ok(swA.includes('"../assets/js/' + f + '?v=' + VER + '"'), "allievo/sw.js non mette in cache " + f); });
+[...swA.matchAll(/^\s+"([^"]+)",?$/gm)].map((m) => m[1].split("?")[0]).filter((a) => a !== "./").forEach((a) => ok(fs.existsSync(path.join(R, "allievo", a)), "allievo/sw.js cita un file che non esiste: " + a));
 ok(swA.includes('VERSION = "tda-v' + JSON.parse(leggi("package.json")).version + '"'), "versione di allievo/sw.js diversa da package.json");
 JSON.parse(leggi("allievo/manifest.webmanifest"));
 ok(htmlA.indexOf('MODO: "allievo"') > 0 && htmlA.indexOf('MODO: "allievo"') < htmlA.indexOf("core.js"), "l'app Allievo deve dichiarare la modalità prima di core.js");
-const asset = [...sw.matchAll(/^\s+"([^"]+)",?$/gm)].map((m) => m[1]).filter((a) => a !== "./");
+const asset = [...sw.matchAll(/^\s+"([^"]+)",?$/gm)].map((m) => m[1].split("?")[0]).filter((a) => a !== "./");
 asset.forEach((a) => ok(fs.existsSync(path.join(R, a)), "sw.js cita un file che non esiste: " + a));
 const pkg = JSON.parse(leggi("package.json"));
 ok(sw.includes('VERSION = "td-v' + pkg.version + '"'), "la versione di sw.js non coincide con package.json (" + pkg.version + ")");

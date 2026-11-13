@@ -1,5 +1,10 @@
 # Versioni
 
+## 1.1.1 · 13 novembre 2026
+
+- I file di programma hanno il numero di versione nell'indirizzo: dopo un aggiornamento il browser non può più mescolare file vecchi e nuovi (succedeva aprendo l'app Allievo dove era già installata quella del tutor).
+- Avvio più robusto se manca un pulsante dell'intestazione.
+
 ## 1.1.0 · 13 novembre 2026
 
 - Nuova app **Tutor Digitale · Allievo** (`allievo/`), installabile e personalizzata dal kit del tutor: compiti, quiz da consegnare, correzioni, allenamento, lezioni, palestra, profilo e copia di sicurezza.

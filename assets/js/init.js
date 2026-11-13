@@ -20,16 +20,18 @@
 
   function menu() {
     const btn = document.getElementById("menuBtn"), nav = document.getElementById("mainNav");
+    if (!btn || !nav) return;
     btn.addEventListener("click", function () {
       const open = nav.classList.toggle("open");
       btn.setAttribute("aria-expanded", open ? "true" : "false");
     });
     nav.addEventListener("click", function (e) { if (e.target.closest("a")) { nav.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); } });
-    document.getElementById("themeBtn").addEventListener("click", function () {
+    const th = document.getElementById("themeBtn"), fb = document.getElementById("fontBtn");
+    if (th) th.addEventListener("click", function () {
       const ora = document.documentElement.getAttribute("data-theme");
       TD.db.impostazioni.tema = ora === "dark" ? "light" : "dark"; TD.salva(); TD.applicaAspetto();
     });
-    document.getElementById("fontBtn").addEventListener("click", function () {
+    if (fb) fb.addEventListener("click", function () {
       const giro = { normale: "grande", grande: "enorme", enorme: "normale" };
       TD.db.impostazioni.caratteri = giro[TD.db.impostazioni.caratteri || "normale"]; TD.salva(); TD.applicaAspetto();
       TD.toast({ normale: "Caratteri normali", grande: "Caratteri grandi", enorme: "Caratteri molto grandi" }[TD.db.impostazioni.caratteri]);
