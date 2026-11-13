@@ -1,0 +1,67 @@
+name: Test e pubblicazione
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Verifiche
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - run: node tests/verify.cjs
+
+  deploy:
+    name: Pubblicazione
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepara l'artefatto pubblico
+        run: |
+          mkdir -p "$RUNNER_TEMP/site"
+          rsync -a --exclude '.git/' --exclude '.github/' --exclude 'tests/' --exclude 'scripts/' \
+            --exclude 'package.json' ./ "$RUNNER_TEMP/site/"
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: ${{ runner.temp }}/site
+      - id: pages
+        uses: actions/deploy-pages@v4
+
+  sito:
+    name: Il sito serve la versione giusta
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verifica il service worker pubblicato
+        env:
+          BASE: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+        run: |
+          set -euo pipefail
+          versione="td-v$(node -p "require('./package.json').version")"
+          for tentativo in $(seq 1 20); do
+            if curl -fsSL --max-time 30 "${BASE}sw.js" | grep -qF "VERSION = \"$versione\""; then
+              echo "✓ il sito serve $versione"; exit 0
+            fi
+            echo "… non ancora aggiornato (tentativo $tentativo)"; sleep 15
+          done
+          echo "::error::Il sito non serve lo sw.js di $versione."; exit 1

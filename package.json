@@ -1,0 +1,11 @@
+{
+  "name": "tutor-digitale",
+  "version": "1.0.0",
+  "description": "Tutor Digitale: lezioni di tecnologia su misura, dai primi passi a esperto. PWA statica, offline.",
+  "author": "Danilo D'Auria",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "test": "node tests/verify.cjs"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "Tutor Digitale · lezioni di tecnologia su misura",
+  "short_name": "Tutor Digitale",
+  "description": "Lezioni di computer, tablet, smartphone, Smart TV e Internet dai primi passi a esperto: quiz casuali, esercizi, clienti, liberatoria e attestato in PDF. Anche offline.",
+  "lang": "it",
+  "dir": "ltr",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#f5f1e8",
+  "theme_color": "#1d3557",
+  "categories": ["education", "productivity", "business"],
+  "icons": [
+    { "src": "assets/img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/img/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Lezioni", "url": "./#/percorsi" },
+    { "name": "Quiz", "url": "./#/quiz" },
+    { "name": "Clienti", "url": "./#/clienti" },
+    { "name": "Agenda", "url": "./#/agenda" }
+  ]
+}
