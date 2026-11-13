@@ -88,6 +88,7 @@
     const testo = "Ciao " + nome.split(" ")[0] + ", ecco i tuoi compiti di Tutor Digitale. Apri questo link (la prima volta installa l'app «Tutor Digitale · Allievo»):\n" + link;
     dialogo("Kit per " + E(nome) + " pronto",
       '<p>Il link apre l\'app Allievo già personalizzata con nome, compiti' + (k.quiz.length ? " e quiz (senza soluzioni)" : "") + '. Il kit è firmato: le risposte che tornano si verificano da sole.</p>' +
+      (TD.qr.adatto(link) ? '<div class="qr-box">' + TD.qr.svg(link, { etichetta: "QR del kit" }) + "<p><strong>A lezione:</strong> fai inquadrare questo QR con la fotocamera del telefono o del tablet dell'allievo. Si apre l'app già personalizzata.</p></div>" : '<p class="muted text-small">Il kit è troppo grande per un QR leggibile: usa link, condivisione o file.</p>') +
       '<label class="field"><span>Link personale (' + link.length + ' caratteri)</span><textarea readonly rows="3" class="code">' + E(link) + "</textarea></label>" +
       '<div class="actions"><button class="btn btn-primary" data-a="copia">' + I("copy") + 'Copia il link</button><button class="btn" data-a="share">' + I("upload") + 'Condividi (WhatsApp, email…)</button>' +
       (c.email ? '<a class="btn" href="' + TD.scambio.mailto(c.email, "Tutor Digitale · i tuoi compiti", testo) + '">' + I("doc") + "Email con il link</a>" : "") +
@@ -183,21 +184,48 @@
         '<ol class="review">' + e.dettagli.map(function (d) {
           return '<li class="' + (d.ok ? "ok" : "ko") + '"><span class="rv-mark">' + I(d.ok ? "check" : "x") + "</span><div><p><strong>" + E(d.testo) + "</strong>" + (d.proposta ? " — «" + E(d.proposta) + "»" : "") + "</p><p>Risposta: " + E(d.data || "—") + (d.ok ? "" : ' · <span class="muted">giusta: ' + E(d.giusta) + "</span>") + "</p></div></li>";
         }).join("") + "</ol></div>" : "") +
-      (k.compiti.length ? "<h3>Compiti</h3><ul class=\"task-list\">" + k.compiti.map(function (cp) {
-        const r = (k.compitiAllievo || {})[cp.id] || {};
-        return '<li class="' + (r.fatto ? "done" : "") + '"><span class="check">' + I(r.fatto ? "check" : "x") + "<span>" + E(cp.testo) + (r.nota ? "<small>Nota dell'allievo: " + E(r.nota) + "</small>" : "") + "</span></span></li>";
+      (k.compiti.length ? "<h3>Compiti pratici</h3><p class=\"muted text-small\">Approva o fai rifare ogni compito: l'esito torna all'allievo con la correzione. Quelli «da rifare» restano aperti per il prossimo kit.</p><ul class=\"task-list\">" + k.compiti.map(function (cp) {
+        const r = (k.compitiAllievo || {})[cp.id] || {}, v = ((k.valutazioni || {}).compiti || {})[cp.id] || {};
+        return '<li class="' + (r.fatto ? "" : "") + '"><span class="check">' + I(r.fatto ? "check" : "x") + "<span>" + E(cp.testo) + "<small>" + (r.fatto ? "L'allievo l'ha segnato come fatto" : "Non segnato come fatto") + (r.nota ? " · nota: " + E(r.nota) : "") + "</small></span></span>" + valuta("c", cp.id, v, r.fatto) + "</li>";
       }).join("") + "</ul>" : "") +
       (k.notaAllievo ? '<p class="q-proposta">«' + E(k.notaAllievo) + "»</p>" : "") +
-      ((k.allegati || []).length ? '<div class="allegati">' + k.allegati.map(function (a) { return /^data:image\//.test(a.dati) ? '<figure><img src="' + a.dati + '" alt=""><figcaption>' + E(a.nome) + "</figcaption></figure>" : '<a class="btn btn-sm" download="' + E(a.nome) + '" href="' + a.dati + '">' + E(a.nome) + "</a>"; }).join("") + "</div>" : "") +
+      ((k.allegati || []).length ? "<h3>Foto e file allegati</h3><div class=\"allegati\">" + k.allegati.map(function (a, i) {
+        const v = ((k.valutazioni || {}).allegati || [])[i] || {};
+        return "<figure>" + (/^data:image\//.test(a.dati) ? '<a href="' + a.dati + '" target="_blank" rel="noopener"><img src="' + a.dati + '" alt="Foto inviata: ' + E(a.nome) + '"></a>' : '<a class="btn btn-sm" download="' + E(a.nome) + '" href="' + a.dati + '">' + I("download") + E(a.nome) + "</a>") + "<figcaption>" + E(a.nome) + "</figcaption>" + valuta("a", String(i), v, true) + "</figure>";
+      }).join("") + "</div>" : "") +
       '<label class="field"><span>Il tuo commento per l\'allievo</span><textarea id="comm" rows="3">' + E(k.commento || (e ? (e.perc >= 80 ? "Ottimo lavoro! " : e.perc >= 60 ? "Bene, ci siamo quasi. " : "Ripassiamo insieme alla prossima lezione. ") : "Grazie per i compiti! ")) + "</textarea></label>" +
-      '<div class="actions"><button class="btn btn-primary" id="bCorr">' + I("upload") + "Rimanda la correzione</button>" + (c.email ? '<a class="btn" id="mCorr" href="#">' + I("doc") + "Email</a>" : "") + '<button class="btn" id="cCorr">' + I("copy") + 'Copia come codice</button><a class="btn btn-ghost" href="#/cliente/' + c.id + '?tab=allievo">Scheda cliente</a></div></section>';
+      '<div class="actions"><button class="btn btn-primary" id="bCorr">' + I("upload") + "Rimanda la correzione</button>" + (c.email ? '<a class="btn" id="mCorr" href="#">' + I("doc") + "Email</a>" : "") + '<button class="btn" id="cCorr">' + I("copy") + 'Copia come codice</button><button class="btn" id="qCorr">' + I("screen") + 'QR per il telefono</button><a class="btn btn-ghost" href="#/cliente/' + c.id + '?tab=allievo">Scheda cliente</a></div></section>';
+  }
+  function valuta(tipo, id, v, fatto) {
+    const es = v.esito || (fatto ? "approvato" : "rifare");
+    return '<div class="valuta" data-val="' + tipo + ":" + id + '"><div class="seg small"><label><input type="radio" name="v_' + tipo + id + '" value="approvato"' + (es === "approvato" ? " checked" : "") + "><span>" + I("check") + 'Approvato</span></label><label><input type="radio" name="v_' + tipo + id + '" value="rifare"' + (es === "rifare" ? " checked" : "") + "><span>" + I("x") + 'Da rifare</span></label></div><input type="text" placeholder="Nota per l\'allievo (facoltativa)" value="' + E(v.nota || "") + '"></div>';
+  }
+  function leggiValutazioni(c, k) {
+    const val = { compiti: {}, allegati: [] };
+    document.querySelectorAll("[data-val]").forEach(function (box) {
+      const p = box.dataset.val.split(":"), sel = box.querySelector("input[type=radio]:checked");
+      const o = { esito: sel ? sel.value : "approvato", nota: box.querySelector("input[type=text]").value.trim() };
+      if (p[0] === "c") val.compiti[p[1]] = o; else val.allegati[Number(p[1])] = Object.assign({ nome: (k.allegati[Number(p[1])] || {}).nome || "" }, o);
+    });
+    k.valutazioni = val;
+    // nella scheda del cliente: approvato = chiuso, da rifare = riaperto per il prossimo kit
+    (c.compiti || []).forEach(function (cp) {
+      const v = val.compiti[cp.id]; if (!v) return;
+      if (v.esito === "approvato") { cp.fatto = true; cp.esito = "Approvato"; }
+      else { cp.fatto = false; cp.esito = "Da rifare"; }
+      if (v.nota) cp.notaTutor = v.nota;
+    });
+    TD.salva();
+    return val;
   }
   function collegaCorrezione(c, k) {
     async function pacchetto() {
-      k.commento = document.getElementById("comm").value.trim(); k.stato = "rimandata"; TD.salva();
+      k.commento = document.getElementById("comm").value.trim(); k.stato = "rimandata";
+      const val = leggiValutazioni(c, k);
       return TD.scambio.impacchetta("correzione", { id: c.id, partecipante: k.partecipante || "" }, {
         consegnaId: k.id, data: TD.oggi(), esito: k.esito, commento: k.commento,
-        compiti: k.compiti.map(function (cp) { const r = (k.compitiAllievo || {})[cp.id] || {}; return { id: cp.id, fatto: !!r.fatto }; }), tutor: datiTutor()
+        compiti: k.compiti.map(function (cp) { const r = (k.compitiAllievo || {})[cp.id] || {}, v = val.compiti[cp.id] || {}; return { id: cp.id, testo: cp.testo, fatto: !!r.fatto, esito: v.esito || "", nota: v.nota || "" }; }),
+        allegati: val.allegati.map(function (a) { return a ? { nome: a.nome, esito: a.esito, nota: a.nota } : null; }).filter(Boolean), tutor: datiTutor()
       }, app(c).segreto);
     }
     document.getElementById("bCorr").onclick = async function () {
@@ -209,6 +237,10 @@
     };
     const cc = document.getElementById("cCorr");
     cc.onclick = async function () { const t = await TD.scambio.comprimi(await pacchetto()); TD.scambio.copia(t).then(function (ok) { TD.toast(ok ? "Codice copiato: l'allievo lo incolla in «Ricevi dal tutor»." : "Non riesco a copiare."); }); };
+    document.getElementById("qCorr").onclick = async function () {
+      const link = TD.URL_ALLIEVO + "#/ricevi?k=" + await TD.scambio.comprimi(await pacchetto());
+      dialogo("Correzione da inquadrare", TD.qr.adatto(link) ? '<div class="qr-box big">' + TD.qr.svg(link, { etichetta: "QR della correzione" }) + "<p>L'allievo inquadra il QR con la fotocamera: la correzione si apre nella sua app.</p></div>" : "<p>La correzione è troppo lunga per un QR leggibile (molte domande o commento lungo): usa «Rimanda la correzione».</p>");
+    };
     const m = document.getElementById("mCorr");
     if (m) m.onclick = async function (e) {
       e.preventDefault();

@@ -54,7 +54,7 @@ const ctx = {
 };
 ctx.window = ctx; ctx.self = ctx; ctx.Blob = Blob;
 vm.createContext(ctx);
-["data-lezioni.js", "data-quiz.js", "data-documenti.js", "core.js", "pdf.js", "scambio.js", "views-lezioni.js", "views-quiz.js", "views-palestra.js", "views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js", "remoto.js"]
+["data-lezioni.js", "data-quiz.js", "data-documenti.js", "core.js", "pdf.js", "scambio.js", "views-lezioni.js", "views-quiz.js", "views-palestra.js", "views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js", "remoto.js", "qr.js"]
   .forEach((f) => vm.runInContext(leggi("assets/js/" + f), ctx, { filename: f }));
 const TD = ctx.TD;
 
@@ -129,6 +129,19 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
   const t = f.endsWith(".js") ? leggi("assets/js/" + f) : leggi(f);
   ok(!/<script[^>]+src="https?:/i.test(t) && !/@import\s+url\(["']?https?:/i.test(t) && !/fonts\.googleapis/i.test(t), f + " carica risorse esterne");
 });
+
+/* 8b. QR: dimensioni e versioni attese, testi lunghi e accentati */
+{
+  const a = TD.qr.codifica("HELLO", "M");
+  ok(a.versione === 1 && a.dimensione === 21, "QR di HELLO: attesa versione 1 (21×21)");
+  ok(a.moduli[0][0] === true && a.moduli[6][6] === true && a.moduli[1][1] === false, "QR: segni di posizionamento non corretti");
+  const b = TD.qr.codifica("https://danilodauria.github.io/tutor-digitale/allievo/#/attiva?k=TD1." + "x".repeat(1680));
+  ok(b.versione >= 30 && b.versione <= 40, "QR lungo: versione " + b.versione);
+  ok(TD.qr.adatto("x".repeat(1800)) && !TD.qr.adatto("x".repeat(1801)), "soglia di leggibilità del QR");
+  let troppo = false; try { TD.qr.codifica("x".repeat(3500)); } catch (e) { troppo = true; }
+  ok(troppo, "un testo oltre la capacità deve essere rifiutato");
+  ok(TD.qr.codifica("Città àèìòù €").dimensione > 0, "QR con caratteri accentati");
+}
 
 /* 9. scambio tutor ↔ allievo: kit senza soluzioni, firma, compressione, correzione automatica */
 (async () => {

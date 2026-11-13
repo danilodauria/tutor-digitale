@@ -1,12 +1,12 @@
 # Migliorie e idee per le prossime versioni
 
-Elenco ragionato, dal più utile e semplice al più ambizioso. ★ = impatto, ⏱ = lavoro.
+Elenco ragionato, dal più utile e semplice al più ambizioso. ★ = impatto, ⏱ = lavoro. Le voci fatte sono segnate con ✅: il promemoria settimanale legge questo file e propone le successive.
 
 ## Subito (1.2)
 
-1. **QR code del kit e della sessione** ★★★ ⏱ — il tutor mostra un QR sullo schermo, l'allievo lo inquadra con il telefono: niente link lunghi da copiare. Generatore QR scritto nel programma, senza librerie esterne.
-2. **Promemoria dei compiti nell'app Allievo** ★★★ ⏱ — notifica locale il giorno prima della scadenza (dove il sistema lo permette) e un avviso in home.
-3. **Correzione dei compiti pratici con foto** ★★ ⏱ — il tutor mette «approvato / da rifare» a ogni foto ricevuta, e l'esito torna nella correzione.
+1. ✅ *fatto in 1.2.0* — **QR code del kit e della sessione** ★★★ ⏱ — il tutor mostra un QR sullo schermo, l'allievo lo inquadra con il telefono: niente link lunghi da copiare. Generatore QR scritto nel programma, senza librerie esterne.
+2. ✅ *fatto in 1.2.0* — **Promemoria dei compiti nell'app Allievo** ★★★ ⏱ — notifica locale il giorno prima della scadenza (dove il sistema lo permette) e un avviso in home.
+3. ✅ *fatto in 1.2.0* — **Correzione dei compiti pratici con foto** ★★ ⏱ — il tutor mette «approvato / da rifare» a ogni foto ricevuta, e l'esito torna nella correzione.
 4. **Firma digitale dei kit con chiave del tutor** ★★ ⏱⏱ — oltre al segreto per cliente, una firma ECDSA del tutor: l'allievo è sicuro che il kit venga proprio da te.
 5. **Backup cifrato con password** ★★★ ⏱ — l'esportazione dell'archivio clienti si cifra (AES) e si può tenere su chiavetta o cloud senza rischi per la privacy.
 6. **Registro presenze stampabile per gli enti** ★★ ⏱ — foglio mensile con date, ore e firme, utile per rendicontare a Comuni e associazioni.

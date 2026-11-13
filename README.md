@@ -46,7 +46,9 @@ Le due app si installano allo stesso modo e funzionano offline, ognuna con il pr
 1. Nella scheda del cliente › **App allievo** il tutor sceglie i compiti e un quiz e crea il **kit**: un link personale (o un file) firmato con un codice segreto di quel cliente. Il quiz viaggia **senza soluzioni**.
 2. L'allievo apre il link: l'app si personalizza con il suo nome, i compiti e il quiz. Spunta i compiti fatti, risponde, aggiunge un messaggio o una foto e preme **Invia al tutor**: condivisione (WhatsApp, email…), email, codice da incollare, file o sessione a distanza.
 3. Il tutor apre il file in **Scambio con gli allievi**: il programma verifica la firma, **corregge il quiz da solo**, segna i compiti fatti nella scheda e registra il risultato.
-4. Il tutor aggiunge un commento e **rimanda la correzione**, che l'allievo vede domanda per domanda con le spiegazioni.
+4. Il tutor approva o fa rifare i compiti pratici e le foto, aggiunge un commento e **rimanda la correzione**, che l'allievo vede domanda per domanda con le spiegazioni.
+
+A lezione basta un **QR code**: l'allievo inquadra con la fotocamera il kit, la correzione o la sessione di assistenza e l'app si apre già pronta. Le **scadenze** compaiono nella sua home, finiscono nel calendario del telefono con un avviso il giorno prima e, dove il sistema lo permette, arrivano come notifica.
 
 ### Assistenza a distanza
 

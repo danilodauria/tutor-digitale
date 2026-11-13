@@ -308,8 +308,8 @@
       '<div class="actions"><button class="btn btn-primary" type="submit">' + I("plus") + "Assegna</button></div></form>" +
       '<section class="card"><h2>Compiti assegnati</h2><div class="actions"><button class="btn btn-sm" id="pdfK">' + I("print") + "Scheda compiti PDF</button></div>" +
       (c.compiti.length ? '<ul class="task-list">' + c.compiti.slice().reverse().map(function (k) {
-        return '<li class="' + (k.fatto ? "done" : "") + '"><label class="check"><input type="checkbox" data-k="' + k.id + '"' + (k.fatto ? " checked" : "") + "> <span>" + E(k.testo) + "<small>Assegnato " + E(TD.dataIt(k.assegnato)) + (k.scadenza ? " · entro " + E(TD.dataIt(k.scadenza)) : "") + "</small></span></label>" +
-          '<select data-esito="' + k.id + '" aria-label="Esito"><option value="">esito…</option>' + ["Fatto da solo", "Fatto con aiuto", "Da rivedere"].map(function (e) { return "<option" + (k.esito === e ? " selected" : "") + ">" + e + "</option>"; }).join("") + "</select>" +
+        return '<li class="' + (k.fatto ? "done" : "") + '"><label class="check"><input type="checkbox" data-k="' + k.id + '"' + (k.fatto ? " checked" : "") + "> <span>" + E(k.testo) + "<small>Assegnato " + E(TD.dataIt(k.assegnato)) + (k.scadenza ? " · entro " + E(TD.dataIt(k.scadenza)) : "") + (k.notaAllievo ? " · allievo: " + E(k.notaAllievo) : "") + (k.notaTutor ? " · tua nota: " + E(k.notaTutor) : "") + "</small></span></label>" +
+          '<select data-esito="' + k.id + '" aria-label="Esito"><option value="">esito…</option>' + ["Approvato", "Fatto da solo", "Fatto con aiuto", "Da rifare", "Da rivedere"].map(function (e) { return "<option" + (k.esito === e ? " selected" : "") + ">" + e + "</option>"; }).join("") + "</select>" +
           '<button class="icon-btn" data-delk="' + k.id + '" aria-label="Elimina compito">' + I("trash") + "</button></li>";
       }).join("") + "</ul>" : '<p class="muted">Nessun compito.</p>') + "</section></div>";
     const f = document.getElementById("fk");
@@ -320,7 +320,7 @@
     };
     f.querySelector('[name="lezione"]').onchange = function () { const l = TD.lezione(this.value); if (l && !f.testo.value) f.testo.value = l.compito; };
     body.querySelectorAll("[data-k]").forEach(function (cb) { cb.onchange = function () { const k = c.compiti.find(function (x) { return x.id === cb.dataset.k; }); k.fatto = cb.checked; TD.salva(); cb.closest("li").classList.toggle("done", cb.checked); }; });
-    body.querySelectorAll("[data-esito]").forEach(function (s) { s.onchange = function () { const k = c.compiti.find(function (x) { return x.id === s.dataset.esito; }); k.esito = s.value; if (s.value && s.value !== "Da rivedere") k.fatto = true; TD.salva(); TD.render(); }; });
+    body.querySelectorAll("[data-esito]").forEach(function (s) { s.onchange = function () { const k = c.compiti.find(function (x) { return x.id === s.dataset.esito; }); k.esito = s.value; if (s.value) k.fatto = s.value !== "Da rivedere" && s.value !== "Da rifare"; TD.salva(); TD.render(); }; });
     body.querySelectorAll("[data-delk]").forEach(function (b) { b.onclick = function () { c.compiti = c.compiti.filter(function (x) { return x.id !== b.dataset.delk; }); TD.salva(); TD.render(); }; });
     document.getElementById("pdfK").onclick = function () {
       const d = new TD.Documento({ titolo: "Compiti · " + TD.nomeCliente(c), piede: "Tutor Digitale · scheda compiti" });

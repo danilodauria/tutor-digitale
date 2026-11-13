@@ -1,5 +1,11 @@
 # Versioni
 
+## 1.2.0 · 13 novembre 2026
+
+- **QR code** scritto nel progetto (nessuna libreria): kit dell'allievo, sessione di assistenza a distanza e correzione si aprono inquadrando il QR con la fotocamera del telefono o del tablet.
+- **Promemoria delle scadenze** nell'app Allievo: riquadro «Scadenze» in home, file per il calendario con avviso il giorno prima e la mattina, notifiche all'apertura e, dove il browser lo consente, anche ad app chiusa.
+- **Approvazione dei compiti pratici e delle foto**: per ogni compito e allegato «Approvato» o «Da rifare» con nota; l'esito arriva all'allievo con la correzione e i compiti da rifare restano aperti per il prossimo kit.
+
 ## 1.1.1 · 13 novembre 2026
 
 - I file di programma hanno il numero di versione nell'indirizzo: dopo un aggiornamento il browser non può più mescolare file vecchi e nuovi (succedeva aprendo l'app Allievo dove era già installata quella del tutor).

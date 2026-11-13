@@ -505,7 +505,7 @@ html[data-theme="dark"] .pin { color: var(--text); }
 .consegna .actions { grid-column: 1 / -1; margin: 0; }
 .corr-score { display: grid; grid-template-columns: 180px 1fr; gap: 1.2rem; align-items: start; margin: 1rem 0; }
 .allegati { display: flex; flex-wrap: wrap; gap: .8rem; margin: 1rem 0; }
-.allegati figure { margin: 0; max-width: 220px; }
+.allegati figure { margin: 0; width: 260px; max-width: 100%; }
 .allegati img { border-radius: 10px; border: 1px solid var(--line); }
 .allegati figcaption { font-size: .8rem; color: var(--faint); }
 .task-list .nota { flex: 1 1 220px; padding: .4rem .6rem; font-size: .9rem; }
@@ -521,6 +521,21 @@ html[data-theme="dark"] .pin { color: var(--text); }
   .remote-ids, .corr-score { grid-template-columns: 1fr; }
   .consegna { grid-template-columns: 1fr; }
 }
+
+.qr-box { display: grid; grid-template-columns: minmax(180px, 260px) 1fr; gap: 1rem; align-items: center; background: var(--surface-2); border-radius: 14px; padding: 1rem; margin: 1rem 0; }
+.qr-box .qr { width: 100%; height: auto; border-radius: 8px; background: #fff; }
+.qr-box p { margin: 0; color: var(--soft); }
+.qr-box.big { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+.qr-box.big .qr { max-width: min(420px, 80vw); }
+@media (max-width: 680px) { .qr-box { grid-template-columns: 1fr; justify-items: center; text-align: center; } .qr-box .qr { max-width: 280px; } }
+.scadenze { list-style: none; padding: 0; margin: 0; display: grid; gap: .4rem; }
+.scadenze li { display: flex; gap: .7rem; align-items: center; padding: .55rem .8rem; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); border-left: 5px solid var(--liv1); }
+.scadenze li.scaduto { border-left-color: var(--ko); background: var(--ko-c); }
+.scadenze li.oggi, .scadenze li.domani { border-left-color: var(--liv2); background: var(--warn-c); }
+.scadenze small { display: block; color: var(--faint); }
+.valuta { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin-top: .4rem; }
+.valuta input[type="text"] { flex: 1 1 200px; padding: .35rem .6rem; font-size: .9rem; }
+.esito-ok { color: var(--ok); font-weight: 700; } .esito-ko { color: var(--ko); font-weight: 700; }
 
 /* ----------------------------------------------------------- stampa */
 #printArea { display: none; }

@@ -20,6 +20,80 @@
   }
   function quizFatto(k) { return k.quiz.length && Object.keys(k.risposte || {}).length >= k.quiz.length; }
 
+  /* ------------------------------------------------------------ scadenze e promemoria */
+  function giorni(data) {
+    const a = new Date(TD.oggi() + "T12:00:00"), b = new Date(data + "T12:00:00");
+    return Math.round((b - a) / 86400000);
+  }
+  TD.scadenze = function () {
+    const out = [];
+    (db().consegne || []).forEach(function (k) {
+      if (k.inviata) return;
+      k.compiti.forEach(function (c) {
+        const sc = c.scadenza || k.scadenza;
+        if (!sc || ((k.statoCompiti || {})[c.id] || {}).fatto) return;
+        out.push({ k: k, testo: c.testo, data: sc, g: giorni(sc) });
+      });
+      if (k.quiz.length && k.scadenza && !quizFatto(k)) out.push({ k: k, testo: "Quiz di " + k.quiz.length + " domande", data: k.scadenza, g: giorni(k.scadenza) });
+      if (k.scadenza && !k.inviata && !out.some(function (x) { return x.k === k; })) out.push({ k: k, testo: "Inviare i compiti al tutor", data: k.scadenza, g: giorni(k.scadenza) });
+    });
+    return out.sort(function (a, b) { return a.g - b.g; });
+  };
+  function classe(g) { return g < 0 ? "scaduto" : g === 0 ? "oggi" : g === 1 ? "domani" : "presto"; }
+  function quando(g) { return g < 0 ? "scaduto da " + (-g) + (g === -1 ? " giorno" : " giorni") : g === 0 ? "scade oggi" : g === 1 ? "scade domani" : "entro " + g + " giorni"; }
+  function listaScadenze(l) {
+    return '<ul class="scadenze">' + l.map(function (x) { return '<li class="' + classe(x.g) + '">' + I(x.g <= 0 ? "alert" : "clock") + "<span>" + E(x.testo) + "<small>" + quando(x.g) + " · " + E(TD.dataIt(x.data)) + "</small></span></li>"; }).join("") + "</ul>";
+  }
+
+  /* calendario: evento il giorno della scadenza con due avvisi (il giorno prima e la mattina) */
+  function icsConsegna(k) {
+    const sc = k.scadenza || k.compiti.map(function (c) { return c.scadenza; }).filter(Boolean).sort()[0];
+    if (!sc) return null;
+    const d = sc.replace(/-/g, "");
+    const esc = function (t) { return String(t || "").replace(/[\\;,]/g, function (c) { return "\\" + c; }).replace(/\n/g, "\\n"); };
+    const descr = k.compiti.map(function (c) { return "- " + c.testo; }).join("\n") + (k.quiz.length ? "\n- Quiz di " + k.quiz.length + " domande" : "") + "\nApri l'app Tutor Digitale · Allievo e premi «Invia al tutor».";
+    const righe = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Danilo D'Auria//Tutor Digitale Allievo//IT", "BEGIN:VEVENT",
+      "UID:" + k.id + "@tutor-digitale-allievo", "DTSTAMP:" + new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z",
+      "DTSTART:" + d + "T170000", "DTEND:" + d + "T173000", "SUMMARY:" + esc("Compiti per " + ((db().tutor || {}).nome || "il tutor")), "DESCRIPTION:" + esc(descr),
+      "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + esc("Domani scadono i compiti di Tutor Digitale"), "TRIGGER:-PT24H", "END:VALARM",
+      "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + esc("Oggi scadono i compiti di Tutor Digitale"), "TRIGGER:-PT8H", "END:VALARM",
+      "END:VEVENT", "END:VCALENDAR"];
+    return new Blob([righe.join("\r\n")], { type: "text/calendar" });
+  }
+
+  /* notifiche: all'apertura dell'app e, dove il sistema lo consente, anche ad app chiusa (Periodic Background Sync) */
+  TD.controllaAvvisi = async function () {
+    const d = db();
+    const imminenti = TD.scadenze().filter(function (x) { return x.g <= 1; });
+    try {
+      // copia delle scadenze leggibile dal service worker
+      const c = await caches.open("tda-promemoria");
+      await c.put("scadenze.json", new Response(JSON.stringify({ attivi: !!(d.impostazioni || {}).avvisi, nome: d.allievo ? d.allievo.nome : "", voci: TD.scadenze().map(function (x) { return { testo: x.testo, data: x.data }; }) }), { headers: { "Content-Type": "application/json" } }));
+    } catch (e) {}
+    if (!(d.impostazioni || {}).avvisi || typeof Notification === "undefined" || Notification.permission !== "granted" || !imminenti.length) return;
+    if (d.impostazioni.ultimoAvviso === TD.oggi()) return;
+    d.impostazioni.ultimoAvviso = TD.oggi(); TD.salva();
+    const testo = imminenti.length === 1 ? imminenti[0].testo + " · " + quando(imminenti[0].g) : imminenti.length + " compiti in scadenza: apri l'app per vederli";
+    try { const reg = await navigator.serviceWorker.ready; reg.showNotification("Tutor Digitale · promemoria", { body: testo, icon: "../assets/img/icon-allievo-192.png", badge: "../assets/img/icon-allievo-192.png", tag: "scadenze", data: { url: "./#/compiti" } }); }
+    catch (e) { try { new Notification("Tutor Digitale · promemoria", { body: testo }); } catch (x) {} }
+  };
+  async function attivaAvvisi() {
+    if (typeof Notification === "undefined") { TD.toast("Questo dispositivo non mostra notifiche: usa «Aggiungi al calendario»."); return false; }
+    const p = await Notification.requestPermission();
+    if (p !== "granted") { TD.toast("Notifiche non consentite: puoi attivarle dalle impostazioni del browser."); return false; }
+    db().impostazioni.avvisi = true; db().impostazioni.ultimoAvviso = ""; TD.salva();
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      if (reg.periodicSync) {
+        const st = await navigator.permissions.query({ name: "periodic-background-sync" }).catch(function () { return { state: "denied" }; });
+        if (st.state === "granted") await reg.periodicSync.register("scadenze", { minInterval: 12 * 60 * 60 * 1000 });
+      }
+    } catch (e) {}
+    await TD.controllaAvvisi();
+    TD.toast("Avvisi attivati: ti ricordo le scadenze il giorno prima.");
+    return true;
+  }
+
   /* ------------------------------------------------------------ pacchetti */
   TD.apriPacchetto = async function (p) {
     const d = db();
@@ -89,6 +163,8 @@
         '<div class="hero-actions"><a class="btn btn-primary btn-lg" href="#/compiti">' + I("pen") + "I miei compiti</a>" + (ap.length ? '<a class="btn btn-lg" href="#/invia">' + I("upload") + "Invia al tutor</a>" : "") + "</div>" +
       "</div></section>" +
       '<div class="wrap">' +
+        (TD.scadenze().length ? '<section class="card"><div class="block-head"><h2>' + I("clock") + 'Scadenze</h2><a href="#/compiti">Vai ai compiti ' + I("arrow") + "</a></div>" + listaScadenze(TD.scadenze().slice(0, 4)) +
+          (!(d.impostazioni || {}).avvisi && typeof Notification !== "undefined" ? '<div class="actions"><button class="btn btn-sm" id="attAvvisi">' + I("alert") + "Avvisami il giorno prima</button></div>" : "") + "</section>" : "") +
         (nuoveCorr.length ? '<a class="note-box ok-box" href="#/correzione/' + nuoveCorr[0].id + '">' + I("award") + "<div><strong>È arrivata la correzione dei compiti del " + E(TD.dataIt(nuoveCorr[0].data)) + "</strong><br>Tocca per vedere com'è andata.</div></a>" : "") +
         '<section class="tiles">' +
           tile("#/compiti", "pen", "Compiti", nc ? nc + " da fare" : "Tutto fatto") +
@@ -108,7 +184,13 @@
           (t.telefono ? '<a class="btn" href="tel:' + E(t.telefono) + '">' + I("phone") + E(t.telefono) + "</a> " : "") +
           (t.email ? '<a class="btn" href="mailto:' + E(t.email) + '">' + I("doc") + E(t.email) + "</a>" : "") + "</p></section>" +
       "</div>";
+    dopoHome();
   });
+  function dopoHome() {
+    const b = document.getElementById("attAvvisi");
+    if (b) b.onclick = function () { attivaAvvisi().then(function (ok) { if (ok) TD.render(); }); };
+    TD.controllaAvvisi();
+  }
   function tile(h, ic, t, d) { return '<a class="tile" href="' + h + '"><span class="tile-ico">' + I(ic) + "</span><strong>" + E(t) + "</strong><small>" + E(d) + "</small></a>"; }
 
   function benvenuto(app) {
@@ -163,14 +245,17 @@
               (k.inviata ? (s.nota ? "<small>" + E(s.nota) + "</small>" : "") : '<input class="nota" data-nk="' + k.id + '" data-nc="' + c.id + '" placeholder="Com\'è andata? (facoltativo)" value="' + E(s.nota || "") + '">') + "</li>";
           }).join("") + "</ul>" : "") +
           (k.quiz.length ? '<div class="actions">' + (k.inviata ? "" : '<a class="btn ' + (fatto ? "" : "btn-primary") + '" href="#/consegna/' + k.id + '">' + I("quiz") + (fatto ? "Rivedi il quiz" : "Fai il quiz (" + k.quiz.length + " domande)") + "</a>") + (fatto ? '<span class="pill ok">' + I("check") + "Quiz completato</span>" : "") + "</div>" : "") +
-          (k.inviata ? "" : '<div class="actions"><a class="btn btn-primary" href="#/invia?c=' + k.id + '">' + I("upload") + "Invia al tutor</a></div>") + "</section>";
+          (k.inviata ? "" : '<div class="actions"><a class="btn btn-primary" href="#/invia?c=' + k.id + '">' + I("upload") + "Invia al tutor</a>" + (icsConsegna(k) ? '<button class="btn" data-cal="' + k.id + '">' + I("calendar") + "Promemoria nel calendario</button>" : "") + "</div>") + "</section>";
       }).join("") : '<div class="card empty"><p>Nessun compito per ora.</p><a class="btn" href="#/ricevi">Ricevi dal tutor</a></div>') + "</div>";
     app.querySelectorAll("[data-k]").forEach(function (cb) {
       cb.onchange = function () {
         const k = consegna(cb.dataset.k); k.statoCompiti = k.statoCompiti || {};
         k.statoCompiti[cb.dataset.c] = Object.assign({}, k.statoCompiti[cb.dataset.c], { fatto: cb.checked });
-        TD.salva(); cb.closest("li").classList.toggle("done", cb.checked);
+        TD.salva(); cb.closest("li").classList.toggle("done", cb.checked); TD.controllaAvvisi();
       };
+    });
+    app.querySelectorAll("[data-cal]").forEach(function (b) {
+      b.onclick = function () { const k = consegna(b.dataset.cal); TD.scarica(icsConsegna(k), "promemoria-compiti-" + k.data + ".ics"); TD.toast("Apri il file scaricato: il promemoria entra nel calendario del telefono o del computer, con l'avviso il giorno prima."); };
     });
     app.querySelectorAll("[data-nk]").forEach(function (inp) {
       inp.onchange = function () { const k = consegna(inp.dataset.nk); k.statoCompiti = k.statoCompiti || {}; k.statoCompiti[inp.dataset.nc] = Object.assign({}, k.statoCompiti[inp.dataset.nc], { nota: inp.value.trim() }); TD.salva(); };
@@ -302,6 +387,10 @@
     app.innerHTML = TD.intest("La correzione", "Compiti del " + E(TD.dataIt(k.data)) + " · corretti da " + E((c.tutor && c.tutor.nome) || "il tutor")) +
       '<div class="wrap">' + (e ? '<div class="card result"><div class="score" style="--p:' + e.perc + '"><strong>' + e.perc + "%</strong><span>" + e.giuste + " su " + e.totale + "</span></div><h2>" + (e.perc >= 90 ? "Eccellente!" : e.perc >= 75 ? "Molto bene!" : e.perc >= 60 ? "Superato!" : "Ripassiamo insieme") + "</h2></div>" : "") +
       (c.commento ? '<section class="card"><h2>' + I("user") + "Il messaggio del tutor</h2><p class=\"read\">" + E(c.commento) + "</p></section>" : "") +
+      ((c.compiti || []).some(function (x) { return x.esito; }) || (c.allegati || []).length ? '<section class="card"><h2>' + I("pen") + "I tuoi compiti pratici</h2><ul class=\"task-list\">" +
+        (c.compiti || []).filter(function (x) { return x.esito; }).map(function (x) { return "<li><span class=\"check\">" + I(x.esito === "approvato" ? "check" : "x") + "<span>" + E(x.testo || "") + '<small class="' + (x.esito === "approvato" ? "esito-ok" : "esito-ko") + '">' + (x.esito === "approvato" ? "Approvato" : "Da rifare: lo ritroverai nei prossimi compiti") + "</small>" + (x.nota ? "<small>" + E(x.nota) + "</small>" : "") + "</span></span></li>"; }).join("") +
+        (c.allegati || []).map(function (a) { return "<li><span class=\"check\">" + I(a.esito === "approvato" ? "check" : "x") + "<span>Foto «" + E(a.nome) + '»<small class="' + (a.esito === "approvato" ? "esito-ok" : "esito-ko") + '">' + (a.esito === "approvato" ? "Approvata" : "Da rifare") + "</small>" + (a.nota ? "<small>" + E(a.nota) + "</small>" : "") + "</span></span></li>"; }).join("") +
+        "</ul></section>" : "") +
       (e ? '<section class="block"><h2>Domanda per domanda</h2><ol class="review">' + e.dettagli.map(function (x) {
         return '<li class="' + (x.ok ? "ok" : "ko") + '"><span class="rv-mark">' + I(x.ok ? "check" : "x") + "</span><div><p><strong>" + E(x.testo) + "</strong>" + (x.proposta ? " — «" + E(x.proposta) + "»" : "") + "</p><p>La tua risposta: " + E(x.data || "—") + "</p>" + (x.ok ? "" : "<p>Giusta: <strong>" + E(x.giusta) + "</strong></p>") + '<p class="muted">' + E(x.spiegazione) + "</p></div></li>";
       }).join("") + "</ol></section>" : "") +
@@ -316,9 +405,12 @@
       '<div class="wrap"><div class="grid-2">' +
         '<section class="card"><h2>' + I("user") + "Io</h2>" + (d.allievo ? '<dl class="dl"><dt>Nome</dt><dd>' + E(d.allievo.nome) + "</dd>" + (d.allievo.ente ? "<dt>Gruppo</dt><dd>" + E(d.allievo.ente) + "</dd>" : "") + "<dt>Tutor</dt><dd>" + E((d.tutor || {}).nome || "") + "</dd><dt>Lezioni ripassate</dt><dd>" + (d.ripassate || []).length + "</dd><dt>Allenamenti</dt><dd>" + (d.allenamenti || []).length + (media == null ? "" : " · media " + media + "%") + "</dd></dl>" : "<p>App non ancora attivata.</p>") + "</section>" +
         '<section class="card"><h2>' + I("download") + 'Copia di sicurezza</h2><p>Se cambi telefono o computer, salva la copia e aprila sul nuovo dispositivo.</p><div class="actions"><button class="btn btn-primary" id="exp">' + I("download") + 'Salva copia</button><label class="btn">' + I("upload") + 'Ripristina<input type="file" id="imp" accept=".json" hidden></label><button class="btn btn-danger" id="del">' + I("trash") + "Azzera l'app</button></div></section>" +
+        '<section class="card"><h2>' + I("alert") + 'Promemoria</h2><p>' + ((d.impostazioni || {}).avvisi ? "Gli avvisi delle scadenze sono attivi." : "Ricevi un avviso il giorno prima della scadenza dei compiti.") + '</p><div class="actions">' + ((d.impostazioni || {}).avvisi ? '<button class="btn" id="disAvvisi">Disattiva gli avvisi</button>' : '<button class="btn btn-primary" id="attAvvisi2">' + I("alert") + "Attiva gli avvisi</button>") + '</div><p class="muted text-small">Sui telefoni dove le notifiche non arrivano ad app chiusa, usa «Promemoria nel calendario» nei compiti: il calendario avvisa sempre.</p></section>' +
         '<section class="card"><h2>' + I("eye") + 'Lettura comoda</h2><p>Usa il pulsante <strong>Aa</strong> in alto per ingrandire i caratteri e il sole/luna per il tema scuro. Nelle lezioni c\'è «Leggi ad alta voce».</p></section>' +
         '<section class="card"><h2>' + I("info") + 'Informazioni</h2><p>Tutor Digitale · Allievo, versione ' + TD.VERSIONE + '. Ideato e sviluppato da Danilo D\'Auria. Codice MIT, contenuti CC BY-NC-SA 4.0.</p><p><a href="../#/licenze">Licenze</a> · <a href="../#/installa">Come si installa</a></p></section>' +
       "</div></div>";
+    const a2 = document.getElementById("attAvvisi2"); if (a2) a2.onclick = function () { attivaAvvisi().then(function () { TD.render(); }); };
+    const d2 = document.getElementById("disAvvisi"); if (d2) d2.onclick = function () { d.impostazioni.avvisi = false; TD.salva(); TD.controllaAvvisi(); TD.render(); };
     document.getElementById("exp").onclick = function () { TD.scarica(new Blob([JSON.stringify(TD.db)], { type: "application/json" }), "tutor-digitale-allievo-copia_" + TD.oggi() + ".json"); };
     document.getElementById("imp").onchange = function () {
       const r = new FileReader(); r.onload = function () { try { const o = JSON.parse(r.result); if (!("consegne" in o)) throw 0; TD.db = o; TD.salva(); TD.toast("Copia ripristinata."); TD.vai("#/"); } catch (e) { TD.toast("Non è una copia valida."); } }; r.readAsText(this.files[0]);

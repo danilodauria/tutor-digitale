@@ -164,7 +164,16 @@
   const supportato = typeof RTCPeerConnection !== "undefined";
   const schermoOk = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
 
-  TD.rotta("/remoto", function (a) { app = a; disegna(); });
+  TD.rotta("/remoto", function (a, par, q) {
+    app = a; disegna();
+    const c = document.getElementById("rCod");
+    if (q.s && c) { c.value = q.s; const p = document.getElementById("rPin"); if (p) p.focus(); TD.toast("Codice ricevuto: scrivi la password di 6 cifre."); }
+  });
+  /* indirizzo dell'altra app (tutor ↔ allievo) per il QR della sessione */
+  function linkSessione(codice) {
+    const base = TD.MODO === "allievo" ? new URL("../", location.href).href : (TD.URL_ALLIEVO || new URL("allievo/", location.href).href);
+    return base + "#/remoto?s=" + codice;
+  }
 
   function disegna() {
     const offline = !navigator.onLine;
@@ -182,7 +191,8 @@
     else if (S.fase === "attesa") corpo =
       '<section class="card remote-card"><h2>Sessione aperta</h2>' +
         '<div class="remote-ids"><div><span>Password</span><strong class="pin">' + (S.pin.slice(0, 3) + " " + S.pin.slice(3)) + '</strong><small>cambia tra <b id="rScade">' + Math.floor(Math.max(0, S.scade - Date.now()) / 60000) + ":" + String(Math.floor(Math.max(0, S.scade - Date.now()) / 1000) % 60).padStart(2, "0") + '</b></small></div>' +
-        "<div><span>Codice da inviare</span>" + (S.codice ? '<textarea readonly rows="3" class="code">' + E(S.codice) + '</textarea><div class="actions"><button class="btn btn-primary" id="rCopia">' + I("copy") + 'Copia</button><button class="btn" id="rShare">' + I("upload") + "Condividi</button></div>" : '<p class="muted">Preparo il codice…</p>') + "</div></div>" +
+        "<div><span>Codice da inviare</span>" + (S.codice ? '<textarea readonly rows="3" class="code">' + E(S.codice) + '</textarea><div class="actions"><button class="btn btn-primary" id="rCopia">' + I("copy") + 'Copia</button><button class="btn" id="rShare">' + I("upload") + "Condividi</button></div>" +
+          (TD.qr && TD.qr.adatto(linkSessione(S.codice)) ? '<div class="qr-box">' + TD.qr.svg(linkSessione(S.codice), { etichetta: "QR della sessione" }) + "<p>Oppure fai inquadrare questo QR con la fotocamera del telefono o del tablet: si apre l'app con il codice già inserito.</p></div>" : "") : '<p class="muted">Preparo il codice…</p>') + "</div></div>" +
         '<label class="field"><span>Incolla qui il codice di risposta che ti rimandano</span><textarea id="rRisp" rows="3" placeholder="TDR.…"></textarea></label>' +
         '<div class="actions"><button class="btn btn-primary" id="rCompleta">' + I("check") + 'Completa il collegamento</button><button class="btn" id="rNuova">Nuova password</button><button class="btn btn-ghost" id="rChiudi">' + I("x") + "Annulla</button></div></section>";
     else if (S.fase === "risposta") corpo =
@@ -222,7 +232,8 @@
     };
     if ($("rCopia")) $("rCopia").onclick = function () { TD.scambio.copia(S.codice).then(function (ok) { TD.toast(ok ? "Codice copiato: incollalo in WhatsApp o in una email." : "Seleziona il codice e copialo a mano."); }); };
     if ($("rShare")) $("rShare").onclick = function () {
-      if (navigator.share) navigator.share({ title: "Tutor Digitale", text: S.codice }).catch(function () {});
+      const testo = S.fase === "attesa" ? "Assistenza Tutor Digitale: apri questo link e scrivi la password che ti dico a voce.\n" + linkSessione(S.codice) : S.codice;
+      if (navigator.share) navigator.share({ title: "Tutor Digitale", text: testo }).catch(function () {});
       else TD.scambio.copia(S.codice).then(function () { TD.toast("Condivisione non disponibile: codice copiato."); });
     };
     if ($("rCompleta")) $("rCompleta").onclick = function () { const c = $("rRisp").value.trim(); if (!c) { TD.toast("Incolla il codice di risposta."); return; } completa(c).catch(function (e) { TD.toast(e.message); }); };
