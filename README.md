@@ -63,7 +63,7 @@ Guida pratica in PDF, in tre formati: [A5 da leggere](assets/pdf/vademecum-tutor
 Il vademecum **si aggiorna da solo**: `scripts/build_vademecum.py` prende versione, novità e lezioni direttamente dal programma, e il workflow [Vademecum](.github/workflows/vademecum.yml) lo rigenera a ogni cambio di versione, lo salva nel repository, ripubblica il sito e allega i tre PDF alla Release.
 
 ```bash
-pip install reportlab pymupdf
+pip install reportlab==5.0.1 pymupdf==2.1
 python3 scripts/build_vademecum.py   # rigenera a mano i tre PDF
 ```
 

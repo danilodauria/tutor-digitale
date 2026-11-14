@@ -15,7 +15,7 @@
 #  (.github/workflows/vademecum.yml).
 #
 #  Uso:
-#    pip install reportlab pymupdf
+#    pip install reportlab==5.0.1 pymupdf==2.1
 #    python3 scripts/build_vademecum.py
 # =============================================================================
 
@@ -489,10 +489,8 @@ def imponi_libricino(origine, destinazione, versione):
     import pymupdf
 
     src = pymupdf.open(origine)
-    pagine = src.page_count
-    while pagine % 4:
-        src.new_page(width=src[0].rect.width, height=src[0].rect.height)
-        pagine += 1
+    vere = src.page_count            # le facciate in più restano bianche
+    pagine = vere + (-vere) % 4
     out = pymupdf.open()
     larghezza, altezza = landscape(A4)
     for foglio in range(pagine // 4):
@@ -501,7 +499,7 @@ def imponi_libricino(origine, destinazione, versione):
         for coppia in (fronte, retro):
             pagina = out.new_page(width=larghezza, height=altezza)
             for indice, numero in enumerate(coppia):
-                if 1 <= numero <= pagine:
+                if 1 <= numero <= vere:
                     r = pymupdf.Rect(indice * larghezza / 2, 0, (indice + 1) * larghezza / 2, altezza)
                     pagina.show_pdf_page(r, src, numero - 1)
             cx = larghezza / 2
