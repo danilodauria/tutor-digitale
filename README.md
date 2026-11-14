@@ -30,6 +30,12 @@ Chi insegna tecnologia a domicilio o nelle associazioni ha bisogno di tre cose i
 | **Preventivi e ricevute** | Dal listino modificabile, numerati per anno; ricevuta per prestazione occasionale con nota sulla marca da bollo e ritenuta d'acconto facoltativa, oppure riepilogo per chi ha partita IVA. |
 | **Registro presenze** | Foglio mensile per Comuni, associazioni e scuole: incontri, orari, ore, argomenti, griglia presente/assente di ogni partecipante, firme del docente e del referente, fogli firme a mano per ogni incontro, tabella per Excel. |
 | **Statistiche** | Ore e incassi per mese, da incassare, clienti per luogo e città, argomenti più richiesti, progressi e andamento dei quiz di ogni allievo; tabella per Excel e riepilogo PDF. |
+| **Percorsi su misura** | Percorsi incontro per incontro, sei modelli pronti, programma in PDF, assegnazione con agenda e compiti, «Il mio percorso» nell'app Allievo. |
+| **Editor** | Lezioni, domande e schermate annotate (frecce, cerchi, numeri, scritte) proprie, con esportazione e importazione. |
+| **Schermate guida** | Dieci guide disegnate per Android, iPhone, Windows e Smart TV con il punto da toccare, stampabili. |
+| **Modalità aula** | Domanda sulla Smart TV, risposte dai telefoni con un QR, classifica; canale cifrato end-to-end, oppure alzata di mano senza Internet. |
+| **Fattura elettronica** | File XML FatturaPA (FPR12) per forfettari, minimi e regime ordinario, con PDF di cortesia, da caricare nel portale dell'Agenzia delle Entrate. |
+| **Accessibilità** | Contrasto elevato, pulsanti grandi, niente animazioni, «un pulsante alla volta» per chi ha difficoltà motorie; controllo axe WCAG 2 AA. |
 | **Agenda e strumenti** | Appuntamenti con esportazione nel calendario (.ics), timer della lezione con promemoria della pausa, kit del tutor, idee per il lavoro e metodo in cinque tempi. |
 | **Impostazioni** | Profilo del docente con firma, listino, tema chiaro o scuro, caratteri grandi, **backup cifrato con password** (AES-256, file `.tdcifrato` da tenere su chiavetta o cloud), firma digitale dei kit con impronta della chiave. |
 
@@ -75,7 +81,7 @@ PDF, firme, attestati e quiz sono generati sul dispositivo, **senza librerie né
 
 ## Dati e privacy
 
-Non ci sono server, account o statistiche. I dati dei clienti stanno nel browser del dispositivo del tutor (localStorage). Chi usa il programma per lavoro ne è titolare del trattamento: conviene proteggere il dispositivo con una password e fare ogni settimana un **backup cifrato** (*Impostazioni › Backup cifrato con password*): senza la password il file è illeggibile, quindi si può tenere su chiavetta, Google Drive o OneDrive. La home ricorda il backup se l'ultimo ha più di una settimana.
+Non ci sono server, account o statistiche. Solo la modalità aula passa da un canale pubblico gratuito (broker MQTT di HiveMQ, EMQX o Mosquitto) con i messaggi cifrati AES-256: il broker vede solo testo illeggibile e un nome di stanza casuale. I dati dei clienti stanno nel browser del dispositivo del tutor (localStorage). Chi usa il programma per lavoro ne è titolare del trattamento: conviene proteggere il dispositivo con una password e fare ogni settimana un **backup cifrato** (*Impostazioni › Backup cifrato con password*): senza la password il file è illeggibile, quindi si può tenere su chiavetta, Google Drive o OneDrive. La home ricorda il backup se l'ultimo ha più di una settimana.
 
 Kit, correzioni e attestati sono firmati con una **chiave ECDSA del tutor** creata sul dispositivo: l'app Allievo mostra «Kit verificato» e rifiuta i kit modificati; la pagina `verifica/` controlla gli attestati senza server.
 

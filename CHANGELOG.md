@@ -1,5 +1,14 @@
 # Versioni
 
+## 1.4.0 · 14 novembre 2026
+
+- **Percorsi su misura** (miglioria 7): componi un percorso incontro per incontro o parti da sei modelli pronti (SPID in 4 incontri, Smartphone da zero, Truffe? No grazie, Nonni e nipoti, Ufficio in ordine, Smart TV senza stress). Programma in PDF, assegnazione con appuntamenti in agenda e compiti con scadenza, «Il mio percorso» nell'app Allievo tramite il kit.
+- **Editor delle lezioni e delle domande** (miglioria 8): lezioni proprie con immagini, domande a scelta multipla, annotatore di schermate con frecce, cerchi, riquadri, numeri e scritte; esportazione e importazione dei contenuti.
+- **Schermate guida illustrate** (miglioria 9): dieci guide disegnate da zero per Android, iPhone, Windows e Smart TV con il punto da toccare, dentro le lezioni collegate e stampabili in PDF.
+- **Fattura elettronica** (miglioria 11): file XML FatturaPA (FPR12) per forfettari, minimi e regime ordinario, con bollo virtuale, controllo di partita IVA, codice fiscale e indirizzi, e PDF di cortesia. Il file si carica nel portale dell'Agenzia delle Entrate o si dà al commercialista.
+- **Modalità gruppo in aula** (miglioria 12): domanda sulla Smart TV, risposte dai telefoni inquadrando un QR, punteggio per velocità, grafico delle risposte e classifica, risultati salvati nella scheda del gruppo. Canale cifrato end-to-end; senza Internet, conta per alzata di mano.
+- **Accessibilità** (miglioria 19): contrasto elevato, pulsanti grandi, niente animazioni e la modalità «un pulsante alla volta» per chi ha difficoltà motorie. Contrasti corretti e pagine controllate con axe sulle regole WCAG 2 AA in tema chiaro, scuro e ad alto contrasto.
+
 ## 1.3.0 · 14 novembre 2026
 
 - **Backup cifrato con password** (miglioria 5): Impostazioni › «Backup cifrato con password» salva un file `.tdcifrato` protetto con AES-256 e PBKDF2, da tenere su chiavetta o cloud senza rischi per la privacy dei clienti; «Importa backup» riconosce da solo il file cifrato e chiede la password. In home compare un promemoria se l'ultima copia ha più di una settimana.

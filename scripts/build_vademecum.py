@@ -209,9 +209,12 @@ def costruisci(percorso, formato, d):
     ultima = d["versioni"][0] if d["versioni"] else {"versione": d["versione"], "data": "", "voci": []}
     storia = []
 
+    numero = [0]
+
     def cap(t):
+        numero[0] += 1
         storia.append(CondPageBreak(doc.height * 0.25))
-        storia.append(Paragraph(t, st["Capitolo"]))
+        storia.append(Paragraph("%d. %s" % (numero[0], re.sub(r"^\d+\.\s*", "", t)), st["Capitolo"]))
 
     def sez(t):
         storia.append(CondPageBreak(doc.height * 0.12))
@@ -326,7 +329,7 @@ def costruisci(percorso, formato, d):
 
     # ------------------------------------------------------------ 5
     cap("5. Lezioni, quiz, esercizi e palestra")
-    p("Le <b>%d lezioni</b> sono ordinate in %d livelli e %d percorsi (l'elenco completo è al capitolo 12). "
+    p("Le <b>%d lezioni</b> sono ordinate in %d livelli e %d percorsi (l'elenco completo è nel capitolo «Le lezioni», in fondo). "
       "Ognuna ha obiettivi, spiegazione, passi numerati, tre esercizi (facile, medio, esperto), compito "
       "a casa, aree DigComp 2.2, lettura ad alta voce e scheda PDF."
       % (k["lezioni"], len(d["livelli"]), len(d["percorsi"])))
@@ -406,6 +409,65 @@ def costruisci(percorso, formato, d):
     ])
     p("La tabella si esporta per Excel e il riepilogo in PDF, utile per il commercialista o per presentare "
       "l'attività a un ente. I numeri sono giusti se il registro è compilato con durata, importo e «pagato».")
+
+    # ------------------------------------------------------------ percorsi su misura
+    cap("Percorsi su misura")
+    p("Altro › <b>Percorsi su misura</b>: componi un percorso incontro per incontro scegliendo le lezioni, "
+      "oppure parti da un modello pronto (%s) e adattalo." % ", ".join("«" + m + "»" for m in d.get("modelli", [])[:4]))
+    passi([
+        "Apri un modello o «Nuovo percorso»; dai un nome, scegli le lezioni per ogni incontro e i minuti.",
+        "<b>Programma PDF</b>: il programma da allegare al preventivo o da presentare all'ente.",
+        "<b>Assegna</b> a un cliente: con la data del primo incontro gli appuntamenti finiscono in agenda e i compiti a casa ricevono la scadenza.",
+        "Manda il kit: nell'app Allievo compare «Il mio percorso», con le lezioni da ripassare e i progressi.",
+    ])
+
+    # ------------------------------------------------------------ editor e guide
+    cap("Lezioni, domande e schermate tue")
+    p("Altro › <b>Editor delle lezioni</b>: aggiungi lezioni con obiettivi, passi, esercizi, compito e immagini, e "
+      "domande a scelta multipla. Compaiono nei percorsi (con il segno «tua»), nei quiz, nelle verifiche e nella "
+      "modalità aula, e viaggiano nel kit quando le assegni. «Esporta i contenuti» crea un file da portare su un "
+      "altro dispositivo o da dare a un collega.")
+    sez("Schermate guida")
+    p("Altro › <b>Schermate guida</b>: %d guide disegnate passo per passo per Android, iPhone, Windows e Smart TV, "
+      "con il cerchio arancione dove toccare (caratteri grandi, Wi-Fi, installare l'app Allievo, spegnere il "
+      "computer, telecomando, SMS truffa…). Compaiono anche dentro le lezioni collegate e si stampano in PDF." % d.get("guide", 10))
+    p("Con <b>Nuova schermata</b> fotografi o catturi lo schermo del cliente e aggiungi frecce, cerchi, riquadri, "
+      "numeri e scritte: la schermata annotata si può inserire nelle tue lezioni.")
+
+    # ------------------------------------------------------------ aula
+    cap("Modalità gruppo in aula")
+    passi([
+        "Collega il computer alla Smart TV e apri Altro › <b>Modalità gruppo in aula</b>; scegli livello, percorso, numero di domande e secondi.",
+        "«Apri l'aula»: sulla TV compare un QR. I partecipanti lo inquadrano con il telefono, scrivono il nome ed entrano (si apre l'app Allievo, senza installare nulla).",
+        "«Prima domanda»: tutti rispondono dal telefono; la TV conta le risposte e, alla fine del tempo o quando hanno risposto tutti, mostra quella giusta, il grafico e la classifica.",
+        "Alla fine puoi salvare i risultati nella scheda del gruppo.",
+    ])
+    box("La modalità con i telefoni passa da un canale pubblico gratuito (MQTT) con i messaggi cifrati: serve "
+        "Internet su TV e telefoni. Senza Internet scegli «Alzata di mano»: ognuno alza il cartellino A, B, C o D e "
+        "tu tocchi i numeri sullo schermo.", "attenzione")
+
+    # ------------------------------------------------------------ fattura
+    cap("Fattura elettronica")
+    p("Con la partita IVA (Impostazioni › Regime per i documenti) il documento «<b>Fattura elettronica</b>» crea il "
+      "file <b>XML FatturaPA</b> e un PDF di cortesia per il cliente. Servono: partita IVA, codice fiscale, indirizzo "
+      "con CAP e regime fiscale (forfettario, ordinario o minimi) in Impostazioni; codice fiscale o partita IVA, "
+      "indirizzo e CAP del cliente, e per le aziende il codice destinatario SDI o la PEC.")
+    elenco([
+        "Forfettario: nessuna IVA (natura N2.2) e bollo virtuale da 2 € sopra 77,47 €, che puoi addebitare al cliente.",
+        "Il file si carica nel portale «Fatture e Corrispettivi» dell'Agenzia delle Entrate o si manda al commercialista: il programma non lo trasmette allo SDI.",
+    ])
+    box("Il file segue le specifiche FatturaPA 1.2.2 ed è controllato sullo schema ufficiale, ma la responsabilità "
+        "fiscale resta tua: fai verificare le prime fatture dal commercialista.", "attenzione")
+
+    # ------------------------------------------------------------ accessibilità
+    cap("Accessibilità")
+    p("In Impostazioni (e nel profilo dell'app Allievo) c'è la scheda <b>Accessibilità</b>:")
+    elenco([
+        "<b>Contrasto elevato</b>: nero, bianco e giallo, per chi vede poco.",
+        "<b>Pulsanti più grandi</b> e <b>niente animazioni</b>.",
+        "<b>Un pulsante alla volta</b>: i comandi si illuminano a turno e si sceglie toccando lo schermo in un punto qualsiasi o premendo un tasto (anche un sensore esterno). Esc mette in pausa.",
+        "Funziona con i lettori di schermo NVDA, TalkBack e VoiceOver e con il solo tasto Tab; le pagine sono controllate con lo strumento automatico axe sulle regole WCAG 2 AA.",
+    ])
 
     # ------------------------------------------------------------ 10
     cap("10. Agenda e strumenti")

@@ -8,7 +8,7 @@ window.TD = window.TD || {};
 (function () {
   "use strict";
 
-  TD.VERSIONE = "1.3.0";
+  TD.VERSIONE = "1.4.0";
   TD.MODO = TD.MODO || "tutor";
   const KEY = TD.MODO === "allievo" ? "tutor-digitale-allievo:v1:db" : "tutor-digitale:v1:db";
   TD.CHIAVE = KEY;
@@ -39,16 +39,25 @@ window.TD = window.TD || {};
     } catch (e) { return vuoto(); }
   }
   TD.db = carica();
+
+  /* lezioni e domande create dal tutor (editor) o arrivate con il kit: si aggiungono a quelle del programma */
+  const BASE_LEZ = (TD.LEZIONI || []).slice(), BASE_DOM = (TD.DOMANDE || []).slice();
+  TD.applicaPersonali = function () {
+    const p = TD.db.personali || {};
+    if (TD.LEZIONI) { TD.LEZIONI.length = 0; BASE_LEZ.concat((p.lezioni || []).filter(function (l) { return l && l.id && l.titolo; })).forEach(function (l) { TD.LEZIONI.push(l); }); }
+    if (TD.DOMANDE) { TD.DOMANDE.length = 0; BASE_DOM.concat((p.domande || []).filter(function (q) { return Array.isArray(q) && q[2] && q[3] && q[4] && q[4].length === 3; })).forEach(function (q) { TD.DOMANDE.push(q); }); }
+  };
+  TD.applicaPersonali();
   TD.salva = function () {
     try { localStorage.setItem(KEY, JSON.stringify(TD.db)); return true; }
     catch (e) { TD.toast("Spazio del browser pieno: esporta un backup e libera spazio."); return false; }
   };
-  TD.azzera = function () { TD.db = vuoto(); TD.salva(); };
+  TD.azzera = function () { TD.db = vuoto(); TD.salva(); TD.applicaPersonali(); };
   TD.importa = function (obj) {
     if (!obj || !Array.isArray(obj.clienti)) throw new Error("File non valido");
     const base = vuoto();
     Object.keys(base).forEach(function (k) { if (obj[k] == null) obj[k] = base[k]; });
-    TD.db = obj; TD.salva();
+    TD.db = obj; TD.salva(); TD.applicaPersonali();
   };
 
   /* ------------------------------------------------------------ utilità */
@@ -258,7 +267,9 @@ window.TD = window.TD || {};
         catch (e) { console.error(e); app.innerHTML = '<div class="wrap"><div class="card"><h1>Qualcosa non va</h1><p>' + TD.esc(e.message) + '</p><a class="btn" href="#/">Torna alla home</a></div></div>'; }
         document.querySelectorAll("[data-nav]").forEach(function (a) {
           const seg = path.split("/")[1] || "";
-          a.classList.toggle("active", !!seg && (a.getAttribute("data-nav") === seg || (a.dataset.alias || "").split(" ").indexOf(seg) >= 0));
+          const on = !!seg && (a.getAttribute("data-nav") === seg || (a.dataset.alias || "").split(" ").indexOf(seg) >= 0);
+          a.classList.toggle("active", on);
+          if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
         });
         TD.aggiornaSpia();
         window.scrollTo(0, 0);

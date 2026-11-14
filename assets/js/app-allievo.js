@@ -109,6 +109,12 @@
       if (d.allievo && d.allievo.clienteId !== a.clienteId) d.consegne = [];
       d.allievo = a; d.tutor = p.dati.tutor; d.segreto = p.dati.segreto;
       d.profilo = Object.assign({}, d.profilo, { nome: p.dati.tutor.nome || "", qualifica: p.dati.tutor.qualifica || "", email: p.dati.tutor.email || "", telefono: p.dati.tutor.telefono || "" });
+      if (p.dati.percorso) d.percorso = p.dati.percorso;
+      if ((p.dati.lezioniPersonali || []).length) {
+        d.personali = d.personali || { lezioni: [], domande: [] };
+        p.dati.lezioniPersonali.forEach(function (l) { d.personali.lezioni = d.personali.lezioni.filter(function (x) { return x.id !== l.id; }).concat([l]); });
+        if (TD.applicaPersonali) TD.applicaPersonali();
+      }
       const k = p.dati.consegna;
       d.consegne = (d.consegne || []).filter(function (x) { return x.id !== k.id; });
       d.consegne.push(Object.assign({ risposte: {}, statoCompiti: {}, inviata: false, correzione: null, ricevuta: new Date().toISOString() }, k));
@@ -183,6 +189,8 @@
           tile("#/ricevi", "download", "Ricevi dal tutor", "Nuovi compiti e correzioni") +
           tile("#/remoto", "screen", "Aiuto a distanza", "Codice e password") +
           tile("#/info", "user", "Il mio profilo", "Dati e copia di sicurezza") +
+          (d.percorso ? tile("#/mio-percorso", "layers", "Il mio percorso", d.percorso.nome) : "") +
+          tile("#/aula", "users", "Aula", "Quiz di gruppo con la TV") +
         "</section>" +
         '<section class="block"><div class="block-head"><h2>Le mie lezioni</h2></div><div class="paths">' + devs.map(function (id) {
           const p = TD.percorso(id), liv = (d.allievo.livelli || {})[id] || 0;
@@ -405,6 +413,24 @@
       '<div class="actions"><a class="btn btn-primary" href="#/compiti">Torna ai compiti</a><a class="btn" href="#/quiz">Allenati ancora</a></div></div>';
   });
 
+  /* ------------------------------------------------------------ il mio percorso (7) */
+  TD.rotta("/mio-percorso", function (app) {
+    const d = db(), p = d.percorso;
+    if (!p) { app.innerHTML = '<div class="wrap"><div class="card"><h1>Il mio percorso</h1><p>Il tutor non ti ha ancora assegnato un percorso.</p><a class="btn" href="#/">Torna all\'inizio</a></div></div>'; return; }
+    const rip = d.ripassate || [];
+    const tutte = []; p.incontri.forEach(function (inc) { (inc.lezioni || []).forEach(function (id) { if (tutte.indexOf(id) < 0 && TD.lezione(id)) tutte.push(id); }); });
+    const fatte = tutte.filter(function (id) { return rip.indexOf(id) >= 0; }).length;
+    app.innerHTML = TD.intest(E(p.nome), E(p.descr || "Le lezioni del tuo percorso, incontro per incontro."), TD.barra(fatte, tutte.length) + '<p class="muted text-small">' + fatte + " lezioni ripassate su " + tutte.length + "</p>") +
+      '<div class="wrap"><ol class="pm-incontri allievo">' + p.incontri.map(function (inc, i) {
+        const lez = (inc.lezioni || []).filter(function (id) { return TD.lezione(id); });
+        const ok = lez.length && lez.every(function (id) { return rip.indexOf(id) >= 0; });
+        return '<li class="card' + (ok ? " fatto" : "") + '"><h2>' + (ok ? I("check") : "") + "Incontro " + (i + 1) + " · " + E(inc.titolo) + '</h2><ul class="list">' + lez.map(function (id) {
+          const l = TD.lezione(id);
+          return '<li><a href="#/lezione/' + id + '"><span>' + E(l.titolo) + "<small>" + (rip.indexOf(id) >= 0 ? "ripassata ✓" : "da ripassare") + "</small></span>" + I("arrow") + "</a></li>";
+        }).join("") + "</ul></li>";
+      }).join("") + "</ol></div>";
+  });
+
   /* ------------------------------------------------------------ profilo */
   TD.rotta("/info", function (app) {
     const d = db();
@@ -414,9 +440,11 @@
         '<section class="card"><h2>' + I("user") + "Io</h2>" + (d.allievo ? '<dl class="dl"><dt>Nome</dt><dd>' + E(d.allievo.nome) + "</dd>" + (d.allievo.ente ? "<dt>Gruppo</dt><dd>" + E(d.allievo.ente) + "</dd>" : "") + "<dt>Tutor</dt><dd>" + E((d.tutor || {}).nome || "") + "</dd>" + (d.improntaTutor ? "<dt>Firma del tutor</dt><dd>" + I("check") + " verificata · impronta <code>" + E(d.improntaTutor) + "</code></dd>" : "") + "<dt>Lezioni ripassate</dt><dd>" + (d.ripassate || []).length + "</dd><dt>Allenamenti</dt><dd>" + (d.allenamenti || []).length + (media == null ? "" : " · media " + media + "%") + "</dd></dl>" : "<p>App non ancora attivata.</p>") + "</section>" +
         '<section class="card"><h2>' + I("download") + 'Copia di sicurezza</h2><p>Se cambi telefono o computer, salva la copia e aprila sul nuovo dispositivo.</p><div class="actions"><button class="btn btn-primary" id="exp">' + I("download") + 'Salva copia</button><label class="btn">' + I("upload") + 'Ripristina<input type="file" id="imp" accept=".json" hidden></label><button class="btn btn-danger" id="del">' + I("trash") + "Azzera l'app</button></div></section>" +
         '<section class="card"><h2>' + I("alert") + 'Promemoria</h2><p>' + ((d.impostazioni || {}).avvisi ? "Gli avvisi delle scadenze sono attivi." : "Ricevi un avviso il giorno prima della scadenza dei compiti.") + '</p><div class="actions">' + ((d.impostazioni || {}).avvisi ? '<button class="btn" id="disAvvisi">Disattiva gli avvisi</button>' : '<button class="btn btn-primary" id="attAvvisi2">' + I("alert") + "Attiva gli avvisi</button>") + '</div><p class="muted text-small">Sui telefoni dove le notifiche non arrivano ad app chiusa, usa «Promemoria nel calendario» nei compiti: il calendario avvisa sempre.</p></section>' +
+        TD.cardAccessibilita() +
         '<section class="card"><h2>' + I("eye") + 'Lettura comoda</h2><p>Usa il pulsante <strong>Aa</strong> in alto per ingrandire i caratteri e il sole/luna per il tema scuro. Nelle lezioni c\'è «Leggi ad alta voce».</p></section>' +
         '<section class="card"><h2>' + I("info") + 'Informazioni</h2><p>Tutor Digitale · Allievo, versione ' + TD.VERSIONE + '. Ideato e sviluppato da Danilo D\'Auria. Codice MIT, contenuti CC BY-NC-SA 4.0.</p><p><a href="../#/licenze">Licenze</a> · <a href="../#/installa">Come si installa</a></p></section>' +
       "</div></div>";
+    TD.collegaAccessibilita();
     const a2 = document.getElementById("attAvvisi2"); if (a2) a2.onclick = function () { attivaAvvisi().then(function () { TD.render(); }); };
     const d2 = document.getElementById("disAvvisi"); if (d2) d2.onclick = function () { d.impostazioni.avvisi = false; TD.salva(); TD.controllaAvvisi(); TD.render(); };
     document.getElementById("exp").onclick = function () { TD.scarica(new Blob([JSON.stringify(TD.db)], { type: "application/json" }), "tutor-digitale-allievo-copia_" + TD.oggi() + ".json"); };

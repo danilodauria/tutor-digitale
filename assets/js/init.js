@@ -15,6 +15,7 @@
     if (t !== "dark" && t !== "light") t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     document.documentElement.setAttribute("data-theme", t);
     document.documentElement.setAttribute("data-font", imp.caratteri || "normale");
+    if (TD.applicaAccessibilita) TD.applicaAccessibilita();
     try { localStorage.setItem(TD.MODO === "allievo" ? "tutor-digitale-allievo:v1:theme" : "tutor-digitale:v1:theme", t); } catch (e) {}
   };
 

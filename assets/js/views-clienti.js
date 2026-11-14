@@ -75,10 +75,12 @@
         "</div>" +
         '<div class="grid-2 solo-ente">' +
           campo("ragione", "Ragione sociale o nome del gruppo", c.ragione) + campo("referente", "Referente", c.referente) +
-          campo("piva", "Partita IVA o codice fiscale", c.piva) + campo("pec", "PEC o codice destinatario (facoltativo)", c.pec) +
+          campo("piva", "Partita IVA o codice fiscale", c.piva) + campo("pec", "PEC (facoltativa)", c.pec) +
         "</div>" +
         '<div class="grid-2">' +
           campo("indirizzo", "Indirizzo", c.indirizzo) + campo("citta", "Città", c.citta) +
+          campo("cap", "CAP (per la fattura elettronica)", c.cap) + campo("provincia", "Provincia, sigla (es. RM)", c.provincia) +
+          '<div class="solo-ente">' + campo("sdi", "Codice destinatario SDI (7 caratteri, facoltativo)", c.sdi) + "</div>" +
           campo("telefono", "Telefono", c.telefono, "tel") + campo("email", "Email", c.email, "email") +
           '<label class="field"><span>Dove si fanno le lezioni</span><select name="luogo">' + TD.LUOGHI.map(function (l) { return "<option" + (c.luogo === l ? " selected" : "") + ">" + E(l) + "</option>"; }).join("") + "</select></label>" +
           '<label class="field"><span>Forma</span><select name="forma"><option value="individuale"' + (c.forma !== "gruppo" ? " selected" : "") + '>Individuale</option><option value="gruppo"' + (c.forma === "gruppo" ? " selected" : "") + ">Di gruppo</option></select></label>" +
@@ -93,6 +95,7 @@
             '<select name="liv_rete" aria-label="Livello Internet">' + TD.LIVELLI.map(function (l) { return '<option value="' + l.id + '"' + (((c.livelli || {}).rete || 0) === l.id ? " selected" : "") + ">" + E(l.nome) + "</option>"; }).join("") + "</select></div>" +
         '</div><p class="muted text-small">Non sai il livello? Dopo il salvataggio usa il <strong>test d\'ingresso</strong> dalla scheda cliente.</p></fieldset>' +
         campo("sistemi", "Modelli e sistemi (es. Windows 11, iPhone 13, TV Samsung)", c.sistemi) +
+        campo("rustdesk", "ID RustDesk del computer del cliente (per il controllo a distanza, facoltativo)", c.rustdesk) +
         '<label class="field solo-ente"><span>Partecipanti (uno per riga: Nome Cognome)</span><textarea name="partecipanti" rows="5">' + E((c.partecipanti || []).map(function (x) { return x.nome; }).join("\n")) + "</textarea></label>" +
         '<label class="field"><span>Obiettivi del cliente</span><textarea name="obiettivi" rows="3" placeholder="Es. videochiamare i nipoti, usare lo SPID, gestire le email di lavoro">' + E(c.obiettivi || "") + "</textarea></label>" +
         '<label class="field"><span>Esigenze di accessibilità (facoltativo, solo con consenso nella liberatoria)</span><textarea name="accessibilita" rows="2" placeholder="Es. caratteri grandi, parlare lentamente, preferisce il tablet al mouse">' + E(c.accessibilita || "") + "</textarea></label>" +
@@ -115,7 +118,7 @@
       e.preventDefault();
       const o = TD.form(f);
       if (o.tipo === "ente" ? !o.ragione : !(o.nome || o.cognome)) { TD.toast(o.tipo === "ente" ? "Scrivi il nome dell'ente o del gruppo." : "Scrivi almeno nome o cognome."); return; }
-      ["tipo", "nome", "cognome", "nascita", "cf", "tutore", "ragione", "referente", "piva", "pec", "indirizzo", "citta", "telefono", "email", "luogo", "forma", "sistemi", "obiettivi", "accessibilita", "note", "stato"].forEach(function (k) { c[k] = o[k] || ""; });
+      ["tipo", "nome", "cognome", "nascita", "cf", "tutore", "ragione", "referente", "piva", "pec", "indirizzo", "citta", "cap", "provincia", "sdi", "rustdesk", "telefono", "email", "luogo", "forma", "sistemi", "obiettivi", "accessibilita", "note", "stato"].forEach(function (k) { c[k] = o[k] || ""; });
       c.dispositivi = o.dispositivi || [];
       c.livelli = c.livelli || {};
       ["pc", "tablet", "smartphone", "tv", "rete"].forEach(function (d) { c.livelli[d] = Number(o["liv_" + d] || 0); });
@@ -276,7 +279,7 @@
   /* percorso */
   function percorso(body, c) {
     c.completate = c.completate || [];
-    body.innerHTML = '<p class="muted">Spunta le lezioni svolte. Queste compaiono come competenze nell\'attestato.</p>' +
+    body.innerHTML = TD.riquadroPercorsoMisura(c) + '<p class="muted">Spunta le lezioni svolte. Queste compaiono come competenze nell\'attestato.</p>' +
       TD.PERCORSI.map(function (pc) {
         return '<section class="card"><h2 class="with-ico">' + I(pc.icona) + E(pc.nome) + ' <span class="muted text-small">livello attuale: ' + E(TD.livello((c.livelli || {})[pc.id] || 0).nome) + "</span></h2>" +
           TD.LIVELLI.map(function (lv) {
@@ -285,6 +288,7 @@
             }).join("") + "</div></div>";
           }).join("") + "</section>";
       }).join("");
+    TD.collegaPercorsoMisura(c);
     body.querySelectorAll("[data-lez]").forEach(function (cb) {
       cb.onchange = function () {
         const id = cb.dataset.lez;

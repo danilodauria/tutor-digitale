@@ -36,6 +36,14 @@ const out = {
   luoghi: TD.LUOGHI,
   glossario: TD.GLOSSARIO.map((g) => ({ liv: g[0], termine: g[1], definizione: g[2] })),
   conteggi: { lezioni: TD.LEZIONI.length, domande: TD.DOMANDE.length + TD.COMPLETA.length + TD.SEQUENZE.length, truffe: TD.TRUFFE.length, glossario: TD.GLOSSARIO.length },
-  versioni: versioni
+  versioni: versioni,
+  modelli: [],
+  guide: 0
 };
+/* percorsi modello e schermate guida: si leggono dai loro moduli senza eseguire l'interfaccia */
+{
+  const testoP = leggi("assets/js/views-percorsi.js");
+  out.modelli = [...testoP.matchAll(/\{ id: "m-[^"]+", nome: "([^"]+)"/g)].map((m) => m[1]);
+  out.guide = (leggi("assets/js/guide.js").match(/\{ id: "g-/g) || []).length;
+}
 process.stdout.write(JSON.stringify(out, null, 1));

@@ -19,7 +19,7 @@ const html = leggi("index.html"), sw = leggi("sw.js");
 const VER = JSON.parse(leggi("package.json")).version;
 const SOLO_ALLIEVO = ["app-allievo.js"];
 const SOLO_VERIFICA = ["verifica.js"];
-const SOLO_TUTOR = ["views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js", "views-lavoro.js"];
+const SOLO_TUTOR = ["views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js", "views-lavoro.js", "views-percorsi.js", "views-editor.js", "fattura.js"];
 js.forEach((f) => {
   if (SOLO_ALLIEVO.includes(f) || SOLO_VERIFICA.includes(f)) return;
   ok(html.includes('src="assets/js/' + f + '?v=' + VER + '"'), "index.html non carica " + f + " con ?v=" + VER);
@@ -62,7 +62,7 @@ const ctx = {
 };
 ctx.window = ctx; ctx.self = ctx; ctx.Blob = Blob;
 vm.createContext(ctx);
-["data-lezioni.js", "data-quiz.js", "data-documenti.js", "core.js", "pdf.js", "scambio.js", "views-lezioni.js", "views-quiz.js", "views-palestra.js", "views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js", "views-lavoro.js", "remoto.js", "qr.js"]
+["data-lezioni.js", "data-quiz.js", "data-documenti.js", "core.js", "pdf.js", "scambio.js", "views-lezioni.js", "views-quiz.js", "views-palestra.js", "views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js", "views-lavoro.js", "remoto.js", "qr.js", "relay.js", "fattura.js", "guide.js", "views-percorsi.js", "views-editor.js", "aula.js", "accessibilita.js"]
   .forEach((f) => vm.runInContext(leggi("assets/js/" + f), ctx, { filename: f }));
 const TD = ctx.TD;
 
@@ -241,6 +241,82 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
   ok(JSON.stringify(st.clienti.find((c) => c.id === "a").quiz) === "[50,80]", "statistiche: andamento dei quiz in ordine di data");
   ok(TD.incontriDelMese(dbS.clienti[0], "2026-03", false).length === 0 && TD.incontriDelMese(dbS.clienti[0], "2026-03", true).length === 1, "presenze: incontri pianificati solo se richiesti");
   ok(TD.incontriDelMese(dbS.clienti[1], "2026-01").length === 1, "presenze: incontri del mese dell'ente");
+
+  /* 14. percorsi su misura (7) */
+  TD.PERCORSI_MODELLO.forEach((m) => {
+    ok(m.incontri.length >= 2, "modello " + m.id + ": troppo pochi incontri");
+    m.incontri.forEach((inc) => inc.lezioni.forEach((id) => ok(!!TD.lezione(id), "modello " + m.id + ": lezione inesistente " + id)));
+  });
+  {
+    const cl = { id: "x", luogo: "A domicilio", partecipanti: [] };
+    const r = TD.assegnaPercorso(cl, TD.PERCORSI_MODELLO[0], { dal: "2026-12-01", ogni: 7, ora: "15:00" });
+    ok(r.appuntamenti === 4 && cl.registro.length === 4 && cl.registro[3].data === "2026-12-22" && cl.registro.every((x) => x.stato === "pianificata"), "percorso: 4 appuntamenti settimanali in agenda");
+    ok(r.compiti === TD.lezioniPercorso(TD.PERCORSI_MODELLO[0]).length, "percorso: un compito per ogni lezione diversa (" + r.compiti + ")");
+    ok(cl.compiti[0].scadenza === "2026-12-07", "percorso: scadenza del compito prima dell'incontro successivo");
+    TD.assegnaPercorso(cl, TD.PERCORSI_MODELLO[0], {});
+    ok(cl.compiti.length === r.compiti, "percorso: assegnare due volte non duplica i compiti aperti");
+  }
+
+  /* 15. editor: lezioni e domande proprie (8) */
+  {
+    const prima = TD.LEZIONI.length, primaD = TD.DOMANDE.length;
+    const lez = { id: "my-prova", dev: "pc", liv: 1, n: 9, titolo: "Lezione di prova", durata: 60, obiettivi: ["Uno"], spiegazione: ["Testo"], passi: ["A", "B"], esercizi: { facile: "f", medio: "m", esperto: "e" }, compito: "Fai la prova", digcomp: [1], immagini: [], personale: true };
+    ok(TD.validaLezione(lez).length === 0 && TD.validaLezione({ titolo: "" }).length >= 3, "editor: validazione delle lezioni");
+    ok(TD.validaDomanda([0, "pc", "D?", "Sì", ["No", "Forse", "Mai"], ""]).length === 0 && TD.validaDomanda([0, "pc", "D?", "Sì", ["Sì", "No", "Forse"], ""]).length === 1, "editor: validazione delle domande");
+    const n = TD.importaContenuti({ formato: "tutor-digitale-contenuti", lezioni: [lez, { id: "rotta" }], domande: [[0, "pc", "Domanda nuova di prova?", "Sì", ["No", "Forse", "Mai"], "Perché sì."], [0, "pc", TD.DOMANDE[0][2], "x", ["a", "b", "c"], ""]] });
+    ok(n.lezioni === 1 && n.domande === 1, "editor: importazione filtra i contenuti non validi o doppi");
+    ok(TD.LEZIONI.length === prima + 1 && TD.lezioniDi("pc", 1).some((l) => l.id === "my-prova") && TD.DOMANDE.length === primaD + 1, "editor: lezioni e domande proprie entrano nel programma");
+    const exp = TD.esportaContenuti();
+    ok(exp.lezioni.length === 1 && exp.domande.length === 1, "editor: esportazione");
+    let rif = false; try { TD.importaContenuti({ formato: "altro" }); } catch (e) { rif = true; }
+    ok(rif, "editor: un file estraneo deve essere rifiutato");
+    TD.db.personali = { lezioni: [], domande: [] }; TD.applicaPersonali();
+    ok(TD.LEZIONI.length === prima && TD.DOMANDE.length === primaD, "editor: togliendo i contenuti propri il programma torna come prima");
+  }
+
+  /* 16. schermate guida (9) */
+  TD.GUIDE.forEach((g) => {
+    ok(g.passi.length >= 2, "guida " + g.id + ": servono almeno due passi");
+    g.lezioni.forEach((id) => ok(!!TD.lezione(id), "guida " + g.id + ": lezione inesistente " + id));
+    g.passi.forEach((x, i) => { const svg = TD.svgPasso(x[0], x[1], i + 1); ok(svg.includes("stroke-dasharray") && svg.startsWith("<svg"), "guida " + g.id + " passo " + (i + 1) + ": manca il segno su «" + x[1] + "» in " + x[0]); });
+  });
+  ok(new Set(TD.GUIDE.map((g) => g.id)).size === TD.GUIDE.length && TD.GUIDE.length >= 10, "guide: almeno 10, id unici");
+  ok(TD.GUIDE.some((g) => g.dispositivo === "iPhone") && TD.GUIDE.some((g) => g.dispositivo === "Windows") && TD.GUIDE.some((g) => g.dispositivo === "Smart TV") && TD.GUIDE.some((g) => g.dispositivo === "Android"), "guide: Android, iPhone, Windows e TV");
+
+  /* 17. fattura elettronica (11) */
+  {
+    const F = TD.fattura;
+    ok(F.ePiva("12345678903") && !F.ePiva("12345678901") && F.eCf("RSSMRA70A41H501X") && !F.eCf("RSSMRA70A41H501"), "fattura: controllo di partita IVA e codice fiscale");
+    const prof = { nome: "Danilo D'Auria", cf: "DRADNL80A01H501U", piva: "12345678903", indirizzo: "Via Roma 1", cap: "00100", citta: "Roma", provincia: "RM", regimeFiscale: "RF19" };
+    const cli = { tipo: "persona", nome: "Maria", cognome: "Rossi", cf: "RSSMRA70A41H501X", indirizzo: "Via Po 2", cap: "00198", citta: "Roma" };
+    const f = F.xml(prof, cli, { numero: "12/2026", data: "2026-11-14", bolloAlCliente: true }, [{ voce: "Pacchetto 5 lezioni", qta: 1, prezzo: 135 }]);
+    ok(f.nomeFile === "ITDRADNL80A01H501U_05KMK.xml", "fattura: nome del file e progressivo (" + f.nomeFile + ")");
+    ok(f.xml.includes("<Natura>N2.2</Natura>") && f.xml.includes("<BolloVirtuale>SI</BolloVirtuale>") && f.xml.includes("<ImportoTotaleDocumento>137.00</ImportoTotaleDocumento>") && f.xml.includes("<CodiceDestinatario>0000000</CodiceDestinatario>") && f.xml.includes("<RegimeFiscale>RF19</RegimeFiscale>"), "fattura forfettaria: natura N2.2, bollo, totale");
+    const fo = F.xml(Object.assign({}, prof, { regimeFiscale: "RF01" }), cli, { numero: "1/2026", data: "2026-11-14" }, [{ voce: "Lezione", qta: 2, prezzo: 50 }]);
+    ok(fo.xml.includes("<AliquotaIVA>22.00</AliquotaIVA>") && fo.xml.includes("<Imposta>22.00</Imposta>") && fo.xml.includes("<ImportoTotaleDocumento>122.00</ImportoTotaleDocumento>") && !fo.xml.includes("DatiBollo"), "fattura ordinaria: IVA 22%");
+    let manca = null; try { F.xml({ nome: "X" }, cli, { numero: "1/2026", data: "2026-11-14" }, [{ voce: "a", qta: 1, prezzo: 1 }]); } catch (e) { manca = e.mancanti; }
+    ok(manca && manca.length >= 3, "fattura: senza partita IVA, codice fiscale e indirizzo non si genera");
+    { const sx = F.xml(prof, Object.assign({}, cli, { cognome: "Rossi & <C>" }), { numero: "2/2026", data: "2026-11-14" }, [{ voce: "Voce & <prova>", qta: 1, prezzo: 1 }]).xml; ok(sx.includes("<Cognome>Rossi &amp; &lt;C&gt;</Cognome>") && sx.includes("Voce &amp; &lt;prova&gt;"), "fattura: caratteri speciali protetti"); }
+  }
+
+  /* 18. modalità aula (12) e canale cifrato */
+  {
+    const qz = TD.aula.domandePubbliche(TD.generaQuiz({ liv: "", dev: "tutti", n: 8, tipi: ["mc", "vf", "completa"], cumulativo: true }));
+    ok(qz.length === 8 && qz.every((q) => q.giusta >= 0 && q.giusta < q.opzioni.length && q.opzioni.every((o) => typeof o === "string")), "aula: domande pronte per la TV");
+    ok(TD.aula.punti(true, 0, 30000) === 1000 && TD.aula.punti(true, 30000, 30000) === 500 && TD.aula.punti(false, 1, 30000) === 0, "aula: punteggio veloce/lento");
+    const cl = TD.aula.classifica({ a: { nome: "Ugo", punti: 900, giuste: 1 }, b: { nome: "Lia", punti: 1500, giuste: 2 } });
+    ok(cl[0].nome === "Lia" && cl[1].nome === "Ugo", "aula: classifica");
+    ok(JSON.stringify(TD.aula.distribuzione({ a: { scelta: 1 }, b: { scelta: 1 }, c: { scelta: 3 } }, 4)) === "[0,2,0,1]", "aula: distribuzione delle risposte");
+    const R = TD.relay._test;
+    const pk = R.publish("tutordigitale/v1/abc", new Uint8Array(300));
+    const lett = R.leggiPacchetti(new Uint8Array([...pk, ...pk.slice(0, 10)]));
+    ok(lett.pacchetti.length === 1 && lett.pacchetti[0].tipo === 3 && lett.resto.length === 10, "canale: pacchetti MQTT spezzati ricomposti");
+    const k1 = await R.chiaveAes(TD.relay.nuovaChiave()), k2 = await R.chiaveAes(TD.relay.nuovaChiave());
+    const cif = await R.cifra(k1, { t: "ciao", x: "àè" });
+    ok((await R.decifra(k1, cif)).x === "àè", "canale: cifratura e decifratura");
+    let altra = false; try { await R.decifra(k2, cif); } catch (e) { altra = true; }
+    ok(altra, "canale: con un'altra chiave il messaggio è illeggibile");
+  }
 })().then(fine, (e) => { ok(false, "scambio: " + e.stack); fine(); });
 
 function fine() {

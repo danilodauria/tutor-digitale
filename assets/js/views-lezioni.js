@@ -137,7 +137,7 @@
     const fatta = c && (c.completate || []).indexOf(l.id) >= 0;
     return '<a class="lesson-card liv-' + l.liv + (fatta ? " done" : "") + '" href="#/lezione/' + l.id + '">' +
       '<span class="lesson-top">' + TD.badgeLiv(l.liv) + '<span class="mins">' + I("clock") + l.durata + " min</span></span>" +
-      "<h3>" + E(l.titolo) + "</h3>" +
+      "<h3>" + E(l.titolo) + (l.personale ? ' <span class="pill">tua</span>' : "") + "</h3>" +
       "<p>" + E(l.obiettivi[0]) + "</p>" + (fatta ? '<span class="done-mark">' + I("check") + " svolta</span>" : "") + "</a>";
   }
   TD.cardLezione = cardLezione;
@@ -186,6 +186,7 @@
           '<section class="card"><h2>' + I("target") + "Obiettivi</h2><ul class=\"checks\">" + l.obiettivi.map(function (o) { return "<li>" + E(o) + "</li>"; }).join("") + "</ul></section>" +
           '<section class="card"><h2>' + I("bulb") + "Spiegazione</h2>" + l.spiegazione.map(function (s) { return '<p class="read">' + E(s) + "</p>"; }).join("") + "</section>" +
           '<section class="card"><h2>' + I("layers") + "Passo per passo</h2><ol class=\"steps\">" + l.passi.map(function (s) { return "<li><span>" + E(s) + "</span></li>"; }).join("") + "</ol></section>" +
+          ((l.immagini || []).length || (TD.guidePer && TD.guidePer(l).length) ? '<section class="card"><h2>' + I("screen") + "Schermate guida</h2>" + (TD.guidePer ? TD.guidePer(l).map(function (g) { return TD.guidaHtml(g, true); }).join("") : "") + (l.immagini || []).map(function (im) { return '<figure class="schermata"><img src="' + E(im.src) + '" alt="' + E(im.didascalia || "Schermata della lezione") + '" loading="lazy"><figcaption>' + E(im.didascalia || "") + "</figcaption></figure>"; }).join("") + "</section>" : "") +
           '<section class="card"><h2>' + I("star") + "Esercizi</h2><div class=\"ex-grid\">" +
             ["facile", "medio", "esperto"].map(function (k, i) {
               return '<div class="ex ex-' + k + '"><span class="ex-tag">' + ["Facile", "Medio", "Esperto"][i] + "</span><p>" + E(l.esercizi[k]) + "</p></div>";

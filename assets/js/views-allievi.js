@@ -75,7 +75,9 @@
     const p = await TD.scambio.impacchetta("kit", { id: c.id, partecipante: k.partecipante || "" }, {
       allievo: { nome: nomeAllievo(c, k.partecipante), clienteId: c.id, partecipante: k.partecipante || "", tipo: c.tipo, ente: c.tipo === "ente" ? TD.nomeCliente(c) : "", livelli: c.livelli || {}, dispositivi: c.dispositivi || [] },
       tutor: datiTutor(), segreto: a.segreto,
-      consegna: { id: k.id, data: k.data, scadenza: k.scadenza, messaggio: k.messaggio, compiti: k.compiti, quiz: TD.scambio.senzaSoluzioni(k.quiz) }
+      consegna: { id: k.id, data: k.data, scadenza: k.scadenza, messaggio: k.messaggio, compiti: k.compiti, quiz: TD.scambio.senzaSoluzioni(k.quiz) },
+      percorso: c.percorsoMisura ? { nome: c.percorsoMisura.nome, descr: c.percorsoMisura.descr || "", incontri: c.percorsoMisura.incontri.map(function (inc) { return { titolo: inc.titolo, lezioni: inc.lezioni }; }) } : null,
+      lezioniPersonali: TD.lezioniPersonaliPer ? TD.lezioniPersonaliPer(c, k) : []
     }, a.segreto);
     try { await TD.scambio.firmaPacchetto(p, await TD.chiaviTutor()); } catch (e) {}
     return p;

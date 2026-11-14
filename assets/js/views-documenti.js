@@ -27,7 +27,7 @@
           (att.some(function (a) { return a.pubblico; }) ? '<div class="actions"><button class="btn btn-sm" type="button" id="regPub">' + I("download") + "Registro pubblico (solo con consenso)</button></div>" : "") + "</section>" +
         '<div class="grid-2">' +
           '<section class="card"><h2>Registro degli attestati</h2>' + (att.length ? '<table class="table"><thead><tr><th>Codice</th><th>Intestatario</th><th>Data</th></tr></thead><tbody>' + att.map(function (a) { return "<tr><td><strong>" + E(a.codice) + "</strong></td><td>" + E(a.intestatario) + "</td><td>" + E(TD.dataIt(a.data)) + "</td></tr>"; }).join("") + "</tbody></table>" : '<p class="muted">Nessun attestato rilasciato.</p>') + "</section>" +
-          '<section class="card"><h2>Preventivi e ricevute</h2>' + (docs.length ? '<ul class="list">' + docs.map(function (d) { const c = TD.cliente(d.cliente); return '<li><a href="#/preventivo?doc=' + d.id + '"><span><strong>' + E(d.tipo === "ricevuta" ? "Ricevuta" : "Preventivo") + " " + E(d.numero) + "</strong> · " + E(TD.dataIt(d.data)) + " · " + E(c ? TD.nomeCliente(c) : d.intestatario || "") + " · " + TD.euro(d.totale) + "</span>" + I("arrow") + "</a></li>"; }).join("") + "</ul>" : '<p class="muted">Nessun documento.</p>') + "</section>" +
+          '<section class="card"><h2>Preventivi e ricevute</h2>' + (docs.length ? '<ul class="list">' + docs.map(function (d) { const c = TD.cliente(d.cliente); return '<li><a href="#/preventivo?doc=' + d.id + '"><span><strong>' + E(d.tipo === "ricevuta" ? "Ricevuta" : d.tipo === "fattura" ? "Fattura" : "Preventivo") + " " + E(d.numero) + "</strong> · " + E(TD.dataIt(d.data)) + " · " + E(c ? TD.nomeCliente(c) : d.intestatario || "") + " · " + TD.euro(d.totale) + "</span>" + I("arrow") + "</a></li>"; }).join("") + "</ul>" : '<p class="muted">Nessun documento.</p>') + "</section>" +
         "</div></div>";
     document.getElementById("ver").onsubmit = function (e) {
       e.preventDefault();
@@ -368,15 +368,15 @@
     const piva = pr.regime === "piva";
     app.innerHTML = TD.intest(esistente ? (d.tipo === "ricevuta" ? "Ricevuta " : "Preventivo ") + E(d.numero) : "Preventivo o ricevuta", "Le voci arrivano dal listino (modificabile in Impostazioni). Numerazione automatica per anno.") +
       '<div class="wrap"><div class="grid-2"><form class="card form" id="fp">' +
-        '<div class="grid-2"><label class="field"><span>Documento</span><select name="tipo"><option value="preventivo"' + (d.tipo !== "ricevuta" ? " selected" : "") + ">Preventivo</option><option value=\"ricevuta\"" + (d.tipo === "ricevuta" ? " selected" : "") + ">" + (piva ? "Riepilogo / pro-forma" : "Ricevuta prestazione occasionale") + "</option></select></label>" +
+        '<div class="grid-2"><label class="field"><span>Documento</span><select name="tipo"><option value="preventivo"' + (d.tipo !== "ricevuta" ? " selected" : "") + ">Preventivo</option><option value=\"ricevuta\"" + (d.tipo === "ricevuta" ? " selected" : "") + ">" + (piva ? "Riepilogo / pro-forma" : "Ricevuta prestazione occasionale") + "</option>" + (piva ? '<option value="fattura"' + (d.tipo === "fattura" ? " selected" : "") + ">Fattura elettronica (XML FatturaPA)</option>" : "") + "</select></label>" +
           '<label class="field"><span>Data</span><input name="data" type="date" value="' + E(d.data) + '"></label></div>' +
         '<label class="field"><span>Cliente</span><select name="cliente">' + TD.opzioniClienti(d.cliente) + "</select></label>" +
         '<div id="righe"></div><div class="actions"><select id="daListino" aria-label="Aggiungi voce dal listino"><option value="">+ voce dal listino…</option>' + TD.db.listino.map(function (l, i) { return '<option value="' + i + '">' + E(l.voce) + " · " + TD.euro(l.prezzo) + "</option>"; }).join("") + '</select><button type="button" class="btn btn-sm" id="rigaLibera">' + I("plus") + "Riga libera</button></div>" +
-        (piva ? "" : '<label class="check"><input type="checkbox" name="ritenuta"' + (d.ritenuta ? " checked" : "") + "> Applica ritenuta d'acconto 20% (se il cliente è un'azienda o un ente sostituto d'imposta)</label>") +
+        (piva ? '<label class="check"><input type="checkbox" name="bolloCliente"' + (d.bolloCliente ? " checked" : "") + "> Fattura senza IVA oltre 77,47 €: addebita al cliente i 2 € del bollo virtuale</label>" : '<label class="check"><input type="checkbox" name="ritenuta"' + (d.ritenuta ? " checked" : "") + "> Applica ritenuta d'acconto 20% (se il cliente è un'azienda o un ente sostituto d'imposta)</label>") +
         '<label class="field"><span>Note (validità, modalità di pagamento…)</span><textarea name="note" rows="3">' + E(d.note || (pr.pagamenti ? "Pagamento: " + pr.pagamenti : "")) + "</textarea></label>" +
         '<div id="totali" class="totals"></div>' +
         '<div class="actions"><button class="btn btn-primary" type="submit">' + I("download") + "Salva e scarica PDF</button><button type=\"button\" class=\"btn\" id=\"stampaP\">" + I("print") + "Stampa</button>" + (esistente ? '<button type="button" class="btn btn-danger" id="delP">' + I("trash") + "Elimina</button>" : "") + "</div>" +
-        '<p class="muted text-small">' + I("info") + " " + (piva ? "Con partita IVA la fattura va emessa in formato elettronico tramite il Sistema di Interscambio: questo documento è un riepilogo senza valore fiscale." : "Ricevuta per lavoro autonomo occasionale, fuori campo IVA (art. 5 DPR 633/72). Sopra 77,47 € va applicata la marca da bollo da 2 €. Verifica sempre con il tuo commercialista.") + "</p>" +
+        '<p class="muted text-small">' + I("info") + " " + (piva ? "Con «Fattura elettronica» il programma crea il file XML FatturaPA da caricare nel portale Fatture e Corrispettivi dell'Agenzia delle Entrate o da dare al commercialista, più il PDF di cortesia per il cliente. Il programma non trasmette nulla allo SDI: controlla sempre con il commercialista." : "Ricevuta per lavoro autonomo occasionale, fuori campo IVA (art. 5 DPR 633/72). Sopra 77,47 € va applicata la marca da bollo da 2 €. Verifica sempre con il tuo commercialista.") + "</p>" +
       '</form><div><div class="doc-preview" id="prevP"></div></div></div></div>';
 
     const f = document.getElementById("fp"), box = document.getElementById("righe");
@@ -389,21 +389,23 @@
     }
     function calcola() {
       const o = TD.form(f);
-      const imponibile = d.righe.reduce(function (s, r) { return s + (Number(r.qta) || 0) * (Number(r.prezzo) || 0); }, 0);
+      let imponibile = d.righe.reduce(function (s, r) { return s + (Number(r.qta) || 0) * (Number(r.prezzo) || 0); }, 0);
+      if (piva && o.tipo === "fattura") { const fc = TD.fattura.calcola(d.righe, pr, { bolloAlCliente: !!o.bolloCliente }); return { o: o, imponibile: fc.totale, iva: fc.imposta, ritenuta: 0, bollo: fc.bollo, netto: fc.totale, fc: fc }; }
       const rit = !piva && o.ritenuta ? Math.round(imponibile * 20) / 100 : 0;
       const bollo = !piva && o.tipo === "ricevuta" && imponibile > 77.47;
       return { o: o, imponibile: imponibile, ritenuta: rit, bollo: bollo, netto: imponibile - rit };
     }
     function totali() {
       const t = calcola();
-      document.getElementById("totali").innerHTML = "<div><span>Totale</span><strong>" + TD.euro(t.imponibile) + "</strong></div>" +
+      document.getElementById("totali").innerHTML = "<div><span>Totale" + (t.iva ? " (IVA 22% inclusa: " + TD.euro(t.iva) + ")" : "") + "</span><strong>" + TD.euro(t.imponibile) + "</strong></div>" + (t.fc && t.fc.bollo ? '<div class="muted"><span>Bollo virtuale da 2 € indicato nel file XML</span><span>' + (t.o.bolloCliente ? "addebitato" : "a tuo carico") + "</span></div>" : "") +
         (t.ritenuta ? "<div><span>Ritenuta d'acconto 20%</span><strong>− " + TD.euro(t.ritenuta) + "</strong></div><div><span>Netto da pagare</span><strong>" + TD.euro(t.netto) + "</strong></div>" : "") +
-        (t.bollo ? '<div class="muted"><span>Marca da bollo da 2 € sull\'originale</span><span>obbligatoria</span></div>' : "");
+        (t.bollo && !t.fc ? '<div class="muted"><span>Marca da bollo da 2 € sull\'originale</span><span>obbligatoria</span></div>' : "");
       clearTimeout(totali._t); totali._t = setTimeout(function () { pagine().then(function (pg) { TD.anteprima(document.getElementById("prevP"), pg.slice(0, 1)); }); }, 300);
     }
     function pagine() {
       const t = calcola(), o = t.o, c = TD.cliente(o.cliente);
       const num = d.numero || prossimoNumero(o.tipo, o.data);
+      if (o.tipo === "fattura") return pagineFattura(t, c, num);
       const doc = new TD.Documento({ titolo: (o.tipo === "ricevuta" ? "Ricevuta" : "Preventivo") + " " + num, piede: "Tutor Digitale · " + (pr.nome || "") });
       doc.intestazione(pr, o.tipo === "ricevuta" ? (piva ? "Riepilogo / pro-forma" : "Ricevuta") : "Preventivo");
       doc.h1((o.tipo === "ricevuta" ? (piva ? "Riepilogo n. " : "Ricevuta n. ") : "Preventivo n. ") + num);
@@ -417,6 +419,20 @@
       if (o.tipo === "preventivo") doc.piccolo("Preventivo valido 30 giorni. Le lezioni si svolgono nei giorni e orari concordati; la disdetta è gradita con almeno 24 ore di anticipo.");
       if (o.note) { doc.h2("Note"); doc.p(o.note, { size: 26 }); }
       return TD.immagine(pr.firma).then(function (im) { doc.firme([{ etichetta: "Firma", immagine: im, nome: pr.nome }]); return doc.chiudi(); });
+    }
+    function pagineFattura(t, c, num) {
+      const fc = t.fc;
+      const doc = new TD.Documento({ titolo: "Fattura " + num, piede: "Copia di cortesia · l'originale è il file XML trasmesso tramite il Sistema di Interscambio" });
+      doc.intestazione(pr, "Fattura");
+      doc.h1("Fattura n. " + num);
+      doc.campi([["Data", TD.dataIt(t.o.data)], ["Cliente", c ? TD.nomeCliente(c) : ""], ["Indirizzo", c ? [c.indirizzo, c.cap, c.citta, c.provincia].filter(Boolean).join(" ") : ""], ["C.F. / P. IVA", c ? (c.cf || c.piva || "") : ""], ["Cedente", (pr.nome || "") + " · P. IVA " + (pr.piva || "")], ["Codice fiscale", pr.cf || ""]]);
+      doc.tabella(["Descrizione", "Q.tà", "Prezzo", "Importo"], fc.linee.map(function (l) { return [l.descr, String(l.qta).replace(".", ","), TD.euro(l.prezzo), TD.euro(l.totale)]; }), [0.52, 0.1, 0.18, 0.2], { destra: [1, 2, 3] });
+      doc.p("Imponibile: " + TD.euro(fc.imponibile) + (fc.imposta ? " · IVA 22%: " + TD.euro(fc.imposta) : ""), { size: 28 });
+      doc.p("Totale documento: " + TD.euro(fc.totale), { size: 34, peso: 700 });
+      if (fc.senzaIva) doc.piccolo((pr.regimeFiscale === "RF02" ? "Operazione senza IVA ai sensi dell'art. 27, commi 1 e 2, D.L. 98/2011 (regime dei minimi)." : "Operazione in franchigia da IVA ai sensi dell'art. 1, commi 54-89, L. 190/2014 (regime forfettario). Compenso non soggetto a ritenuta d'acconto.") + (fc.bollo ? " Imposta di bollo da 2,00 € assolta in modo virtuale." : ""));
+      if (pr.iban) doc.piccolo("Pagamento con bonifico: IBAN " + pr.iban + ".");
+      if (t.o.note) { doc.h2("Note"); doc.p(t.o.note, { size: 26 }); }
+      return Promise.resolve(doc.chiudi());
     }
     function prossimoNumero(tipo, data) {
       const anno = (data || TD.oggi()).slice(0, 4);
@@ -435,10 +451,18 @@
       const t = calcola();
       if (!d.righe.length) { TD.toast("Aggiungi almeno una voce."); return; }
       if (!d.numero || d.tipo !== t.o.tipo) d.numero = prossimoNumero(t.o.tipo, t.o.data);
-      Object.assign(d, { tipo: t.o.tipo, data: t.o.data, cliente: t.o.cliente, note: t.o.note, ritenuta: !!t.o.ritenuta, totale: t.imponibile, netto: t.netto, intestatario: TD.cliente(t.o.cliente) ? TD.nomeCliente(TD.cliente(t.o.cliente)) : "" });
+      if (t.o.tipo === "fattura") {
+        let f;
+        try { f = TD.fattura.xml(pr, TD.cliente(t.o.cliente), { numero: d.numero, data: t.o.data, bolloAlCliente: !!t.o.bolloCliente, causale: t.o.note ? t.o.note.slice(0, 200) : "" }, d.righe); }
+        catch (err) { TD.toast(err.message); if (!esistente) d.numero = ""; return; }
+        TD.scarica(new Blob([f.xml], { type: "application/xml" }), f.nomeFile);
+        d.xml = f.nomeFile;
+      }
+      Object.assign(d, { tipo: t.o.tipo, data: t.o.data, cliente: t.o.cliente, note: t.o.note, ritenuta: !!t.o.ritenuta, bolloCliente: !!t.o.bolloCliente, totale: t.imponibile, netto: t.netto, intestatario: TD.cliente(t.o.cliente) ? TD.nomeCliente(TD.cliente(t.o.cliente)) : "" });
       if (!esistente) TD.db.documenti.push(d);
       TD.salva();
-      pagine().then(function (pg) { TD.scaricaPdf(pg, d.tipo + "-" + d.numero.replace("/", "-") + ".pdf", { titolo: d.tipo + " " + d.numero }); });
+      pagine().then(function (pg) { TD.scaricaPdf(pg, d.tipo + "-" + d.numero.replace("/", "-") + (d.tipo === "fattura" ? "-cortesia" : "") + ".pdf", { titolo: d.tipo + " " + d.numero }); });
+      if (d.tipo === "fattura") TD.toast("Fattura " + d.numero + ": scaricati il file XML (per lo SDI) e il PDF di cortesia.");
       if (!esistente) history.replaceState(null, "", "#/preventivo?doc=" + d.id);
     };
     document.getElementById("stampaP").onclick = function () { pagine().then(TD.stampa); };
