@@ -11,7 +11,7 @@ Elenco ragionato, dal più utile e semplice al più ambizioso. ★ = impatto, �
 5. ✅ *fatto in 1.3.0* — **Backup cifrato con password** ★★★ ⏱ — l'esportazione dell'archivio clienti si cifra (AES) e si può tenere su chiavetta o cloud senza rischi per la privacy.
 6. ✅ *fatto in 1.3.0* — **Registro presenze stampabile per gli enti** ★★ ⏱ — foglio mensile con date, ore e firme, utile per rendicontare a Comuni e associazioni.
 
-## Medio termine
+## Medio termine (1.4)
 
 7. ✅ *fatto in 1.4.0* — **Percorsi su misura** ★★★ ⏱⏱ — il tutor compone un percorso (es. «SPID in 4 incontri») scegliendo lezioni ed esercizi, e lo assegna con un solo kit.
 8. ✅ *fatto in 1.4.0* — **Editor delle lezioni e delle domande** ★★★ ⏱⏱ — aggiungere lezioni, domande e immagini proprie dal programma, con esportazione e importazione.
@@ -20,13 +20,17 @@ Elenco ragionato, dal più utile e semplice al più ambizioso. ★ = impatto, �
 11. ✅ *fatto in 1.4.0* — **Fattura elettronica** ★★ ⏱⏱ — esportazione del documento in XML FatturaPA per chi ha la partita IVA, da caricare nel portale dell'Agenzia delle Entrate o nel programma del commercialista.
 12. ✅ *fatto in 1.4.0* — **Modalità gruppo in aula** ★★★ ⏱⏱ — quiz «tutti insieme»: il tutor proietta la domanda sulla Smart TV, i partecipanti rispondono dal loro telefono collegandosi alla sessione.
 
-## Ambiziose
+## Ambiziose (1.5)
 
-13. **Sincronizzazione tra i tuoi dispositivi** ★★★ ⏱⏱⏱ — archivio clienti allineato tra PC, tablet e telefono via collegamento diretto (come l'assistenza a distanza) o tramite il tuo «GitHub di casa».
-14. **Casella condivisa online** ★★ ⏱⏱⏱ — una cartella cifrata (per esempio su un repository privato o su un piccolo server di casa) dove allievi e tutor lasciano file con credenziali e password a tempo, senza passare dall'email.
-15. **Assistente vocale locale** ★★ ⏱⏱⏱ — l'allievo fa domande a voce e l'app risponde dalle lezioni (come Neura dello Psicologo Digitale), senza Internet.
-16. **Controllo remoto completo** ★★ ⏱⏱⏱ — integrazione guidata con RustDesk (libero, installabile) per muovere davvero il mouse sul PC dell'allievo quando serve.
-17. **Versione desktop (.exe, .deb, .AppImage)** ★★ ⏱⏱ — come per lo Psicologo Digitale, con un pacchetto Electron che funziona anche su PC vecchi e si integra con FeniceOS.
+13. ✅ *fatto in 1.5.0* — **Sincronizzazione tra i tuoi dispositivi** ★★★ ⏱⏱⏱ — archivio clienti allineato tra PC, tablet e telefono via collegamento diretto (come l'assistenza a distanza) o tramite il tuo «GitHub di casa».
+14. ✅ *fatto in 1.5.0* — **Casella condivisa online** ★★ ⏱⏱⏱ — una cartella cifrata (per esempio su un repository privato o su un piccolo server di casa) dove allievi e tutor lasciano file con credenziali e password a tempo, senza passare dall'email.
+15. ✅ *fatto in 1.5.0* — **Assistente vocale locale** ★★ ⏱⏱⏱ — l'allievo fa domande a voce e l'app risponde dalle lezioni (come Neura dello Psicologo Digitale), senza Internet.
+16. ✅ *fatto in 1.5.0* — **Controllo remoto completo** ★★ ⏱⏱⏱ — integrazione guidata con RustDesk (libero, installabile) per muovere davvero il mouse sul PC dell'allievo quando serve.
+17. ✅ *fatto in 1.5.0* — **Versione desktop (.exe, .deb, .AppImage)** ★★ ⏱⏱ — come per lo Psicologo Digitale, con un pacchetto Electron che funziona anche su PC vecchi e si integra con FeniceOS.
 18. ✅ *fatto in 1.3.0* — **Attestato con QR di verifica** ★★ ⏱ — il QR sull'attestato apre una pagina che conferma codice, intestatario e data (registro pubblico facoltativo, solo con consenso).
 19. ✅ *fatto in 1.4.0* — **Accessibilità certificata** ★★★ ⏱⏱ — prova con lettori di schermo (NVDA, TalkBack, VoiceOver), contrasto elevato, modalità «un pulsante alla volta» per chi ha difficoltà motorie.
-20. **Kit per altri tutor** ★★ ⏱⏱ — licenza commerciale ai formatori di associazioni ed enti: il tuo programma diventa un prodotto, con il tuo marchio e il listino delle licenze.
+20. ✅ *fatto in 1.5.0* — **Kit per altri tutor** ★★ ⏱⏱ — licenza commerciale ai formatori di associazioni ed enti: il tuo programma diventa un prodotto, con il tuo marchio e il listino delle licenze.
+
+## Nuove idee
+
+Tutte le voci sono completate. Per le prossime versioni si possono aggiungere qui nuove idee, con ★ impatto e ⏱ lavoro: il promemoria settimanale le leggerà.

@@ -469,6 +469,61 @@ def costruisci(percorso, formato, d):
         "Funziona con i lettori di schermo NVDA, TalkBack e VoiceOver e con il solo tasto Tab; le pagine sono controllate con lo strumento automatico axe sulle regole WCAG 2 AA.",
     ])
 
+    # ------------------------------------------------------------ 1.5
+    cap("I tuoi dispositivi sempre allineati")
+    passi([
+        "Sul dispositivo principale: Altro › <b>Sincronizza i dispositivi</b> › «Crea l'abbinamento».",
+        "Sugli altri tuoi dispositivi inquadra il QR (o apri il link): si abbinano da soli. Il link contiene la chiave segreta: non mandarlo ad altri.",
+        "Quando vuoi allinearli, apri «Sincronizza» e premi il pulsante su <b>due</b> dispositivi insieme, entrambi con Internet: si scambiano l'archivio cifrato e lo uniscono.",
+    ])
+    p("Vince sempre la modifica più recente, cliente per cliente e documento per documento; ciò che hai cancellato su "
+      "uno sparisce anche sull'altro. Senza Internet: backup cifrato su chiavetta (o sul «GitHub di casa») e, "
+      "sull'altro dispositivo, Importa backup › <b>Unisci</b>.")
+
+    cap("Casella condivisa con l'allievo")
+    p("Ogni cliente ha una <b>casella</b> cifrata (pulsante «Casella» nella scheda; nell'app Allievo arriva con il kit) "
+      "dove vi lasciate note, <b>password con scadenza</b> (1 ora, 1 giorno, 7 o 30 giorni) e piccoli file fino a 150 kB, "
+      "senza passare dall'email. Le voci scadute si cancellano da sole su entrambi i dispositivi.")
+    box("La casella passa da un canale pubblico gratuito che conserva solo l'ultima versione cifrata (AES-256): "
+        "nessuno può leggerla, ma il servizio non ha garanzie. Per documenti importanti tieni anche una copia; per i "
+        "file grandi usa l'assistenza a distanza.", "attenzione")
+
+    cap("Assistente vocale")
+    p("«<b>Chiedi all'assistente</b>» (nell'app Allievo e in Altro): si fa una domanda a voce o scrivendo, per esempio "
+      "«come mando una foto su WhatsApp?». L'assistente cerca nelle %d lezioni, nelle schermate guida, nel glossario e "
+      "nelle domande frequenti, risponde con i passi e la lettura ad alta voce, e apre la lezione giusta. La ricerca "
+      "avviene sul dispositivo, anche senza Internet." % k["lezioni"])
+    box("Il microfono usa il riconoscimento vocale del browser, che su alcuni telefoni e computer ha bisogno di "
+        "Internet. Senza rete basta scrivere la domanda: la risposta arriva lo stesso.", "info")
+
+    cap("Controllo completo con RustDesk")
+    passi([
+        "Installa <b>RustDesk</b> (gratuito e libero, da rustdesk.com/download) sul tuo computer e su quello dell'allievo.",
+        "Nella scheda del cliente scrivi il suo <b>ID RustDesk</b>: compare il pulsante «RustDesk» che apre il collegamento.",
+        "Fatti dettare la password monouso, o falla mettere nella Casella con scadenza di 1 ora; l'allievo preme «Accetta».",
+    ])
+    p("La guida per l'allievo è nella sua app, in «Aiuto a distanza». Prima di collegarti serve la liberatoria firmata.")
+
+    cap("Versione desktop")
+    p("Oltre alla versione nel browser, ogni Release su GitHub contiene i <b>programmi da installare</b>: "
+      "<b>.exe</b> per Windows (anche portatile in ZIP), <b>.deb</b> e <b>.AppImage</b> per Linux e FeniceOS, <b>.dmg</b> per Mac. "
+      "Funzionano senza Internet, tengono i dati nel profilo dell'utente del computer e si aggiornano da soli.")
+    elenco([
+        "Windows: al primo avvio può comparire «Windows ha protetto il PC»: «Ulteriori informazioni» › «Esegui comunque» (il programma non ha un certificato a pagamento).",
+        "Mac: la prima volta tasto destro sull'app › «Apri».",
+        "PC molto vecchi (Windows 7 o precedenti): usa la versione nel browser, che funziona anche lì con un browser aggiornato.",
+        "I dati della versione desktop e quelli del browser sono archivi separati: per passarli usa la sincronizzazione o il backup.",
+    ])
+
+    cap("Kit per altri tutor")
+    p("Altro › <b>Kit per altri tutor</b>: il programma diventa un prodotto da offrire a formatori di associazioni ed enti.")
+    elenco([
+        "<b>Marchio</b>: nome dell'attività, colore e logo su documenti, attestati e app Allievo, sempre con la dicitura «realizzato con Tutor Digitale di Danilo D'Auria».",
+        "<b>Listino delle licenze</b>: prezzi annui proposti per formatore singolo, associazione ed ente, modificabili, con la scheda prodotto in PDF.",
+        "<b>Emetti una licenza</b>: crea il file .tdlicenza firmato con la tua chiave e il certificato PDF; il formatore lo importa e il programma ne verifica firma e scadenza.",
+    ])
+    p("Le regole per i licenziatari sono nel file LICENZA-FORMATORI.md del progetto.")
+
     # ------------------------------------------------------------ 10
     cap("10. Agenda e strumenti")
     elenco([
@@ -504,6 +559,8 @@ def costruisci(percorso, formato, d):
         ["«Password sbagliata o file danneggiato»", "Controlla maiuscole e trattini della password del backup; prova una copia precedente."],
         ["Il QR dell'attestato non si legge", "Stampa a qualità normale o alta, non in bozza; inquadra con più luce. In alternativa si incolla il link nella pagina verifica."],
         ["Il registro presenze è vuoto", "Gli incontri del mese devono essere «svolti» e i presenti spuntati nel registro."],
+        ["L'aula, la casella o la sincronizzazione non si collegano", "Servono Internet su tutti i dispositivi. Alcune reti (scuole, uffici) bloccano il canale: prova con l'hotspot del telefono. In aula resta l'alzata di mano."],
+        ["La fattura elettronica non si genera", "Il messaggio dice cosa manca: di solito CAP, codice fiscale o partita IVA tuoi o del cliente."],
         ["Le notifiche dei compiti non arrivano", "Su alcuni telefoni arrivano solo ad app aperta: usa «Promemoria nel calendario»."],
         ["«Spazio del browser pieno»", "Esporta un backup cifrato, poi elimina allegati e foto vecchie dalle consegne corrette."],
     ], ["Che cosa succede", "Che cosa fare"], st, doc, [0.4, 0.6]))

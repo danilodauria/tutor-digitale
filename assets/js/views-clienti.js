@@ -165,6 +165,8 @@
         '<div class="head-actions">' +
           '<button class="btn ' + (attivo ? "btn-ok" : "btn-primary") + '" id="attiva">' + I(attivo ? "check" : "play") + (attivo ? "In lezione ora" : "Inizia la lezione") + "</button>" +
           '<a class="btn" href="#/cliente/' + c.id + '/modifica">' + I("pen") + "Modifica</a>" +
+          '<a class="btn" href="#/casella/' + c.id + '">' + I("lock") + "Casella</a>" +
+          (c.rustdesk ? '<a class="btn" href="rustdesk://' + E(String(c.rustdesk).replace(/\s+/g, "")) + '">' + I("screen") + "RustDesk</a>" : "") +
         "</div>" +
       "</div>" +
       '<div class="wrap"><nav class="tabs" role="tablist">' + TABS.map(function (t) { return '<a role="tab" class="' + (t[0] === tab ? "on" : "") + '" href="#/cliente/' + c.id + "?tab=" + t[0] + '">' + t[1] + "</a>"; }).join("") + "</nav></div></header>" +

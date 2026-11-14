@@ -77,7 +77,9 @@
       tutor: datiTutor(), segreto: a.segreto,
       consegna: { id: k.id, data: k.data, scadenza: k.scadenza, messaggio: k.messaggio, compiti: k.compiti, quiz: TD.scambio.senzaSoluzioni(k.quiz) },
       percorso: c.percorsoMisura ? { nome: c.percorsoMisura.nome, descr: c.percorsoMisura.descr || "", incontri: c.percorsoMisura.incontri.map(function (inc) { return { titolo: inc.titolo, lezioni: inc.lezioni }; }) } : null,
-      lezioniPersonali: TD.lezioniPersonaliPer ? TD.lezioniPersonaliPer(c, k) : []
+      lezioniPersonali: TD.lezioniPersonaliPer ? TD.lezioniPersonaliPer(c, k) : [],
+      casella: TD.casellaPer ? TD.casellaPer(c) : null,
+      marchio: TD.marchioPubblico ? TD.marchioPubblico() : null
     }, a.segreto);
     try { await TD.scambio.firmaPacchetto(p, await TD.chiaviTutor()); } catch (e) {}
     return p;

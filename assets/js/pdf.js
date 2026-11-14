@@ -178,9 +178,12 @@ window.TD = window.TD || {};
   };
   Documento.prototype.intestazione = function (prof, sottotitolo) {
     const x = this.x;
-    x.fillStyle = this.colore; x.fillRect(0, 0, this.W, 18);
-    if (TD.logoImg && TD.logoImg.complete) { try { x.drawImage(TD.logoImg, this.m, this.m - 40, 96, 96); } catch (e) {} }
-    x.font = "700 40px " + SERIF; x.fillStyle = this.colore; x.fillText("Tutor Digitale", this.m + 120, this.m + 4);
+    const mar = TD.marchio ? TD.marchio() : null;
+    const colore = mar && mar.colore ? mar.colore : this.colore;
+    x.fillStyle = colore; x.fillRect(0, 0, this.W, 18);
+    const logo = mar && mar.logo && TD.logoMarchioImg && TD.logoMarchioImg.complete ? TD.logoMarchioImg : TD.logoImg;
+    if (logo && logo.complete) { try { const h = 96, w = Math.min(220, logo.width * h / logo.height || 96); x.drawImage(logo, this.m, this.m - 40, w, h); } catch (e) {} }
+    x.font = "700 40px " + SERIF; x.fillStyle = colore; x.fillText(mar && mar.nome ? mar.nome : "Tutor Digitale", this.m + 120, this.m + 4);
     x.font = "400 24px " + SANS; x.fillStyle = "#4b5563";
     x.fillText(sottotitolo || "Lezioni di tecnologia su misura", this.m + 120, this.m + 42);
     x.textAlign = "right"; x.font = "600 26px " + SANS; x.fillStyle = "#111827";
@@ -197,7 +200,7 @@ window.TD = window.TD || {};
     this.pagine.forEach(function (c, i) {
       const x = c.getContext("2d");
       x.font = "400 21px " + SANS; x.fillStyle = "#9ca3af";
-      if (self.piede) x.fillText(self.piede, self.m, self.H - 60);
+      if (self.piede) x.fillText(self.piede + (TD.marchio && TD.marchio() && TD.marchio().nome ? " · realizzato con Tutor Digitale di Danilo D'Auria" : ""), self.m, self.H - 60);
       x.textAlign = "right"; x.fillText("Pagina " + (i + 1) + " di " + n, self.W - self.m, self.H - 60); x.textAlign = "left";
     });
     return this.pagine;

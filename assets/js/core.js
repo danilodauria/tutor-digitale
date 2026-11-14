@@ -8,7 +8,7 @@ window.TD = window.TD || {};
 (function () {
   "use strict";
 
-  TD.VERSIONE = "1.4.0";
+  TD.VERSIONE = "1.5.0";
   TD.MODO = TD.MODO || "tutor";
   const KEY = TD.MODO === "allievo" ? "tutor-digitale-allievo:v1:db" : "tutor-digitale:v1:db";
   TD.CHIAVE = KEY;
@@ -48,16 +48,93 @@ window.TD = window.TD || {};
     if (TD.DOMANDE) { TD.DOMANDE.length = 0; BASE_DOM.concat((p.domande || []).filter(function (q) { return Array.isArray(q) && q[2] && q[3] && q[4] && q[4].length === 3; })).forEach(function (q) { TD.DOMANDE.push(q); }); }
   };
   TD.applicaPersonali();
+  /* ------------------------------------------------------------ timbri per la sincronizzazione (13)
+     ogni elemento riceve _m (ultima modifica) quando il suo contenuto cambia;
+     gli elementi tolti finiscono in «eliminati», così l'altro dispositivo li toglie a sua volta */
+  const COLLEZIONI = ["clienti", "documenti", "attestati", "percorsiMisura", "schermate", "personali.lezioni"];
+  function prendi(db, k) { const p = k.split("."); let o = db; for (let i = 0; i < p.length; i++) { if (!o) return null; o = o[p[i]]; } return Array.isArray(o) ? o : null; }
+  function chiave(x) { return x && (x.id || x.codice); }
+  function impronta(s) { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36) + s.length.toString(36); }
+  function senzaTimbri(k, v) { return k === "_m" || k === "_h" ? undefined : v; }
+  const ID_VISTI = {};
+  TD.timbra = function (db, primaVolta) {
+    if (TD.MODO === "allievo") return;
+    const ora = Date.now();
+    db.eliminati = db.eliminati || [];
+    COLLEZIONI.forEach(function (k) {
+      const arr = prendi(db, k) || [], ids = {};
+      arr.forEach(function (x) {
+        const id = chiave(x); if (!id) return; ids[id] = 1;
+        const h = impronta(JSON.stringify(x, senzaTimbri));
+        if (x._h !== h) { x._h = h; x._m = x._m && primaVolta ? x._m : ora; }
+      });
+      if (!primaVolta && ID_VISTI[k]) Object.keys(ID_VISTI[k]).forEach(function (id) { if (!ids[id]) db.eliminati.push({ k: k, id: id, t: ora }); });
+      ID_VISTI[k] = ids;
+    });
+    db._oggetti = db._oggetti || {};
+    ["profilo", "listino"].forEach(function (k) {
+      const h = impronta(JSON.stringify(db[k] || null, function (kk, v) { return kk === "chiavi" ? undefined : v; }));
+      const o = db._oggetti[k] || {};
+      if (o.h !== h) db._oggetti[k] = { h: h, m: o.h && !primaVolta ? ora : (o.m || ora) };
+    });
+    if (db.eliminati.length > 800) db.eliminati = db.eliminati.slice(-800);
+  };
+  TD.COLLEZIONI_SYNC = COLLEZIONI;
+  TD.timbra(TD.db, true);
+
+  /* unione di due archivi dello stesso tutor: vince la modifica più recente */
+  TD.unisciDati = function (a, b) {
+    const ris = { aggiunti: 0, aggiornati: 0, tolti: 0 };
+    a.eliminati = a.eliminati || [];
+    const elimA = {}; a.eliminati.forEach(function (e) { elimA[e.k + "|" + e.id] = Math.max(elimA[e.k + "|" + e.id] || 0, e.t); });
+    const elimB = {}; (b.eliminati || []).forEach(function (e) { elimB[e.k + "|" + e.id] = Math.max(elimB[e.k + "|" + e.id] || 0, e.t); });
+    COLLEZIONI.forEach(function (k) {
+      let arrA = prendi(a, k);
+      if (!arrA) { if (k === "personali.lezioni") { a.personali = a.personali || { lezioni: [], domande: [] }; a.personali.lezioni = a.personali.lezioni || []; arrA = a.personali.lezioni; } else { a[k] = []; arrA = a[k]; } }
+      const arrB = prendi(b, k) || [];
+      const indice = {}; arrA.forEach(function (x, i) { indice[chiave(x)] = i; });
+      arrB.forEach(function (y) {
+        const id = chiave(y); if (!id) return;
+        if (indice[id] == null) {
+          if ((elimA[k + "|" + id] || 0) >= (y._m || 0)) return;
+          arrA.push(JSON.parse(JSON.stringify(y))); indice[id] = arrA.length - 1; ris.aggiunti++;
+        } else if ((y._m || 0) > (arrA[indice[id]]._m || 0)) { arrA[indice[id]] = JSON.parse(JSON.stringify(y)); ris.aggiornati++; }
+      });
+      for (let i = arrA.length - 1; i >= 0; i--) {
+        const t = elimB[k + "|" + chiave(arrA[i])];
+        if (t && t >= (arrA[i]._m || 0)) { arrA.splice(i, 1); ris.tolti++; }
+      }
+    });
+    if (b.personali && Array.isArray(b.personali.domande)) {
+      a.personali = a.personali || { lezioni: [], domande: [] }; a.personali.domande = a.personali.domande || [];
+      b.personali.domande.forEach(function (q) { if (!a.personali.domande.some(function (x) { return x[2] === q[2]; })) { a.personali.domande.push(q); ris.aggiunti++; } });
+    }
+    a._oggetti = a._oggetti || {};
+    ["profilo", "listino"].forEach(function (k) {
+      const ma = (a._oggetti[k] || {}).m || 0, mb = ((b._oggetti || {})[k] || {}).m || 0;
+      if (b[k] && mb > ma) {
+        const chiavi = k === "profilo" && a.profilo ? a.profilo.chiavi : null;
+        a[k] = JSON.parse(JSON.stringify(b[k]));
+        if (k === "profilo" && !a.profilo.chiavi && chiavi) a.profilo.chiavi = chiavi;
+        a._oggetti[k] = b._oggetti[k]; ris.aggiornati++;
+      }
+    });
+    const visti = {};
+    a.eliminati = a.eliminati.concat(b.eliminati || []).filter(function (e) { const kk = e.k + "|" + e.id + "|" + e.t; if (visti[kk]) return false; visti[kk] = 1; return true; }).slice(-800);
+    return ris;
+  };
+
   TD.salva = function () {
+    try { TD.timbra(TD.db, false); } catch (e) {}
     try { localStorage.setItem(KEY, JSON.stringify(TD.db)); return true; }
     catch (e) { TD.toast("Spazio del browser pieno: esporta un backup e libera spazio."); return false; }
   };
-  TD.azzera = function () { TD.db = vuoto(); TD.salva(); TD.applicaPersonali(); };
+  TD.azzera = function () { TD.db = vuoto(); TD.timbra(TD.db, true); TD.salva(); TD.applicaPersonali(); };
   TD.importa = function (obj) {
     if (!obj || !Array.isArray(obj.clienti)) throw new Error("File non valido");
     const base = vuoto();
     Object.keys(base).forEach(function (k) { if (obj[k] == null) obj[k] = base[k]; });
-    TD.db = obj; TD.salva(); TD.applicaPersonali();
+    TD.db = obj; TD.timbra(TD.db, true); TD.salva(); TD.applicaPersonali();
   };
 
   /* ------------------------------------------------------------ utilità */

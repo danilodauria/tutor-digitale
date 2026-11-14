@@ -219,7 +219,19 @@
   }
   function guida() {
     return '<section class="card"><h2>' + I("info") + 'Come funziona</h2><ol class="steps"><li><span>Chi apre la sessione manda il <strong>codice</strong> e dice la <strong>password</strong> (cambia a ogni sessione e ogni 10 minuti).</span></li><li><span>L\'altro incolla il codice, scrive la password e rimanda il <strong>codice di risposta</strong>.</span></li><li><span>Incollata la risposta, siete collegati: schermo, chat e file viaggiano direttamente tra i due dispositivi, cifrati.</span></li></ol>' +
-      '<p class="muted text-small">Il browser permette di <strong>vedere</strong> lo schermo dell\'altro ma non di muovere il suo mouse: per il controllo completo del computer si usa un programma dedicato come RustDesk (gratuito e libero). Su alcune reti aziendali molto chiuse il collegamento diretto può non riuscire: in quel caso basta usare l\'hotspot del telefono.</p></section>';
+      '<p class="muted text-small">Il browser permette di <strong>vedere</strong> lo schermo dell\'altro ma non di muovere il suo mouse: per il controllo completo del computer si usa un programma dedicato come RustDesk (gratuito e libero). Su alcune reti aziendali molto chiuse il collegamento diretto può non riuscire: in quel caso basta usare l\'hotspot del telefono.</p></section>' + rustdesk();
+  }
+  /* controllo completo del computer con RustDesk (miglioria 16): libero, gratuito, si installa una volta */
+  function rustdesk() {
+    const allievo = TD.MODO === "allievo";
+    const clienti = allievo ? [] : TD.db.clienti.filter(function (c) { return c.rustdesk; });
+    return '<section class="card" id="rustdesk"><h2>' + I("screen") + 'Controllo completo del computer con RustDesk</h2>' +
+      '<p>Quando serve muovere davvero il mouse sul computer ' + (allievo ? "tuo" : "dell'allievo") + ' (installare un programma, sistemare un\'impostazione), si usa <strong>RustDesk</strong>: libero, gratuito e senza account. Si installa una volta su entrambi i computer.</p>' +
+      (allievo
+        ? '<ol class="steps"><li><span>Scarica RustDesk dal sito ufficiale <a href="https://rustdesk.com/download" target="_blank" rel="noopener">rustdesk.com/download</a> e installalo (o usa la versione portatile).</span></li><li><span>Aprilo: a sinistra trovi <strong>«Il tuo ID»</strong> (9 o 10 cifre) e una <strong>password monouso</strong>.</span></li><li><span>Detta ID e password al tutor, o mettili nella <a href="#/casella">Casella</a> con scadenza di 1 ora.</span></li><li><span>Quando il tutor si collega compare una finestra: premi <strong>«Accetta»</strong>. Puoi chiudere la sessione in qualsiasi momento.</span></li></ol>'
+        : '<ol class="steps"><li><span>Installa RustDesk sul tuo computer da <a href="https://rustdesk.com/download" target="_blank" rel="noopener">rustdesk.com/download</a>.</span></li><li><span>Fai installare RustDesk anche all\'allievo (c\'è la guida nella sua app, in «Aiuto a distanza»).</span></li><li><span>Scrivi l\'<strong>ID RustDesk</strong> nella scheda del cliente (Modifica): compare il pulsante «RustDesk» che apre il collegamento.</span></li><li><span>La password monouso fattela dettare o lasciare nella Casella con scadenza di 1 ora; l\'allievo deve premere «Accetta».</span></li></ol>' +
+          (clienti.length ? '<div class="actions">' + clienti.map(function (c) { return '<a class="btn btn-sm" href="rustdesk://' + E(String(c.rustdesk).replace(/\s+/g, "")) + '">' + I("screen") + E(TD.nomeCliente(c)) + "</a>"; }).join("") + "</div>" : "")) +
+      '<p class="muted text-small">Prima di collegarti ricorda la liberatoria firmata (uso dei dispositivi personali). RustDesk usa per default i suoi server pubblici per mettere in contatto i due computer, con traffico cifrato; chi vuole può installare un proprio server RustDesk, anche sul «server di casa».</p></section>';
   }
   function collega() {
     const $ = function (id) { return document.getElementById(id); };

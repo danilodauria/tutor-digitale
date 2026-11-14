@@ -235,7 +235,12 @@
           try { obj = await TD.scambio.decifraBackup(pw, obj); } catch (e) { TD.toast(e.message); return; }
         }
         try {
-          if (!TD.conferma("Sostituire i dati attuali con il backup (" + (obj.clienti || []).length + " clienti)? Conviene prima esportare quelli attuali.")) return;
+          if (!obj || !Array.isArray(obj.clienti)) throw new Error("x");
+          if (TD.db.clienti.length && TD.conferma("Vuoi UNIRE il backup (" + obj.clienti.length + " clienti) con i dati di questo dispositivo?\n\nOK = unisci (consigliato tra due tuoi dispositivi: vince la modifica più recente)\nAnnulla = scegli se sostituire")) {
+            const ris = TD.unisciDati(TD.db, obj); TD.timbra(TD.db, true); TD.salva(); TD.applicaPersonali();
+            TD.toast("Uniti: " + ris.aggiunti + " nuovi, " + ris.aggiornati + " aggiornati, " + ris.tolti + " tolti."); TD.vai("#/"); return;
+          }
+          if (!TD.conferma("Sostituire TUTTI i dati attuali con il backup (" + obj.clienti.length + " clienti)? Conviene prima esportare quelli attuali.")) return;
           TD.importa(obj); TD.toast("Backup importato."); TD.applicaAspetto(); TD.vai("#/");
         } catch (e) { TD.toast("Il file non è un backup valido di Tutor Digitale."); }
       };

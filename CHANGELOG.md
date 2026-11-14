@@ -1,5 +1,14 @@
 # Versioni
 
+## 1.5.0 · 14 novembre 2026
+
+- **Sincronizzazione tra i tuoi dispositivi** (miglioria 13): abbinamento con un QR, poi PC, tablet e telefono si scambiano l'archivio cifrato end-to-end e lo uniscono (vince la modifica più recente, le cancellazioni si propagano). Senza Internet: Importa backup › «Unisci».
+- **Casella condivisa cifrata** (miglioria 14): per ogni cliente note, password con scadenza e piccoli file tra tutor e allievo, senza email; l'allievo la riceve con il kit, le voci scadute si cancellano da sole.
+- **Assistente vocale** (miglioria 15): domande a voce o scritte, risposta cercata sul dispositivo nelle lezioni, nelle schermate guida, nel glossario e nelle domande frequenti, letta ad alta voce.
+- **Controllo completo con RustDesk** (miglioria 16): guida per tutor e allievo, ID RustDesk nella scheda cliente e pulsante che apre il collegamento.
+- **Versione desktop** (miglioria 17): programmi per Windows (.exe e portatile), Linux (.deb, .AppImage) e Mac (.dmg) costruiti da GitHub e allegati alla Release, con aggiornamento automatico.
+- **Kit per altri tutor** (miglioria 20): marchio personale su documenti, attestati e app Allievo; listino delle licenze e scheda prodotto; licenze per formatori firmate e verificabili.
+
 ## 1.4.0 · 14 novembre 2026
 
 - **Percorsi su misura** (miglioria 7): componi un percorso incontro per incontro o parti da sei modelli pronti (SPID in 4 incontri, Smartphone da zero, Truffe? No grazie, Nonni e nipoti, Ufficio in ordine, Smart TV senza stress). Programma in PDF, assegnazione con appuntamenti in agenda e compiti con scadenza, «Il mio percorso» nell'app Allievo tramite il kit.

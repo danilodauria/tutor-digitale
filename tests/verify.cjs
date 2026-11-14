@@ -19,7 +19,7 @@ const html = leggi("index.html"), sw = leggi("sw.js");
 const VER = JSON.parse(leggi("package.json")).version;
 const SOLO_ALLIEVO = ["app-allievo.js"];
 const SOLO_VERIFICA = ["verifica.js"];
-const SOLO_TUTOR = ["views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js", "views-lavoro.js", "views-percorsi.js", "views-editor.js", "fattura.js"];
+const SOLO_TUTOR = ["views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js", "views-lavoro.js", "views-percorsi.js", "views-editor.js", "fattura.js", "sync.js"];
 js.forEach((f) => {
   if (SOLO_ALLIEVO.includes(f) || SOLO_VERIFICA.includes(f)) return;
   ok(html.includes('src="assets/js/' + f + '?v=' + VER + '"'), "index.html non carica " + f + " con ?v=" + VER);
@@ -62,7 +62,7 @@ const ctx = {
 };
 ctx.window = ctx; ctx.self = ctx; ctx.Blob = Blob;
 vm.createContext(ctx);
-["data-lezioni.js", "data-quiz.js", "data-documenti.js", "core.js", "pdf.js", "scambio.js", "views-lezioni.js", "views-quiz.js", "views-palestra.js", "views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js", "views-lavoro.js", "remoto.js", "qr.js", "relay.js", "fattura.js", "guide.js", "views-percorsi.js", "views-editor.js", "aula.js", "accessibilita.js"]
+["data-lezioni.js", "data-quiz.js", "data-documenti.js", "core.js", "pdf.js", "scambio.js", "views-lezioni.js", "views-quiz.js", "views-palestra.js", "views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js", "views-lavoro.js", "remoto.js", "qr.js", "relay.js", "fattura.js", "guide.js", "views-percorsi.js", "views-editor.js", "aula.js", "accessibilita.js", "sync.js", "casella.js", "assistente.js", "marchio.js"]
   .forEach((f) => vm.runInContext(leggi("assets/js/" + f), ctx, { filename: f }));
 const TD = ctx.TD;
 
@@ -317,6 +317,58 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
     let altra = false; try { await R.decifra(k2, cif); } catch (e) { altra = true; }
     ok(altra, "canale: con un'altra chiave il messaggio è illeggibile");
   }
+
+  /* 19. sincronizzazione: unione di due archivi (13) */
+  {
+    const base = () => ({ clienti: [], documenti: [], attestati: [], percorsiMisura: [], schermate: [], personali: { lezioni: [], domande: [] }, profilo: { nome: "D" }, listino: [], eliminati: [], _oggetti: {} });
+    const A = base(), B = base();
+    A.clienti = [{ id: "c1", nome: "Anna", _m: 100 }, { id: "c2", nome: "Bruno", _m: 100 }, { id: "c4", nome: "Dario", _m: 100 }];
+    B.clienti = [{ id: "c1", nome: "Anna Rossi", _m: 200 }, { id: "c2", nome: "Bruno vecchio", _m: 50 }, { id: "c3", nome: "Carla", _m: 150 }];
+    B.eliminati = [{ k: "clienti", id: "c4", t: 300 }];
+    A.eliminati = [{ k: "clienti", id: "c9", t: 500 }]; B.clienti.push({ id: "c9", nome: "Tolto da A", _m: 400 });
+    B.profilo = { nome: "Danilo nuovo" }; B._oggetti.profilo = { m: 999 }; A._oggetti.profilo = { m: 10 }; A.profilo.chiavi = { privata: "x" };
+    B.personali.domande = [[0, "pc", "Nuova?", "s", ["a", "b", "c"], ""]];
+    const r = TD.unisciDati(A, B);
+    const nomi = A.clienti.map((c) => c.nome).sort().join(",");
+    ok(nomi === "Anna Rossi,Bruno,Carla", "sync: vince la modifica più recente, si aggiunge il nuovo, si toglie l'eliminato (" + nomi + ")");
+    ok(r.aggiunti >= 2 && r.tolti === 1, "sync: conteggi dell'unione");
+    ok(A.profilo.nome === "Danilo nuovo" && A.profilo.chiavi && A.profilo.chiavi.privata === "x", "sync: profilo più recente, chiave di firma conservata");
+    ok(A.personali.domande.length === 1, "sync: domande proprie unite");
+    const A2 = JSON.parse(JSON.stringify(A)); TD.unisciDati(A2, JSON.parse(JSON.stringify(A)));
+    ok(JSON.stringify(A2.clienti) === JSON.stringify(A.clienti), "sync: unire due volte non cambia nulla");
+    const db = base(); db.clienti = [{ id: "x1", nome: "Uno" }, { id: "x2", nome: "Due" }];
+    TD.timbra(db, true); const m0 = db.clienti[0]._m;
+    ok(m0 > 0 && db.clienti[0]._h, "sync: timbro di modifica");
+    db.clienti.pop(); TD.timbra(db, false);
+    ok(db.eliminati.some((e) => e.id === "x2"), "sync: un cliente tolto viene annotato tra gli eliminati");
+  }
+
+  /* 20. casella condivisa (14) */
+  {
+    const ora = 1000000000;
+    const u = TD.casellaUnisci([{ id: "a", t: 1, creato: 1, titolo: "Wi-Fi" }, { id: "b", t: 1, creato: 2, scade: ora - 1, titolo: "Scaduta" }], [{ id: "a", t: 5, creato: 1, titolo: "Wi-Fi nuova" }, { id: "c", eliminata: true, t: ora }], ora);
+    ok(u.find((v) => v.id === "a").titolo === "Wi-Fi nuova", "casella: vince la versione più recente");
+    ok(u.find((v) => v.id === "b").eliminata === true && !u.find((v) => v.id === "b").titolo, "casella: le voci scadute si cancellano davvero");
+    ok(TD.casellaUnisci([{ id: "d", t: 9, creato: 9, titolo: "x" }], [{ id: "d", eliminata: true, t: 10 }], ora).find((v) => v.id === "d").eliminata, "casella: la cancellazione arriva all'altro dispositivo");
+  }
+
+  /* 21. assistente vocale: trova la lezione giusta (15) */
+  [["come mando una foto su whatsapp", "smartphone-1-1"], ["come si accende e si spegne il computer", "pc-0-1"], ["mi è arrivato un sms strano con un link", "g-sms-truffa|rete-1-2"], ["voglio attivare lo spid", "smartphone-2-1"], ["ingrandire i caratteri del tablet", "tablet-0-2|g-caratteri"], ["sottotitoli sulla tv", "tv-0-2|g-telecomando"]].forEach(([d, attesi]) => {
+    const r = TD.assistenteCerca(d, 3).map((x) => x.id || x.link || x.titolo);
+    ok(attesi.split("|").some((a) => r.some((x) => String(x).includes(a))), "assistente: «" + d + "» → " + attesi + " (trovato " + r.join(", ") + ")");
+  });
+  ok(TD.assistenteRisposta("xyzqwerty").risultati.length === 0, "assistente: domanda senza senso, nessun risultato inventato");
+
+  /* 22. licenze per formatori (20) */
+  {
+    const chL = await S.nuoveChiavi();
+    const lic = await TD.emettiLicenza({ numero: "TDL-2026-001", licenziatario: "Associazione Prova", email: "a@b.it", piano: "associazione", dal: "2026-11-14", al: "2027-11-14" }, chL);
+    ok((await TD.verificaLicenza(lic, "2026-12-01")).stato === "valida", "licenza: firma valida");
+    ok((await TD.verificaLicenza(lic, "2028-01-01")).stato === "scaduta", "licenza: scadenza");
+    const falsa = JSON.parse(JSON.stringify(lic)); falsa.al = "2099-12-31";
+    ok((await TD.verificaLicenza(falsa, "2026-12-01")).stato === "alterata", "licenza: una data cambiata a mano viene scoperta");
+  }
+  ok(JSON.parse(leggi("desktop/package.json")).version === VER, "desktop/package.json deve avere la versione " + VER);
 })().then(fine, (e) => { ok(false, "scambio: " + e.stack); fine(); });
 
 function fine() {

@@ -1,0 +1,94 @@
+{
+  "name": "tutor-digitale",
+  "version": "1.5.0",
+  "private": true,
+  "description": "Tutor Digitale per Windows, Linux e macOS: lezioni di tecnologia su misura, clienti, documenti e app Allievo, anche offline.",
+  "author": "Danilo D'Auria <danilodauria.site@gmail.com>",
+  "homepage": "https://danilodauria.github.io/tutor-digitale/",
+  "license": "MIT",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win --publish never",
+    "dist:linux": "electron-builder --linux --publish never",
+    "dist:mac": "electron-builder --mac --publish never"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "^38.2.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "it.danilodauria.tutordigitale",
+    "productName": "Tutor Digitale",
+    "copyright": "Copyright © 2026 Danilo D'Auria",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "danilodauria",
+        "repo": "tutor-digitale",
+        "releaseType": "release"
+      }
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.cjs",
+      "build/icon.png",
+      "app/**/*"
+    ],
+    "win": {
+      "icon": "build/icon.png",
+      "artifactName": "Tutor-Digitale-Windows-${arch}.${ext}",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Tutor Digitale",
+      "uninstallDisplayName": "Tutor Digitale"
+    },
+    "mac": {
+      "icon": "build/icon.png",
+      "category": "public.app-category.education",
+      "artifactName": "Tutor-Digitale-Mac-${arch}.${ext}",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "identity": null
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "artifactName": "Tutor-Digitale-Linux-${arch}.${ext}",
+      "category": "Education",
+      "maintainer": "Danilo D'Auria <danilodauria.site@gmail.com>",
+      "synopsis": "Lezioni di tecnologia su misura, anche offline",
+      "description": "Tutor Digitale: 40 lezioni dai primi passi a esperto su computer, tablet, smartphone, Smart TV e Internet; quiz, esercizi, clienti, liberatoria, attestati con QR, fattura elettronica, modalità aula e app Allievo. Funziona senza Internet.",
+      "target": [
+        "deb",
+        "AppImage"
+      ]
+    },
+    "afterPack": "after-pack.cjs"
+  },
+  "desktopName": "tutor-digitale.desktop"
+}

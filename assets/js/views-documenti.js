@@ -311,7 +311,7 @@
     // logo e intestazione
     if (TD.logoImg && TD.logoImg.complete) { try { x.drawImage(TD.logoImg, W / 2 - 75, 160, 150, 150); } catch (e) {} }
     x.textAlign = "center"; x.fillStyle = "#1d3557";
-    x.font = "600 34px " + N; x.fillText("TUTOR DIGITALE · LEZIONI DI TECNOLOGIA SU MISURA", W / 2, 360);
+    x.font = "600 34px " + N; x.fillText(TD.marchio && TD.marchio() && TD.marchio().nome ? (TD.marchio().nome.toUpperCase() + " · CON TUTOR DIGITALE") : "TUTOR DIGITALE · LEZIONI DI TECNOLOGIA SU MISURA", W / 2, 360);
     x.font = "700 120px " + S; x.fillText("Attestato", W / 2, 500);
     x.font = "italic 400 44px " + S; x.fillStyle = "#4b5563"; x.fillText("di frequenza e competenze digitali", W / 2, 565);
     x.font = "400 38px " + N; x.fillStyle = "#374151"; x.fillText("si attesta che", W / 2, 650);

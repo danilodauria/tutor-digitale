@@ -30,7 +30,7 @@ window.TD = window.TD || {};
     return pacchetto(0x10, corpo);
   }
   function subscribe(id, topic) { return pacchetto(0x82, [id >> 8, id & 255].concat(str(topic)).concat([0])); }
-  function publish(topic, dati) { return pacchetto(0x30, str(topic).concat(Array.from(dati))); }
+  function publish(topic, dati, trattieni) { return pacchetto(trattieni ? 0x31 : 0x30, str(topic).concat(Array.from(dati))); }
   /* estrae i pacchetti completi da un buffer: [{tipo, corpo}], resto */
   function leggiPacchetti(buf) {
     const out = []; let i = 0;
@@ -114,9 +114,10 @@ window.TD = window.TD || {};
     if (opz.suStato) opz.suStato("collegato", usato);
     return {
       broker: usato,
-      invia: async function (obj) {
+      /* trattieni = il broker conserva l'ultimo messaggio e lo consegna a chi si collega dopo (casella) */
+      invia: async function (obj, o) {
         if (ws.readyState !== 1) return false;
-        ws.send(publish(topic, await cifra(chiave, Object.assign({ __da: io }, obj))));
+        ws.send(publish(topic, await cifra(chiave, Object.assign({ __da: io }, obj)), !!(o && o.trattieni)));
         return true;
       },
       chiudi: function () { aperto = false; clearInterval(ping); try { ws.send(new Uint8Array([0xE0, 0])); ws.close(); } catch (e) {} },

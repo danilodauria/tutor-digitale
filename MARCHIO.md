@@ -13,6 +13,8 @@ logo. In particolare:
 - non puoi usare nome e logo per offrire corsi, servizi o prodotti facendo credere che
   provengano dall'autore o siano da lui autorizzati.
 
+Chi ha una **licenza per formatori** ([LICENZA-FORMATORI.md](LICENZA-FORMATORI.md)) può mostrare il **proprio** marchio su documenti, attestati e app Allievo, con la dicitura «realizzato con Tutor Digitale di Danilo D'Auria»: il nome e il logo «Tutor Digitale» restano dell'autore.
+
 Per usi diversi scrivi all'autore tramite https://github.com/danilodauria.
 
 © 2026 Danilo D'Auria — tutti i diritti sul nome e sul logo riservati.

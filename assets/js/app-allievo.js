@@ -110,6 +110,8 @@
       d.allievo = a; d.tutor = p.dati.tutor; d.segreto = p.dati.segreto;
       d.profilo = Object.assign({}, d.profilo, { nome: p.dati.tutor.nome || "", qualifica: p.dati.tutor.qualifica || "", email: p.dati.tutor.email || "", telefono: p.dati.tutor.telefono || "" });
       if (p.dati.percorso) d.percorso = p.dati.percorso;
+      if (p.dati.casella && p.dati.casella.stanza) d.casella = p.dati.casella;
+      if (p.dati.marchio) { d.marchio = p.dati.marchio; if (TD.applicaMarchio) TD.applicaMarchio(); }
       if ((p.dati.lezioniPersonali || []).length) {
         d.personali = d.personali || { lezioni: [], domande: [] };
         p.dati.lezioniPersonali.forEach(function (l) { d.personali.lezioni = d.personali.lezioni.filter(function (x) { return x.id !== l.id; }).concat([l]); });
@@ -191,6 +193,8 @@
           tile("#/info", "user", "Il mio profilo", "Dati e copia di sicurezza") +
           (d.percorso ? tile("#/mio-percorso", "layers", "Il mio percorso", d.percorso.nome) : "") +
           tile("#/aula", "users", "Aula", "Quiz di gruppo con la TV") +
+          (d.casella ? tile("#/casella", "lock", "Casella", "Note e password dal tutor") : "") +
+          tile("#/assistente", "speaker", "Chiedi all'assistente", "A voce o scrivendo") +
         "</section>" +
         '<section class="block"><div class="block-head"><h2>Le mie lezioni</h2></div><div class="paths">' + devs.map(function (id) {
           const p = TD.percorso(id), liv = (d.allievo.livelli || {})[id] || 0;

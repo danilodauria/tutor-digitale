@@ -1,0 +1,97 @@
+name: Versione desktop
+
+# Pacchetti installabili di Tutor Digitale (Windows .exe, Linux .deb e
+# .AppImage, macOS .dmg), allegati alla Release della versione. Partono da
+# soli dopo il workflow «Vademecum» che crea la Release, oppure a mano dalla
+# scheda Actions. I programmi installati si aggiornano da soli leggendo
+# latest*.yml dalla Release.
+on:
+  workflow_run:
+    workflows: ["Vademecum"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      forza:
+        description: "Rifai i pacchetti anche se la Release li ha già"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop
+  cancel-in-progress: false
+
+jobs:
+  controlla:
+    name: Serve una build?
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    outputs:
+      tag: ${{ steps.c.outputs.tag }}
+      fai: ${{ steps.c.outputs.fai }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - id: c
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORZA: ${{ inputs.forza && 'si' || 'no' }}
+        run: |
+          set -euo pipefail
+          tag="v$(node -p "require('./package.json').version")"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if ! gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "La Release $tag non esiste ancora: nessuna build."; echo "fai=no" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          presenti="$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')"
+          if [ "$FORZA" = "si" ] || ! grep -q '^Tutor-Digitale-Windows' <<< "$presenti"; then echo "fai=si" >> "$GITHUB_OUTPUT"; else echo "fai=no" >> "$GITHUB_OUTPUT"; echo "Pacchetti di $tag già presenti."; fi
+
+  build:
+    name: ${{ matrix.nome }}
+    needs: controlla
+    if: needs.controlla.outputs.fai == 'si'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, script: "dist:linux", nome: Linux }
+          - { os: windows-latest, script: "dist:win", nome: Windows }
+          - { os: macos-latest, script: "dist:mac", nome: macOS }
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.controlla.outputs.tag }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - name: Prepara il contenuto dell'app
+        run: node scripts/prepare-desktop.cjs
+      - name: Installa Electron
+        working-directory: desktop
+        run: npm install --no-audit --no-fund
+      - name: Genera i pacchetti
+        working-directory: desktop
+        run: npm run ${{ matrix.script }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - name: Versione portatile (ZIP) per Windows
+        if: matrix.nome == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path desktop/dist/win-unpacked/* -DestinationPath desktop/dist/Tutor-Digitale-Windows-portatile.zip
+      - name: Allega alla Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.controlla.outputs.tag }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          file=(desktop/dist/*.exe desktop/dist/*.zip desktop/dist/*.deb desktop/dist/*.AppImage desktop/dist/*.dmg desktop/dist/latest*.yml)
+          [ ${#file[@]} -gt 0 ] || { echo "::error::Nessun pacchetto prodotto"; exit 1; }
+          gh release upload "$TAG" "${file[@]}" --clobber --repo "$GITHUB_REPOSITORY"
+          printf '✓ %s\n' "${file[@]}"

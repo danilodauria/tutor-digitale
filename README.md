@@ -36,6 +36,11 @@ Chi insegna tecnologia a domicilio o nelle associazioni ha bisogno di tre cose i
 | **Modalità aula** | Domanda sulla Smart TV, risposte dai telefoni con un QR, classifica; canale cifrato end-to-end, oppure alzata di mano senza Internet. |
 | **Fattura elettronica** | File XML FatturaPA (FPR12) per forfettari, minimi e regime ordinario, con PDF di cortesia, da caricare nel portale dell'Agenzia delle Entrate. |
 | **Accessibilità** | Contrasto elevato, pulsanti grandi, niente animazioni, «un pulsante alla volta» per chi ha difficoltà motorie; controllo axe WCAG 2 AA. |
+| **Sincronizzazione** | PC, tablet e telefono del tutor abbinati con un QR e allineati con un archivio cifrato end-to-end; oppure backup cifrato con «Unisci». |
+| **Casella condivisa** | Per ogni cliente note, password con scadenza e piccoli file cifrati tra tutor e allievo. |
+| **Assistente vocale** | Domande a voce o scritte, risposte cercate sul dispositivo nelle lezioni e nelle guide, lette ad alta voce. |
+| **RustDesk** | Guida e collegamento rapido per il controllo completo del computer dell'allievo. |
+| **Kit per altri tutor** | Marchio personale, listino e licenze per formatori firmate ([LICENZA-FORMATORI.md](LICENZA-FORMATORI.md)). |
 | **Agenda e strumenti** | Appuntamenti con esportazione nel calendario (.ics), timer della lezione con promemoria della pausa, kit del tutor, idee per il lavoro e metodo in cinque tempi. |
 | **Impostazioni** | Profilo del docente con firma, listino, tema chiaro o scuro, caratteri grandi, **backup cifrato con password** (AES-256, file `.tdcifrato` da tenere su chiavetta o cloud), firma digitale dei kit con impronta della chiave. |
 
@@ -62,6 +67,14 @@ A lezione basta un **QR code**: l'allievo inquadra con la fotocamera il kit, la 
 
 Come un TeamViewer semplice e senza installazioni: chi apre la sessione manda un **codice** e detta una **password di 6 cifre** che cambia a ogni sessione e ogni 10 minuti; l'altro rimanda un codice di risposta e i due dispositivi si collegano **direttamente** (WebRTC, cifrato). Si vede lo schermo dell'altro, si scrive in chat, si scambiano file e compiti. Il browser permette di vedere lo schermo ma non di comandare il mouse dell'altro: per il controllo completo si affianca un programma dedicato come RustDesk. Per trovarsi in rete la sessione usa i server pubblici STUN di Google e Cloudflare, che vedono solo gli indirizzi di rete.
 
+## Versione desktop
+
+Ogni [Release](https://github.com/danilodauria/tutor-digitale/releases) contiene i programmi da installare, costruiti da GitHub ([desktop.yml](.github/workflows/desktop.yml)): **Windows** (.exe e versione portatile .zip), **Linux e FeniceOS** (.deb e .AppImage), **Mac** (.dmg). Funzionano offline e si aggiornano da soli. I pacchetti non hanno un certificato a pagamento: al primo avvio Windows e Mac chiedono una conferma.
+
+```bash
+node scripts/prepare-desktop.cjs && cd desktop && npm install && npm start   # prova in locale
+```
+
 ## Vademecum
 
 Guida pratica in PDF, in tre formati: [A5 da leggere](assets/pdf/vademecum-tutor-digitale.pdf), [A4 da stampare](assets/pdf/vademecum-tutor-digitale-a4.pdf) e [libricino](assets/pdf/vademecum-tutor-digitale-libricino-a4.pdf) già imposto (stampa fronte-retro sul lato corto, piega a metà). Si apre anche dal menu del programma (Altro › Vademecum).
@@ -81,7 +94,7 @@ PDF, firme, attestati e quiz sono generati sul dispositivo, **senza librerie né
 
 ## Dati e privacy
 
-Non ci sono server, account o statistiche. Solo la modalità aula passa da un canale pubblico gratuito (broker MQTT di HiveMQ, EMQX o Mosquitto) con i messaggi cifrati AES-256: il broker vede solo testo illeggibile e un nome di stanza casuale. I dati dei clienti stanno nel browser del dispositivo del tutor (localStorage). Chi usa il programma per lavoro ne è titolare del trattamento: conviene proteggere il dispositivo con una password e fare ogni settimana un **backup cifrato** (*Impostazioni › Backup cifrato con password*): senza la password il file è illeggibile, quindi si può tenere su chiavetta, Google Drive o OneDrive. La home ricorda il backup se l'ultimo ha più di una settimana.
+Non ci sono server, account o statistiche. Modalità aula, sincronizzazione e casella passano da un canale pubblico gratuito (broker MQTT di HiveMQ, EMQX o Mosquitto) con i messaggi cifrati AES-256: il broker vede solo testo illeggibile e un nome di stanza casuale. I dati dei clienti stanno nel browser del dispositivo del tutor (localStorage). Chi usa il programma per lavoro ne è titolare del trattamento: conviene proteggere il dispositivo con una password e fare ogni settimana un **backup cifrato** (*Impostazioni › Backup cifrato con password*): senza la password il file è illeggibile, quindi si può tenere su chiavetta, Google Drive o OneDrive. La home ricorda il backup se l'ultimo ha più di una settimana.
 
 Kit, correzioni e attestati sono firmati con una **chiave ECDSA del tutor** creata sul dispositivo: l'app Allievo mostra «Kit verificato» e rifiuta i kit modificati; la pagina `verifica/` controlla gli attestati senza server.
 
