@@ -26,10 +26,12 @@ Chi insegna tecnologia a domicilio o nelle associazioni ha bisogno di tre cose i
 | **Palestra** | Mouse (clic, doppio clic, clic destro), trascina e rilascia, tastiera con precisione e velocità, «Truffa o no?» con messaggi veri e falsi, laboratorio password con generatore di frasi-password. |
 | **Clienti** | Persone, enti, aziende e gruppi con partecipanti. Scheda con dati, dispositivi e livelli, test d'ingresso, registro delle lezioni con presenze e incassi, percorso svolto, compiti con esito, risultati dei quiz, esportazione CSV. |
 | **Liberatoria** | Modulo di iscrizione con informativa privacy (art. 13 GDPR), liberatoria sull'uso dei dispositivi personali e consensi facoltativi. Si firma con il dito o con il mouse, si scarica in PDF, si stampa; c'è anche il **modulo vuoto** da compilare a penna e il **foglio firme** per i gruppi. |
-| **Attestato** | Attestato finale A4 orizzontale con intestatario, ore, periodo, livello raggiunto, competenze acquisite, esito delle verifiche, firma del docente e **codice verificabile** (con cifra di controllo) registrato nell'archivio. |
+| **Attestato** | Attestato finale A4 orizzontale con intestatario, ore, periodo, livello raggiunto, competenze acquisite, esito delle verifiche, firma del docente e **codice verificabile** (con cifra di controllo) registrato nell'archivio, più un **QR di verifica** firmato digitalmente: chi lo inquadra apre la pagina [verifica](https://danilodauria.github.io/tutor-digitale/verifica/) e vede codice, intestatario, data e livello. Registro pubblico facoltativo, solo con consenso. |
 | **Preventivi e ricevute** | Dal listino modificabile, numerati per anno; ricevuta per prestazione occasionale con nota sulla marca da bollo e ritenuta d'acconto facoltativa, oppure riepilogo per chi ha partita IVA. |
+| **Registro presenze** | Foglio mensile per Comuni, associazioni e scuole: incontri, orari, ore, argomenti, griglia presente/assente di ogni partecipante, firme del docente e del referente, fogli firme a mano per ogni incontro, tabella per Excel. |
+| **Statistiche** | Ore e incassi per mese, da incassare, clienti per luogo e città, argomenti più richiesti, progressi e andamento dei quiz di ogni allievo; tabella per Excel e riepilogo PDF. |
 | **Agenda e strumenti** | Appuntamenti con esportazione nel calendario (.ics), timer della lezione con promemoria della pausa, kit del tutor, idee per il lavoro e metodo in cinque tempi. |
-| **Impostazioni** | Profilo del docente con firma, listino, tema chiaro o scuro, caratteri grandi, copia di sicurezza (esporta e importa). |
+| **Impostazioni** | Profilo del docente con firma, listino, tema chiaro o scuro, caratteri grandi, **backup cifrato con password** (AES-256, file `.tdcifrato` da tenere su chiavetta o cloud), firma digitale dei kit con impronta della chiave. |
 
 ## Due app: Tutor e Allievo
 
@@ -54,6 +56,17 @@ A lezione basta un **QR code**: l'allievo inquadra con la fotocamera il kit, la 
 
 Come un TeamViewer semplice e senza installazioni: chi apre la sessione manda un **codice** e detta una **password di 6 cifre** che cambia a ogni sessione e ogni 10 minuti; l'altro rimanda un codice di risposta e i due dispositivi si collegano **direttamente** (WebRTC, cifrato). Si vede lo schermo dell'altro, si scrive in chat, si scambiano file e compiti. Il browser permette di vedere lo schermo ma non di comandare il mouse dell'altro: per il controllo completo si affianca un programma dedicato come RustDesk. Per trovarsi in rete la sessione usa i server pubblici STUN di Google e Cloudflare, che vedono solo gli indirizzi di rete.
 
+## Vademecum
+
+Guida pratica in PDF, in tre formati: [A5 da leggere](assets/pdf/vademecum-tutor-digitale.pdf), [A4 da stampare](assets/pdf/vademecum-tutor-digitale-a4.pdf) e [libricino](assets/pdf/vademecum-tutor-digitale-libricino-a4.pdf) già imposto (stampa fronte-retro sul lato corto, piega a metà). Si apre anche dal menu del programma (Altro › Vademecum).
+
+Il vademecum **si aggiorna da solo**: `scripts/build_vademecum.py` prende versione, novità e lezioni direttamente dal programma, e il workflow [Vademecum](.github/workflows/vademecum.yml) lo rigenera a ogni cambio di versione, lo salva nel repository, ripubblica il sito e allega i tre PDF alla Release.
+
+```bash
+pip install reportlab pymupdf
+python3 scripts/build_vademecum.py   # rigenera a mano i tre PDF
+```
+
 ## Online e offline
 
 Il programma è una **PWA**: si apre dal browser e si installa come app su Windows, Linux, macOS, Android, iPhone e iPad. Al primo avvio salva sul dispositivo lezioni, quiz, esercizi, modelli e grafiche; da quel momento funziona **identico** anche senza Internet. In alto c'è una spia: **verde** quando c'è connessione, grigia quando non c'è — nient'altro cambia.
@@ -62,7 +75,9 @@ PDF, firme, attestati e quiz sono generati sul dispositivo, **senza librerie né
 
 ## Dati e privacy
 
-Non ci sono server, account o statistiche. I dati dei clienti stanno nel browser del dispositivo del tutor (localStorage). Chi usa il programma per lavoro ne è titolare del trattamento: conviene proteggere il dispositivo con una password ed esportare una copia di sicurezza ogni settimana (*Impostazioni › Esporta backup*).
+Non ci sono server, account o statistiche. I dati dei clienti stanno nel browser del dispositivo del tutor (localStorage). Chi usa il programma per lavoro ne è titolare del trattamento: conviene proteggere il dispositivo con una password e fare ogni settimana un **backup cifrato** (*Impostazioni › Backup cifrato con password*): senza la password il file è illeggibile, quindi si può tenere su chiavetta, Google Drive o OneDrive. La home ricorda il backup se l'ultimo ha più di una settimana.
+
+Kit, correzioni e attestati sono firmati con una **chiave ECDSA del tutor** creata sul dispositivo: l'app Allievo mostra «Kit verificato» e rifiuta i kit modificati; la pagina `verifica/` controlla gli attestati senza server.
 
 ## Come si prova in locale
 
@@ -71,7 +86,7 @@ python3 -m http.server 8000      # poi apri http://localhost:8000
 node tests/verify.cjs            # verifiche automatiche
 ```
 
-Le verifiche controllano sintassi, file in cache delle due app, coerenza delle versioni, completezza delle 40 lezioni e della banca delle domande, che in 40 partite consecutive la risposta giusta cambi sempre posizione e stile di numerazione, che il kit non contenga soluzioni, che la correzione automatica sia esatta, che un pacchetto alterato o una password sbagliata vengano rifiutati.
+Le verifiche controllano sintassi, file in cache delle due app, coerenza delle versioni, completezza delle 40 lezioni e della banca delle domande, che in 40 partite consecutive la risposta giusta cambi sempre posizione e stile di numerazione, che il kit non contenga soluzioni, che la correzione automatica sia esatta, che un pacchetto alterato o una password sbagliata vengano rifiutati, che il backup cifrato non contenga dati in chiaro, che firma dei kit e QR degli attestati rilevino ogni modifica, che statistiche e registro presenze facciano i conti giusti.
 
 ## Licenze
 

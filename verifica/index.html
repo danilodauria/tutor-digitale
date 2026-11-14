@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Verifica attestato · Tutor Digitale</title>
+  <meta name="description" content="Verifica dell'attestato di Tutor Digitale: controlla la firma digitale del docente, il codice, l'intestatario e la data.">
+  <meta name="author" content="Danilo D'Auria">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#1d3557">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="../assets/img/icon.svg" type="image/svg+xml">
+  <script>
+    (function () { try { var t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; document.documentElement.setAttribute("data-theme", t); } catch (e) {} })();
+  </script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=1.3.0">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="../" aria-label="Tutor Digitale">
+        <img src="../assets/img/icon.svg" alt="" width="42" height="42">
+        <span class="brand-text"><strong>Tutor</strong><em>Digitale</em></span>
+      </a>
+    </div>
+  </header>
+  <main id="main">
+    <header class="page-head"><div class="wrap"><h1>Verifica dell'attestato</h1><p class="lead">Questa pagina controlla la firma digitale stampata nel QR dell'attestato. Nessun dato viene inviato: la verifica avviene su questo dispositivo.</p></div></header>
+    <div class="wrap" id="esito"><div class="card"><p>Sto controllando…</p></div></div>
+    <div class="wrap">
+      <section class="card">
+        <h2>Verifica a mano</h2>
+        <form id="manuale" class="search"><input name="link" placeholder="Incolla qui il link letto dal QR" aria-label="Link del QR"><button class="btn">Verifica</button></form>
+        <p class="muted text-small">L'attestato di Tutor Digitale è un documento privato di frequenza e verifica delle competenze, con riferimento al quadro europeo DigComp 2.2: non è un titolo di studio né una certificazione con valore legale.</p>
+      </section>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="wrap footer-bottom"><span>Tutor Digitale · versione <span data-versione>1.3.0</span> · © 2026 Danilo D'Auria</span><span><a href="../">Torna al sito</a></span></div>
+  </footer>
+  <script>window.TD = { MODO: "verifica", VERSIONE: "1.3.0" };</script>
+  <script src="../assets/js/scambio.js?v=1.3.0"></script>
+  <script src="../assets/js/verifica.js?v=1.3.0"></script>
+</body>
+</html>

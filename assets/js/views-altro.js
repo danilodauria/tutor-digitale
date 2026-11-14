@@ -169,7 +169,12 @@
         "<div>" +
           '<section class="card"><h2>' + I("eye") + 'Aspetto e lettura</h2><div class="field"><span>Tema</span>' + seg("tema", [["", "Automatico"], ["light", "Chiaro"], ["dark", "Scuro"]], imp.tema || "") + '</div><div class="field"><span>Dimensione dei caratteri</span>' + seg("caratteri", [["normale", "Normale"], ["grande", "Grande"], ["enorme", "Molto grande"]], imp.caratteri || "normale") + "</div></section>" +
           '<section class="card"><h2>' + I("euro") + 'Listino</h2><p class="muted text-small">Prezzi di partenza proposti: modificali secondo la tua zona e la tua esperienza.</p><div id="listino"></div><div class="actions"><button class="btn btn-sm" id="addL">' + I("plus") + 'Voce</button><button class="btn btn-sm btn-primary" id="salvaL">' + I("check") + 'Salva listino</button><button class="btn btn-sm btn-ghost" id="resetL">Ripristina proposta</button><button class="btn btn-sm" id="pdfL">' + I("download") + "Listino PDF</button></div></section>" +
-          '<section class="card"><h2>' + I("download") + "Copia di sicurezza</h2><p>I dati sono solo su questo dispositivo (" + Math.round(usato / 1024) + ' kB usati). Esporta una copia ogni settimana e tienila anche su una chiavetta.</p><div class="actions"><button class="btn btn-primary" id="exp">' + I("download") + 'Esporta backup</button><label class="btn">' + I("upload") + 'Importa backup<input type="file" id="imp" accept="application/json,.json" hidden></label><button class="btn btn-danger" id="del">' + I("trash") + "Cancella tutti i dati</button></div></section>" +
+          '<section class="card"><h2>' + I("lock") + "Copia di sicurezza</h2><p>I dati sono solo su questo dispositivo (" + Math.round(usato / 1024) + ' kB usati). Esporta una copia ogni settimana e tienila anche su una chiavetta o nel cloud.</p>' +
+            '<p class="text-small">' + (TD.db.esportato ? "Ultima copia: <strong>" + E(TD.dataIt(TD.db.esportato)) + "</strong>" + (giorniDa(TD.db.esportato) > 7 ? ' <span class="pill warn">più di una settimana fa</span>' : "") : '<span class="pill warn">Nessuna copia esportata finora</span>') + "</p>" +
+            '<div class="actions"><button class="btn btn-primary" id="expC">' + I("lock") + 'Backup cifrato con password</button><label class="btn">' + I("upload") + 'Importa backup<input type="file" id="imp" accept="application/json,.json,.tdcifrato" hidden></label></div>' +
+            '<p class="muted text-small">Il backup cifrato (AES-256, file <code>.tdcifrato</code>) si apre solo con la tua password: puoi tenerlo su chiavetta, Google Drive o OneDrive senza rischi per la privacy dei clienti. Se perdi la password, la copia non si recupera: scrivila su carta e conservala a parte.</p>' +
+            '<details class="more"><summary>Altre azioni</summary><div class="actions"><button class="btn" id="exp">' + I("download") + 'Backup non cifrato (.json)</button><button class="btn btn-danger" id="del">' + I("trash") + "Cancella tutti i dati</button></div></details></section>" +
+          '<section class="card"><h2>' + I("shield") + 'Firma digitale dei kit</h2><p>Kit, correzioni e attestati escono firmati con la tua chiave personale (ECDSA P-256). L\'allievo vede «kit verificato» e il QR dell\'attestato conferma che l\'hai rilasciato tu.</p><p>Impronta della tua chiave: <code id="impronta">…</code></p><p class="muted text-small">Leggila all\'allievo la prima volta: la stessa impronta compare nel suo profilo. La chiave privata non lascia mai questo dispositivo, salvo dentro il backup (per questo conviene cifrarlo).</p><div class="actions"><button class="btn btn-sm" id="copiaChiave">' + I("copy") + 'Copia la chiave pubblica</button><button class="btn btn-sm btn-ghost" id="nuovaChiave">Crea una chiave nuova</button></div></section>' +
         "</div></div></div>";
     const pad = TD.padFirma(document.getElementById("firmaDoc"), pr.firma);
     document.getElementById("pulFirma").onclick = pad.pulisci;
@@ -198,22 +203,53 @@
       d.piccolo("Primo incontro conoscitivo e test d'ingresso compresi nella prima lezione. Materiali, schede e attestato inclusi." + (pr.pagamenti ? " Pagamento: " + pr.pagamenti + "." : ""));
       TD.scaricaPdf(d.chiudi(), "listino-tutor-digitale.pdf", { titolo: "Listino" });
     };
+    function marca() { const ora = new Date(); return TD.oggi() + "_" + String(ora.getHours()).padStart(2, "0") + String(ora.getMinutes()).padStart(2, "0"); }
     document.getElementById("exp").onclick = function () {
-      const ora = new Date(); const ts = TD.oggi() + "_" + String(ora.getHours()).padStart(2, "0") + String(ora.getMinutes()).padStart(2, "0");
+      if (!TD.conferma("Il backup non cifrato contiene in chiaro i dati dei clienti e la tua chiave di firma. Meglio il backup cifrato: continuare comunque?")) return;
       TD.db.esportato = new Date().toISOString(); TD.db.versione = TD.VERSIONE; TD.salva();
-      TD.scarica(new Blob([JSON.stringify(TD.db, null, 1)], { type: "application/json" }), "tutor-digitale-backup_" + ts + ".json");
+      TD.scarica(new Blob([JSON.stringify(TD.db, null, 1)], { type: "application/json" }), "tutor-digitale-backup_" + marca() + ".json");
+    };
+    document.getElementById("expC").onclick = async function () {
+      const pw = await TD.chiediPassword("Backup cifrato", "Scegli una password di almeno 8 caratteri (meglio una frase: «lampada-fiume-ottobre»). Servirà per riaprire la copia: <strong>se la perdi, la copia non si recupera</strong>.", true);
+      if (!pw) return;
+      try {
+        TD.db.esportato = new Date().toISOString(); TD.db.versione = TD.VERSIONE; TD.salva();
+        const cif = await TD.scambio.cifraBackup(pw, TD.db);
+        TD.scarica(new Blob([JSON.stringify(cif)], { type: "application/octet-stream" }), "tutor-digitale-backup_" + marca() + ".tdcifrato");
+        TD.toast("Backup cifrato salvato. Tienilo anche su una chiavetta.");
+        TD.render();
+      } catch (e) { TD.toast(e.message); }
     };
     document.getElementById("imp").onchange = function () {
       const file = this.files[0]; if (!file) return;
       const r = new FileReader();
-      r.onload = function () {
+      r.onload = async function () {
+        let obj;
+        try { obj = JSON.parse(r.result); } catch (e) { TD.toast("Il file non è un backup valido di Tutor Digitale."); return; }
+        if (TD.scambio.eBackupCifrato(obj)) {
+          const pw = await TD.chiediPassword("Apri il backup cifrato", "Scrivi la password scelta quando hai salvato la copia del " + E(TD.dataIt(obj.creato)) + ".", false);
+          if (!pw) return;
+          try { obj = await TD.scambio.decifraBackup(pw, obj); } catch (e) { TD.toast(e.message); return; }
+        }
         try {
-          const obj = JSON.parse(r.result);
           if (!TD.conferma("Sostituire i dati attuali con il backup (" + (obj.clienti || []).length + " clienti)? Conviene prima esportare quelli attuali.")) return;
           TD.importa(obj); TD.toast("Backup importato."); TD.applicaAspetto(); TD.vai("#/");
         } catch (e) { TD.toast("Il file non è un backup valido di Tutor Digitale."); }
       };
       r.readAsText(file);
+    };
+    TD.chiaviTutor().then(function (ch) { return ch ? TD.scambio.impronta(ch.pubblica) : ""; }).then(function (imp) {
+      const el = document.getElementById("impronta"); if (el) el.textContent = imp || "non disponibile (serve https o l'app installata)";
+    }).catch(function () {});
+    document.getElementById("copiaChiave").onclick = function () {
+      TD.chiaviTutor().then(function (ch) { if (!ch) return; TD.scambio.impronta(ch.pubblica).then(function (imp) {
+        TD.scambio.copia(JSON.stringify({ nome: pr.nome, impronta: imp, chiave: ch.pubblica })).then(function (ok) { TD.toast(ok ? "Chiave pubblica copiata: puoi pubblicarla in verifica/chiavi.json." : "Copia non riuscita."); });
+      }); });
+    };
+    document.getElementById("nuovaChiave").onclick = async function () {
+      if (!TD.conferma("Creare una chiave nuova? Gli allievi riceveranno un avviso al prossimo kit e gli attestati già rilasciati resteranno verificabili solo con la vecchia chiave pubblicata.")) return;
+      pr.chiaviVecchie = (pr.chiaviVecchie || []).concat(pr.chiavi ? [{ pubblica: pr.chiavi.pubblica, creata: pr.chiavi.creata }] : []);
+      pr.chiavi = null; TD.salva(); await TD.chiaviTutor(); TD.render();
     };
     document.getElementById("del").onclick = function () {
       if (!TD.conferma("Cancellare TUTTI i dati (clienti, registro, documenti, attestati)? L'operazione non si annulla: esporta prima un backup.")) return;
@@ -221,6 +257,7 @@
       TD.azzera(); TD.applicaAspetto(); TD.aggiornaChip(); TD.vai("#/");
     };
   });
+  function giorniDa(iso) { return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000); }
   function seg(nome, voci, sel) {
     return '<div class="seg">' + voci.map(function (v) { return '<label><input type="radio" name="' + nome + '" value="' + v[0] + '"' + (v[0] === sel ? " checked" : "") + "><span>" + v[1] + "</span></label>"; }).join("") + "</div>";
   }
@@ -262,7 +299,7 @@
           "<li>Liberatoria firmata prima di toccare qualsiasi dispositivo; le password le digita sempre il cliente.</li>" +
           "<li>Copia di sicurezza dei dati prima di aggiornamenti, pulizie e ripristini.</li>" +
           "<li>Registro compilato a fine lezione: argomenti, durata, compito e importo.</li>" +
-          "<li>Backup del programma ogni settimana su chiavetta (Impostazioni › Esporta backup).</li>" +
+          "<li>Backup cifrato del programma ogni settimana su chiavetta o cloud (Impostazioni › Backup cifrato con password).</li>" +
           "<li>Ricevuta o fattura per ogni pagamento, conservata con il numero progressivo.</li>" +
           "<li>Attestato con codice solo dopo una verifica superata (soglia consigliata 60%).</li>" +
         "</ul></section></div>";
@@ -302,7 +339,7 @@
         '<section class="card"><h2>Codice · MIT</h2><p>HTML, CSS, JavaScript, service worker e script sono distribuiti con licenza MIT: © 2026 Danilo D\'Auria. Si possono usare, copiare e modificare mantenendo l\'avviso di copyright e di licenza.</p><p><a href="LICENSE" target="_blank" rel="noopener">Testo della licenza MIT</a></p></section>' +
         '<section class="card"><h2>Contenuti · CC BY-NC-SA 4.0</h2><p>Lezioni, domande, esercizi, testi dei documenti, grafiche e logo sono distribuiti con licenza Creative Commons Attribuzione – Non commerciale – Condividi allo stesso modo 4.0: citare l\'autore, nessun uso commerciale senza permesso, stessa licenza per le opere derivate.</p><p><a href="LICENSE-CONTENT.md" target="_blank" rel="noopener">Licenza dei contenuti</a></p></section>' +
         '<section class="card"><h2>Nome e marchio</h2><p>Il nome «Tutor Digitale», il logo con i quattro gradini e il puntatore e la veste grafica identificano il servizio di Danilo D\'Auria: non sono concessi in licenza. Chi ridistribuisce una versione modificata deve usare un nome e un logo diversi.</p><p><a href="MARCHIO.md" target="_blank" rel="noopener">Regole sul nome e sul marchio</a></p></section>' +
-        '<section class="card"><h2>Privacy</h2><p>Il programma non ha server, account, pubblicità o statistiche: tutti i dati dei clienti stanno nel browser di questo dispositivo. Kit, risposte e correzioni viaggiano solo per i canali scelti da te (file, email, messaggi) e sono firmati con un codice segreto per cliente. L\'assistenza a distanza collega direttamente i due dispositivi in modo cifrato; per trovarsi in rete usa i server pubblici STUN di Google e Cloudflare, che vedono solo gli indirizzi di rete, mai i contenuti. Chi lo usa per lavoro ne è titolare del trattamento e deve custodirli (backup cifrato, dispositivo protetto da password).</p></section>' +
+        '<section class="card"><h2>Privacy</h2><p>Il programma non ha server, account, pubblicità o statistiche: tutti i dati dei clienti stanno nel browser di questo dispositivo. Kit, risposte e correzioni viaggiano solo per i canali scelti da te (file, email, messaggi) e sono firmati con un codice segreto per cliente. L\'assistenza a distanza collega direttamente i due dispositivi in modo cifrato; per trovarsi in rete usa i server pubblici STUN di Google e Cloudflare, che vedono solo gli indirizzi di rete, mai i contenuti. Chi lo usa per lavoro ne è titolare del trattamento e deve custodirli: il backup cifrato con password (AES-256) e il dispositivo protetto da password sono le due difese principali.</p></section>' +
         '<section class="card"><h2>Riferimenti</h2><p>Le aree di competenza seguono il quadro europeo <strong>DigComp 2.2</strong> (Commissione europea, JRC), citato come riferimento: l\'attestato non è una certificazione ufficiale DigComp.</p><p>Nomi di prodotti e servizi citati (Windows, Android, iPhone, WhatsApp, RaiPlay…) appartengono ai rispettivi proprietari e sono usati solo a scopo descrittivo.</p></section>' +
         '<section class="card"><h2>Esclusione di garanzia</h2><p>I modelli di liberatoria, ricevuta e preventivo sono una base di lavoro curata ma non sostituiscono il parere di un consulente legale, fiscale o privacy. Il programma è fornito «così com\'è».</p></section>' +
       "</div></div>";

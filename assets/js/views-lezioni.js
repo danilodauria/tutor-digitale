@@ -62,6 +62,8 @@
           stat(oreMese.toLocaleString("it-IT", { maximumFractionDigits: 1 }), "ore insegnate nel mese", "clock", "#/agenda") +
           stat(TD.db.attestati.length, "attestati rilasciati", "award", "#/documenti") +
         "</section>" +
+        (TD.MODO !== "allievo" && TD.db.clienti.length && (!TD.db.esportato || Date.now() - new Date(TD.db.esportato).getTime() > 7 * 86400000)
+          ? '<a class="note-box" href="#/impostazioni">' + I("lock") + "<div><strong>" + (TD.db.esportato ? "L'ultima copia di sicurezza è del " + E(TD.dataIt(TD.db.esportato)) : "Non hai ancora salvato una copia di sicurezza") + "</strong><br>Fai un backup cifrato con password: un minuto, e i dati dei clienti sono al sicuro anche su chiavetta o cloud.</div></a>" : "") +
 
         '<section class="tiles">' +
           tile("#/percorsi", "book", "Lezioni", "40 lezioni in 4 livelli e 5 percorsi") +
@@ -72,6 +74,7 @@
           tile("#/documenti", "doc", "Documenti", "Liberatoria, attestati, preventivi, ricevute") +
           tile("#/agenda", "calendar", "Agenda", "Appuntamenti ed esportazione calendario") +
           tile("#/remoto", "screen", "Assistenza a distanza", "Codice e password che si rigenera") +
+          (TD.MODO !== "allievo" ? tile("#/statistiche", "layers", "Statistiche", "Ore, incassi, argomenti, progressi") + tile("#/presenze", "print", "Registro presenze", "Foglio mensile per enti e Comuni") : "") +
         "</section>" +
 
         (prossime.length ? '<section class="block"><div class="block-head"><h2>Prossimi appuntamenti</h2><a href="#/agenda">Agenda completa ' + I("arrow") + '</a></div><ul class="list">' +

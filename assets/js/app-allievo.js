@@ -99,6 +99,12 @@
     const d = db();
     if (p.tipo === "kit") {
       const a = p.dati.allievo;
+      const ver = await TD.scambio.verificaPacchetto(p);
+      if (ver.stato === "alterata") { TD.toast("Kit rifiutato: la firma del tutor non corrisponde, il kit è stato modificato. Chiedi al tutor di rimandarlo."); return; }
+      if (ver.stato === "valida" && d.chiaveTutor && d.chiaveTutor !== ver.chiave &&
+        !TD.conferma("Attenzione: questo kit è firmato da una chiave diversa da quella del tuo tutor (impronta " + ver.impronta + "). Aprilo solo se il tutor ti ha detto che ha cambiato dispositivo. Continuare?")) return;
+      if (ver.stato === "valida") { d.chiaveTutor = ver.chiave; d.improntaTutor = ver.impronta; }
+      d.ultimaVerifica = ver.stato;
       if (d.allievo && d.allievo.clienteId !== a.clienteId && !TD.conferma("Questa app è di " + d.allievo.nome + ". Sostituire con il profilo di " + a.nome + "? I compiti attuali verranno tolti.")) return;
       if (d.allievo && d.allievo.clienteId !== a.clienteId) d.consegne = [];
       d.allievo = a; d.tutor = p.dati.tutor; d.segreto = p.dati.segreto;
@@ -107,13 +113,15 @@
       d.consegne = (d.consegne || []).filter(function (x) { return x.id !== k.id; });
       d.consegne.push(Object.assign({ risposte: {}, statoCompiti: {}, inviata: false, correzione: null, ricevuta: new Date().toISOString() }, k));
       TD.salva();
-      TD.toast("Benvenuto " + a.nome.split(" ")[0] + "! " + (k.compiti.length || k.quiz.length ? "Hai nuovi compiti." : ""));
+      TD.toast((d.ultimaVerifica === "valida" ? "Kit verificato ✓ " : "") + "Benvenuto " + a.nome.split(" ")[0] + "! " + (k.compiti.length || k.quiz.length ? "Hai nuovi compiti." : ""));
       TD.vai("#/");
       return;
     }
     if (p.tipo === "correzione") {
       const firma = await TD.scambio.verifica(p, d.segreto);
       if (firma === false) { TD.toast("La correzione non risulta firmata dal tuo tutor."); return; }
+      const ver = await TD.scambio.verificaPacchetto(p);
+      if (ver.stato === "alterata" || (ver.stato === "valida" && d.chiaveTutor && d.chiaveTutor !== ver.chiave)) { TD.toast("La correzione non porta la firma digitale del tuo tutor: non la apro."); return; }
       const k = consegna(p.dati.consegnaId);
       if (!k) { TD.toast("Questa correzione riguarda compiti che non sono in questa app."); return; }
       k.correzione = p.dati; k.inviata = true; TD.salva();
@@ -403,7 +411,7 @@
     const media = (d.allenamenti || []).length ? Math.round(d.allenamenti.reduce(function (s, x) { return s + x.perc; }, 0) / d.allenamenti.length) : null;
     app.innerHTML = TD.intest("Il mio profilo", "Tutto resta su questo dispositivo.") +
       '<div class="wrap"><div class="grid-2">' +
-        '<section class="card"><h2>' + I("user") + "Io</h2>" + (d.allievo ? '<dl class="dl"><dt>Nome</dt><dd>' + E(d.allievo.nome) + "</dd>" + (d.allievo.ente ? "<dt>Gruppo</dt><dd>" + E(d.allievo.ente) + "</dd>" : "") + "<dt>Tutor</dt><dd>" + E((d.tutor || {}).nome || "") + "</dd><dt>Lezioni ripassate</dt><dd>" + (d.ripassate || []).length + "</dd><dt>Allenamenti</dt><dd>" + (d.allenamenti || []).length + (media == null ? "" : " · media " + media + "%") + "</dd></dl>" : "<p>App non ancora attivata.</p>") + "</section>" +
+        '<section class="card"><h2>' + I("user") + "Io</h2>" + (d.allievo ? '<dl class="dl"><dt>Nome</dt><dd>' + E(d.allievo.nome) + "</dd>" + (d.allievo.ente ? "<dt>Gruppo</dt><dd>" + E(d.allievo.ente) + "</dd>" : "") + "<dt>Tutor</dt><dd>" + E((d.tutor || {}).nome || "") + "</dd>" + (d.improntaTutor ? "<dt>Firma del tutor</dt><dd>" + I("check") + " verificata · impronta <code>" + E(d.improntaTutor) + "</code></dd>" : "") + "<dt>Lezioni ripassate</dt><dd>" + (d.ripassate || []).length + "</dd><dt>Allenamenti</dt><dd>" + (d.allenamenti || []).length + (media == null ? "" : " · media " + media + "%") + "</dd></dl>" : "<p>App non ancora attivata.</p>") + "</section>" +
         '<section class="card"><h2>' + I("download") + 'Copia di sicurezza</h2><p>Se cambi telefono o computer, salva la copia e aprila sul nuovo dispositivo.</p><div class="actions"><button class="btn btn-primary" id="exp">' + I("download") + 'Salva copia</button><label class="btn">' + I("upload") + 'Ripristina<input type="file" id="imp" accept=".json" hidden></label><button class="btn btn-danger" id="del">' + I("trash") + "Azzera l'app</button></div></section>" +
         '<section class="card"><h2>' + I("alert") + 'Promemoria</h2><p>' + ((d.impostazioni || {}).avvisi ? "Gli avvisi delle scadenze sono attivi." : "Ricevi un avviso il giorno prima della scadenza dei compiti.") + '</p><div class="actions">' + ((d.impostazioni || {}).avvisi ? '<button class="btn" id="disAvvisi">Disattiva gli avvisi</button>' : '<button class="btn btn-primary" id="attAvvisi2">' + I("alert") + "Attiva gli avvisi</button>") + '</div><p class="muted text-small">Sui telefoni dove le notifiche non arrivano ad app chiusa, usa «Promemoria nel calendario» nei compiti: il calendario avvisa sempre.</p></section>' +
         '<section class="card"><h2>' + I("eye") + 'Lettura comoda</h2><p>Usa il pulsante <strong>Aa</strong> in alto per ingrandire i caratteri e il sole/luna per il tema scuro. Nelle lezioni c\'è «Leggi ad alta voce».</p></section>' +

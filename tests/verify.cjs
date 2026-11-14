@@ -18,9 +18,10 @@ js.forEach((f) => { try { new vm.Script(leggi("assets/js/" + f), { filename: f }
 const html = leggi("index.html"), sw = leggi("sw.js");
 const VER = JSON.parse(leggi("package.json")).version;
 const SOLO_ALLIEVO = ["app-allievo.js"];
-const SOLO_TUTOR = ["views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js"];
+const SOLO_VERIFICA = ["verifica.js"];
+const SOLO_TUTOR = ["views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js", "views-lavoro.js"];
 js.forEach((f) => {
-  if (SOLO_ALLIEVO.includes(f)) return;
+  if (SOLO_ALLIEVO.includes(f) || SOLO_VERIFICA.includes(f)) return;
   ok(html.includes('src="assets/js/' + f + '?v=' + VER + '"'), "index.html non carica " + f + " con ?v=" + VER);
   ok(sw.includes('"assets/js/' + f + '?v=' + VER + '"'), "sw.js non mette in cache " + f + " con ?v=" + VER);
 });
@@ -41,6 +42,13 @@ const pkg = JSON.parse(leggi("package.json"));
 ok(sw.includes('VERSION = "td-v' + pkg.version + '"'), "la versione di sw.js non coincide con package.json (" + pkg.version + ")");
 ok(leggi("assets/js/core.js").includes('TD.VERSIONE = "' + pkg.version + '"'), "TD.VERSIONE diversa da package.json");
 JSON.parse(leggi("manifest.webmanifest"));
+/* pagina di verifica degli attestati */
+const htmlV = leggi("verifica/index.html");
+["scambio.js", "verifica.js"].forEach((f) => ok(htmlV.includes('src="../assets/js/' + f + '?v=' + VER + '"'), "verifica/index.html non carica " + f + " con ?v=" + VER));
+ok(htmlV.includes('VERSIONE: "' + VER + '"'), "verifica/index.html: versione diversa da package.json");
+JSON.parse(leggi("verifica/chiavi.json")); JSON.parse(leggi("verifica/registro.json"));
+ok(fs.existsSync(path.join(R, "scripts/build_vademecum.py")), "manca lo script del vademecum");
+ok(fs.existsSync(path.join(R, "assets/pdf/vademecum-tutor-digitale.pdf")), "manca il vademecum in PDF");
 
 /* 3. ambiente simulato per caricare i dati e il motore dei quiz */
 const store = {};
@@ -54,7 +62,7 @@ const ctx = {
 };
 ctx.window = ctx; ctx.self = ctx; ctx.Blob = Blob;
 vm.createContext(ctx);
-["data-lezioni.js", "data-quiz.js", "data-documenti.js", "core.js", "pdf.js", "scambio.js", "views-lezioni.js", "views-quiz.js", "views-palestra.js", "views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js", "remoto.js", "qr.js"]
+["data-lezioni.js", "data-quiz.js", "data-documenti.js", "core.js", "pdf.js", "scambio.js", "views-lezioni.js", "views-quiz.js", "views-palestra.js", "views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js", "views-lavoro.js", "remoto.js", "qr.js"]
   .forEach((f) => vm.runInContext(leggi("assets/js/" + f), ctx, { filename: f }));
 const TD = ctx.TD;
 
@@ -182,6 +190,57 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
   ok((await S.decifraPin("123456", cif)).sdp.sdp === "v=0", "decifratura con la password giusta");
   let rif = false; try { await S.decifraPin("654321", cif); } catch (e) { rif = true; }
   ok(rif, "la password sbagliata deve essere rifiutata");
+
+  /* 10. backup cifrato (miglioria 5) */
+  const finto = { clienti: [{ id: "c1", nome: "Maria", cognome: "Rossi", note: "dati riservati àèì" }], profilo: { nome: "Tutor" } };
+  const cifB = await S.cifraBackup("lampada-fiume-ottobre", finto);
+  ok(S.eBackupCifrato(cifB) && !JSON.stringify(cifB).includes("Maria") && !JSON.stringify(cifB).includes("riservati"), "il backup cifrato non deve contenere dati in chiaro");
+  ok(JSON.stringify(await S.decifraBackup("lampada-fiume-ottobre", cifB)) === JSON.stringify(finto), "il backup cifrato deve tornare identico con la password giusta");
+  let rifB = false; try { await S.decifraBackup("password-sbagliata", cifB); } catch (e) { rifB = true; }
+  ok(rifB, "il backup cifrato deve rifiutare la password sbagliata");
+  let corta = false; try { await S.cifraBackup("1234", finto); } catch (e) { corta = true; }
+  ok(corta, "password troppo corta accettata");
+
+  /* 11. firma ECDSA del tutor sui kit (miglioria 4) */
+  const ch = await S.nuoveChiavi(), altre = await S.nuoveChiavi();
+  ok(/^[0-9A-F]{4}(-[0-9A-F]{4}){3}$/.test(await S.impronta(ch.pubblica)), "impronta della chiave nel formato XXXX-XXXX-XXXX-XXXX");
+  const kitF = await S.firmaPacchetto(await S.impacchetta("kit", { id: "c1" }, { consegna: { quiz: pub } }, segreto), ch);
+  ok((await S.verificaPacchetto(kitF)).stato === "valida", "kit firmato dal tutor: firma valida");
+  const viaggioF = await S.leggi("https://x/allievo/#/attiva?k=" + await S.comprimi(kitF));
+  ok((await S.verificaPacchetto(viaggioF)).stato === "valida", "la firma del tutor deve sopravvivere a compressione e link");
+  viaggioF.dati.consegna.quiz = [];
+  ok((await S.verificaPacchetto(viaggioF)).stato === "alterata", "kit modificato: la firma del tutor deve risultare alterata");
+  const kitAltro = await S.firmaPacchetto(await S.impacchetta("kit", { id: "c1" }, { x: 1 }, segreto), altre);
+  ok((await S.verificaPacchetto(kitAltro)).chiave !== ch.pubblica, "chiavi diverse devono essere riconoscibili");
+  ok((await S.verificaPacchetto(kit)).stato === "assente", "kit senza firma del tutor: stato «assente»");
+
+  /* 12. attestato con QR di verifica (miglioria 18) */
+  const url = await S.firmaAttestato({ codice: "TD-2026-0001-7", intestatario: "Maria Rossi", data: "2026-11-14", livello: "Intermedio", ore: "12", percorsi: ["smartphone", "rete"], tutor: "Danilo D'Auria" }, ch);
+  ok(url.indexOf(S.URL_VERIFICA + "#a=") === 0, "il link di verifica deve puntare alla pagina verifica/");
+  ok(TD.qr.adatto(url) && url.length < 520, "il link di verifica deve stare in un QR piccolo e leggibile (" + url.length + " caratteri)");
+  ok(TD.qr.codifica(url, "M").versione <= 15, "QR dell'attestato troppo fitto: versione " + TD.qr.codifica(url, "M").versione);
+  const va = await S.verificaAttestato(url);
+  ok(va.stato === "valida" && va.dati.n === "Maria Rossi" && va.dati.data === "2026-11-14" && va.dati.c === "TD-2026-0001-7", "attestato: verifica dei dati firmati");
+  const parti = url.split("#a=")[1].split(".");
+  const falso = S.b64u(new TextEncoder().encode(JSON.stringify([1, "TD-2026-0001-7", "Mario Bianchi", "20261114", "Intermedio", "12", "smartphone,rete", "Danilo D'Auria"])));
+  ok((await S.verificaAttestato(S.URL_VERIFICA + "#a=" + falso + "." + parti[1] + "." + parti[2])).stato === "alterata", "attestato con nome cambiato: deve risultare alterato");
+  ok((await S.verificaAttestato("https://x/verifica/")).stato === "illeggibile", "link senza dati: illeggibile");
+
+  /* 13. statistiche (miglioria 10) e registro presenze (miglioria 6) */
+  const dbS = { clienti: [
+    { id: "a", nome: "Anna", cognome: "Bianchi", luogo: "A domicilio", citta: "Roma", completate: ["x"], quiz: [{ data: "2026-01-02", perc: 50 }, { data: "2026-02-01", perc: 80 }],
+      registro: [{ data: "2026-01-10", durata: 60, importo: 30, pagato: true, stato: "svolta", argomenti: [TD.LEZIONI[0].id] }, { data: "2026-02-10", durata: 90, importo: 45, pagato: false, stato: "svolta", argomenti: [TD.LEZIONI[0].id, TD.LEZIONI[1].id] }, { data: "2026-03-01", durata: 60, stato: "pianificata" }, { data: "2025-12-01", durata: 60, importo: 30, pagato: true, stato: "svolta" }] },
+    { id: "b", tipo: "ente", ragione: "Centro anziani", luogo: "Centro anziani", citta: "Roma", partecipanti: [{ id: "p1", nome: "Ugo" }, { id: "p2", nome: "Lia" }],
+      registro: [{ data: "2026-01-20", ora: "10:00", durata: 120, importo: 100, pagato: true, stato: "svolta", presenti: ["p1"], argomenti: [TD.LEZIONI[0].id] }] }] };
+  const st = TD.calcolaStatistiche(dbS, "2026");
+  ok(st.minuti === 270 && st.incontri === 3, "statistiche: ore e incontri dell'anno (" + st.minuti + " min, " + st.incontri + ")");
+  ok(st.incassato === 130 && st.daIncassare === 45, "statistiche: incassato e da incassare");
+  ok(st.mesi[0].minuti === 180 && st.mesi[1].minuti === 90 && st.mesi[2].minuti === 0, "statistiche: ore per mese (pianificate escluse)");
+  ok(st.argomenti[0][0] === TD.LEZIONI[0].id && st.argomenti[0][1] === 3, "statistiche: argomento più richiesto");
+  ok(st.clientiAttivi === 2 && st.luoghi.length === 2 && st.citta[0][0] === "Roma" && st.citta[0][1] === 2, "statistiche: clienti per luogo e città");
+  ok(JSON.stringify(st.clienti.find((c) => c.id === "a").quiz) === "[50,80]", "statistiche: andamento dei quiz in ordine di data");
+  ok(TD.incontriDelMese(dbS.clienti[0], "2026-03", false).length === 0 && TD.incontriDelMese(dbS.clienti[0], "2026-03", true).length === 1, "presenze: incontri pianificati solo se richiesti");
+  ok(TD.incontriDelMese(dbS.clienti[1], "2026-01").length === 1, "presenze: incontri del mese dell'ente");
 })().then(fine, (e) => { ok(false, "scambio: " + e.stack); fine(); });
 
 function fine() {

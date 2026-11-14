@@ -136,6 +136,100 @@ window.TD = window.TD || {};
     return JSON.parse(dec.decode(chiaro));
   }
 
+  /* ---------------------------------------------------------- backup cifrato (5)
+     PBKDF2-SHA-256 (310.000 giri) + AES-GCM 256: senza password il file è illeggibile. */
+  const FORMATO_BACKUP = "tutor-digitale-backup-cifrato";
+  async function chiaveBackup(password, sale, giri) {
+    const base = await subtle.importKey("raw", enc.encode(String(password)), "PBKDF2", false, ["deriveKey"]);
+    return subtle.deriveKey({ name: "PBKDF2", salt: sale, iterations: giri, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+  }
+  async function cifraBackup(password, obj) {
+    if (!subtle) throw new Error("Serve una connessione sicura (https) o l'app installata per cifrare.");
+    if (String(password || "").length < 8) throw new Error("La password deve avere almeno 8 caratteri.");
+    const giri = 310000, sale = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+    let dati = enc.encode(JSON.stringify(obj)), compresso = false;
+    if (haCompressione) { try { dati = await flusso(dati, CompressionStream); compresso = true; } catch (e) {} }
+    const c = await subtle.encrypt({ name: "AES-GCM", iv: iv }, await chiaveBackup(password, sale, giri), dati);
+    return { formato: FORMATO_BACKUP, versione: 1, creato: new Date().toISOString(), programma: TD.VERSIONE || "",
+      kdf: { nome: "PBKDF2-SHA-256", giri: giri, sale: b64u(sale) }, cifra: { nome: "AES-GCM-256", iv: b64u(iv) }, compresso: compresso, dati: b64u(new Uint8Array(c)) };
+  }
+  function eBackupCifrato(obj) { return !!obj && obj.formato === FORMATO_BACKUP && !!obj.dati; }
+  async function decifraBackup(password, obj) {
+    if (!eBackupCifrato(obj)) throw new Error("Non è un backup cifrato di Tutor Digitale.");
+    if (!subtle) throw new Error("Serve una connessione sicura (https) o l'app installata per aprire il backup.");
+    let chiaro;
+    try {
+      const k = await chiaveBackup(password, deb64u(obj.kdf.sale), obj.kdf.giri || 310000);
+      chiaro = new Uint8Array(await subtle.decrypt({ name: "AES-GCM", iv: deb64u(obj.cifra.iv) }, k, deb64u(obj.dati)));
+    } catch (e) { throw new Error("Password sbagliata o file danneggiato."); }
+    if (obj.compresso) chiaro = await flusso(chiaro, DecompressionStream);
+    return JSON.parse(dec.decode(chiaro));
+  }
+
+  /* ---------------------------------------------------------- firma del tutor (4)
+     ECDSA P-256: la chiave privata resta nel programma del tutor, quella
+     pubblica viaggia nel kit. L'app Allievo ricorda la prima chiave ricevuta
+     e avvisa se un kit successivo arriva da una chiave diversa. */
+  const ECDSA = { name: "ECDSA", namedCurve: "P-256" };
+  const FIRMA = { name: "ECDSA", hash: "SHA-256" };
+  async function nuoveChiavi() {
+    if (!subtle) throw new Error("Serve una connessione sicura (https) o l'app installata.");
+    const kp = await subtle.generateKey(ECDSA, true, ["sign", "verify"]);
+    const pub = new Uint8Array(await subtle.exportKey("raw", kp.publicKey));
+    return { pubblica: b64u(pub), privata: await subtle.exportKey("jwk", kp.privateKey), creata: new Date().toISOString() };
+  }
+  async function firmaTesto(chiavi, testo) {
+    const k = await subtle.importKey("jwk", chiavi.privata, ECDSA, false, ["sign"]);
+    return b64u(new Uint8Array(await subtle.sign(FIRMA, k, enc.encode(testo))));
+  }
+  async function verificaTesto(pubblica, testo, firma) {
+    if (!subtle || !pubblica || !firma) return null;
+    try {
+      const k = await subtle.importKey("raw", deb64u(pubblica), ECDSA, false, ["verify"]);
+      return await subtle.verify(FIRMA, k, deb64u(firma), enc.encode(testo));
+    } catch (e) { return false; }
+  }
+  /* impronta leggibile della chiave pubblica: 4 gruppi da 4, es. 7F3A-91C2-0B4E-D85A */
+  async function impronta(pubblica) {
+    if (!subtle || !pubblica) return "";
+    const h = hex(await subtle.digest("SHA-256", deb64u(pubblica))).toUpperCase();
+    return h.slice(0, 4) + "-" + h.slice(4, 8) + "-" + h.slice(8, 12) + "-" + h.slice(12, 16);
+  }
+  async function firmaPacchetto(p, chiavi) {
+    if (!chiavi || !chiavi.privata) return p;
+    p.firmaTutor = { chiave: chiavi.pubblica, firma: await firmaTesto(chiavi, corpo(p)) };
+    return p;
+  }
+  /* { stato: "valida" | "alterata" | "assente", chiave, impronta } */
+  async function verificaPacchetto(p) {
+    if (!p || !p.firmaTutor) return { stato: "assente", chiave: "", impronta: "" };
+    const ok = await verificaTesto(p.firmaTutor.chiave, corpo(p), p.firmaTutor.firma);
+    return { stato: ok === true ? "valida" : ok === false ? "alterata" : "assente", chiave: p.firmaTutor.chiave, impronta: await impronta(p.firmaTutor.chiave) };
+  }
+
+  /* ---------------------------------------------------------- attestato verificabile (18)
+     Il QR contiene i dati essenziali dell'attestato, firmati con la chiave del
+     tutor: la pagina verifica/ controlla la firma senza server né archivio. */
+  const URL_VERIFICA = "https://danilodauria.github.io/tutor-digitale/verifica/";
+  async function firmaAttestato(a, chiavi) {
+    /* forma compatta, per un QR piccolo: [versione, codice, intestatario, data, livello, ore, percorsi, docente] */
+    const dati = [1, a.codice, a.intestatario, String(a.data || "").replace(/-/g, ""), a.livello || "", String(a.ore || ""), (a.percorsi || []).join(","), a.tutor || ""];
+    const corpoA = b64u(enc.encode(JSON.stringify(dati)));
+    return URL_VERIFICA + "#a=" + corpoA + "." + await firmaTesto(chiavi, corpoA) + "." + chiavi.pubblica;
+  }
+  /* { stato: "valida" | "alterata" | "illeggibile", dati, chiave, impronta } */
+  async function verificaAttestato(testo) {
+    const m = String(testo || "").match(/a=([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)/);
+    if (!m) return { stato: "illeggibile" };
+    let dati;
+    try { dati = JSON.parse(dec.decode(deb64u(m[1]))); } catch (e) { return { stato: "illeggibile" }; }
+    if (Array.isArray(dati)) dati = { v: dati[0], c: dati[1], n: dati[2], d: dati[3], l: dati[4], o: dati[5], p: dati[6], t: dati[7] };
+    const ok = await verificaTesto(m[3], m[1], m[2]);
+    const d = String(dati.d || "");
+    dati.data = d.length === 8 ? d.slice(0, 4) + "-" + d.slice(4, 6) + "-" + d.slice(6, 8) : d;
+    return { stato: ok === true ? "valida" : ok === false ? "alterata" : "illeggibile", dati: dati, chiave: m[3], impronta: await impronta(m[3]) };
+  }
+
   /* correzione automatica: domande con soluzione (lato tutor) + risposte dell'allievo */
   function correggi(domande, risposte) {
     const dettagli = domande.map(function (q, i) {
@@ -173,5 +267,8 @@ window.TD = window.TD || {};
 
   TD.scambio = { comprimi: comprimi, decomprimi: decomprimi, impacchetta: impacchetta, verifica: verifica, leggi: leggi, leggiFile: leggiFile,
     file: file, condividi: condividi, copia: copia, mailto: mailto, segreto: segreto, cifraPin: cifraPin, decifraPin: decifraPin,
-    correggi: correggi, senzaSoluzioni: senzaSoluzioni, sicuro: !!subtle };
+    correggi: correggi, senzaSoluzioni: senzaSoluzioni, sicuro: !!subtle,
+    cifraBackup: cifraBackup, decifraBackup: decifraBackup, eBackupCifrato: eBackupCifrato,
+    nuoveChiavi: nuoveChiavi, firmaTesto: firmaTesto, verificaTesto: verificaTesto, impronta: impronta,
+    firmaPacchetto: firmaPacchetto, verificaPacchetto: verificaPacchetto, firmaAttestato: firmaAttestato, verificaAttestato: verificaAttestato, URL_VERIFICA: URL_VERIFICA, b64u: b64u, deb64u: deb64u };
 })();

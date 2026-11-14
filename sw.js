@@ -3,36 +3,38 @@
    Codice: © 2026 Danilo D'Auria · licenza MIT (vedi LICENSE)
    ========================================================================== */
 
-const VERSION = "td-v1.2.0";
+const VERSION = "td-v1.3.0";
 
 const ASSETS = [
   "./",
   "index.html",
   "manifest.webmanifest",
-  "assets/css/styles.css?v=1.2.0",
+  "assets/css/styles.css?v=1.3.0",
   "assets/img/icon.svg",
   "assets/img/icon-192.png",
   "assets/img/icon-512.png",
   "assets/img/apple-touch-icon.png",
-  "assets/js/data-lezioni.js?v=1.2.0",
-  "assets/js/data-quiz.js?v=1.2.0",
-  "assets/js/data-documenti.js?v=1.2.0",
-  "assets/js/core.js?v=1.2.0",
-  "assets/js/pdf.js?v=1.2.0",
-  "assets/js/scambio.js?v=1.2.0",
-  "assets/js/qr.js?v=1.2.0",
-  "assets/js/remoto.js?v=1.2.0",
-  "assets/js/views-allievi.js?v=1.2.0",
-  "assets/js/views-lezioni.js?v=1.2.0",
-  "assets/js/views-quiz.js?v=1.2.0",
-  "assets/js/views-palestra.js?v=1.2.0",
-  "assets/js/views-clienti.js?v=1.2.0",
-  "assets/js/views-documenti.js?v=1.2.0",
-  "assets/js/views-altro.js?v=1.2.0",
-  "assets/js/init.js?v=1.2.0",
+  "assets/js/data-lezioni.js?v=1.3.0",
+  "assets/js/data-quiz.js?v=1.3.0",
+  "assets/js/data-documenti.js?v=1.3.0",
+  "assets/js/core.js?v=1.3.0",
+  "assets/js/pdf.js?v=1.3.0",
+  "assets/js/scambio.js?v=1.3.0",
+  "assets/js/qr.js?v=1.3.0",
+  "assets/js/remoto.js?v=1.3.0",
+  "assets/js/views-allievi.js?v=1.3.0",
+  "assets/js/views-lezioni.js?v=1.3.0",
+  "assets/js/views-quiz.js?v=1.3.0",
+  "assets/js/views-palestra.js?v=1.3.0",
+  "assets/js/views-clienti.js?v=1.3.0",
+  "assets/js/views-documenti.js?v=1.3.0",
+  "assets/js/views-altro.js?v=1.3.0",
+  "assets/js/views-lavoro.js?v=1.3.0",
+  "assets/js/init.js?v=1.3.0",
   "LICENSE",
   "LICENSE-CONTENT.md",
-  "MARCHIO.md"
+  "MARCHIO.md",
+  "assets/pdf/vademecum-tutor-digitale.pdf"
 ];
 
 self.addEventListener("install", (e) => {

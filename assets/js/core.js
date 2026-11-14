@@ -8,7 +8,7 @@ window.TD = window.TD || {};
 (function () {
   "use strict";
 
-  TD.VERSIONE = "1.2.0";
+  TD.VERSIONE = "1.3.0";
   TD.MODO = TD.MODO || "tutor";
   const KEY = TD.MODO === "allievo" ? "tutor-digitale-allievo:v1:db" : "tutor-digitale:v1:db";
   TD.CHIAVE = KEY;
@@ -165,6 +165,41 @@ window.TD = window.TD || {};
     clearTimeout(box._t); box._t = setTimeout(function () { box.classList.remove("on"); }, 3200);
   };
   TD.conferma = function (msg) { return window.confirm(msg); };
+
+  /* finestra per chiedere una password (con conferma quando si cifra) */
+  TD.chiediPassword = function (titolo, testo, conConferma) {
+    return new Promise(function (risolvi) {
+      const box = document.createElement("div");
+      box.className = "modal";
+      box.innerHTML = '<form class="modal-box form" role="dialog" aria-modal="true"><h2>' + TD.esc(titolo) + "</h2><p>" + testo + "</p>" +
+        '<label class="field"><span>Password</span><input type="password" name="p1" autocomplete="new-password" minlength="8" required></label>' +
+        (conConferma ? '<label class="field"><span>Ripeti la password</span><input type="password" name="p2" autocomplete="new-password" required></label>' : "") +
+        '<label class="check"><input type="checkbox" name="vedi"> Mostra la password</label><p class="muted text-small" data-err></p>' +
+        '<div class="actions"><button class="btn btn-primary" type="submit">' + TD.icona("lock") + 'Conferma</button><button class="btn btn-ghost" type="button" data-annulla>Annulla</button></div></form>';
+      document.body.appendChild(box);
+      const f = box.querySelector("form");
+      f.p1.focus();
+      f.vedi.onchange = function () { f.querySelectorAll('input[type="password"],input[data-pw]').forEach(function (i) { i.setAttribute("data-pw", "1"); i.type = f.vedi.checked ? "text" : "password"; }); };
+      function chiudi(v) { box.remove(); risolvi(v); }
+      box.querySelector("[data-annulla]").onclick = function () { chiudi(null); };
+      box.addEventListener("click", function (e) { if (e.target === box) chiudi(null); });
+      f.onsubmit = function (e) {
+        e.preventDefault();
+        const err = f.querySelector("[data-err]");
+        if (f.p1.value.length < 8) { err.textContent = "Almeno 8 caratteri: meglio una frase di 3 o 4 parole."; return; }
+        if (conConferma && f.p1.value !== f.p2.value) { err.textContent = "Le due password non coincidono."; return; }
+        chiudi(f.p1.value);
+      };
+    });
+  };
+
+  /* chiavi di firma del tutor (ECDSA): create alla prima occorrenza, restano nel backup */
+  TD.chiaviTutor = async function () {
+    if (TD.MODO === "allievo" || !TD.scambio || !TD.scambio.sicuro) return null;
+    const pr = TD.db.profilo;
+    if (!pr.chiavi || !pr.chiavi.privata) { pr.chiavi = await TD.scambio.nuoveChiavi(); TD.salva(); }
+    return pr.chiavi;
+  };
 
   /* ------------------------------------------------------------ voce */
   TD.leggi = function (testo) {

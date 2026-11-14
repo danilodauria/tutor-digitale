@@ -19,19 +19,37 @@
           '<a class="tile" href="#/liberatoria/vuota"><span class="tile-ico">' + I("print") + "</span><strong>Modulo vuoto da stampare</strong><small>Per farlo compilare a penna</small></a>" +
           '<a class="tile" href="#/clienti"><span class="tile-ico">' + I("award") + "</span><strong>Attestato finale</strong><small>Dalla scheda cliente › Attestato</small></a>" +
           '<a class="tile" href="#/preventivo"><span class="tile-ico">' + I("euro") + "</span><strong>Preventivo o ricevuta</strong><small>Dal listino, numerati per anno</small></a>" +
+          '<a class="tile" href="#/presenze"><span class="tile-ico">' + I("calendar") + "</span><strong>Registro presenze</strong><small>Foglio mensile per enti e associazioni</small></a>" +
+          '<a class="tile" href="#/statistiche"><span class="tile-ico">' + I("layers") + "</span><strong>Statistiche del lavoro</strong><small>Ore, incassi, argomenti, progressi</small></a>" +
         "</div>" +
-        '<section class="card"><h2>Verifica un attestato</h2><form id="ver" class="search"><input name="codice" placeholder="Codice, es. TD-2026-0001-7" value="' + E(q.codice || "") + '" aria-label="Codice attestato"><button class="btn">' + I("check") + 'Verifica</button></form><p id="verEsito"></p></section>' +
+        '<section class="card"><h2>Verifica un attestato</h2><form id="ver" class="search"><input name="codice" placeholder="Codice (TD-2026-0001-7) o link del QR" value="' + E(q.codice || "") + '" aria-label="Codice o link dell\'attestato"><button class="btn">' + I("check") + 'Verifica</button></form><p id="verEsito"></p>' +
+          '<p class="muted text-small">Chiunque può verificare un attestato inquadrandone il QR: si apre la <a href="verifica/" target="_blank" rel="noopener">pagina di verifica</a>, che controlla la tua firma digitale.</p>' +
+          (att.some(function (a) { return a.pubblico; }) ? '<div class="actions"><button class="btn btn-sm" type="button" id="regPub">' + I("download") + "Registro pubblico (solo con consenso)</button></div>" : "") + "</section>" +
         '<div class="grid-2">' +
           '<section class="card"><h2>Registro degli attestati</h2>' + (att.length ? '<table class="table"><thead><tr><th>Codice</th><th>Intestatario</th><th>Data</th></tr></thead><tbody>' + att.map(function (a) { return "<tr><td><strong>" + E(a.codice) + "</strong></td><td>" + E(a.intestatario) + "</td><td>" + E(TD.dataIt(a.data)) + "</td></tr>"; }).join("") + "</tbody></table>" : '<p class="muted">Nessun attestato rilasciato.</p>') + "</section>" +
           '<section class="card"><h2>Preventivi e ricevute</h2>' + (docs.length ? '<ul class="list">' + docs.map(function (d) { const c = TD.cliente(d.cliente); return '<li><a href="#/preventivo?doc=' + d.id + '"><span><strong>' + E(d.tipo === "ricevuta" ? "Ricevuta" : "Preventivo") + " " + E(d.numero) + "</strong> · " + E(TD.dataIt(d.data)) + " · " + E(c ? TD.nomeCliente(c) : d.intestatario || "") + " · " + TD.euro(d.totale) + "</span>" + I("arrow") + "</a></li>"; }).join("") + "</ul>" : '<p class="muted">Nessun documento.</p>') + "</section>" +
         "</div></div>";
     document.getElementById("ver").onsubmit = function (e) {
       e.preventDefault();
-      const cod = this.codice.value.trim().toUpperCase();
+      const grezzo = this.codice.value.trim();
+      if (/a=[A-Za-z0-9_-]+\./.test(grezzo)) {
+        TD.scambio.verificaAttestato(grezzo).then(function (v) {
+          document.getElementById("verEsito").innerHTML = v.stato === "valida" ? '<span class="pill ok">' + I("check") + "Firma valida: " + E(v.dati.n) + ", " + E(v.dati.c) + (v.dati.l ? ", livello " + E(v.dati.l) : "") + ", rilasciato il " + E(TD.dataIt(v.dati.data)) + " · impronta " + E(v.impronta) + "</span>"
+            : '<span class="pill ko">' + I("x") + (v.stato === "alterata" ? "Firma non valida: i dati dell'attestato sono stati modificati." : "Link non leggibile.") + "</span>";
+        });
+        return;
+      }
+      const cod = grezzo.toUpperCase();
       const a = TD.db.attestati.find(function (x) { return x.codice === cod; });
       const ok = TD.codiceValido(cod);
       document.getElementById("verEsito").innerHTML = a ? '<span class="pill ok">' + I("check") + "Attestato valido: " + E(a.intestatario) + ", rilasciato il " + E(TD.dataIt(a.data)) + " (" + E(a.livello) + ")</span>"
         : ok ? '<span class="pill warn">' + I("info") + "Codice formalmente corretto ma non presente in questo archivio.</span>" : '<span class="pill ko">' + I("x") + "Codice non valido.</span>";
+    };
+    const rp = document.getElementById("regPub");
+    if (rp) rp.onclick = function () {
+      const reg = TD.db.attestati.filter(function (a) { return a.pubblico; }).map(function (a) { return { codice: a.codice, intestatario: a.intestatario, data: a.data, livello: a.livello }; });
+      TD.scarica(new Blob([JSON.stringify({ tutor: TD.db.profilo.nome, aggiornato: TD.oggi(), attestati: reg }, null, 1)], { type: "application/json" }), "registro.json");
+      TD.toast(reg.length + " attestati con consenso: il file va in verifica/registro.json del sito.");
     };
   });
 
@@ -218,6 +236,8 @@
           '<label class="field"><span>Competenze acquisite (una per riga, massimo 12)</span><textarea name="competenze" rows="8">' + E(testoComp) + "</textarea></label>" +
           '<div class="grid-2"><label class="field"><span>Esito delle verifiche</span><input name="esito" value="' + (media == null ? "" : "Media dei quiz: " + media + "%") + '"></label>' +
             '<label class="field"><span>Luogo e data di rilascio</span><input name="luogo" value="' + E((TD.db.profilo.citta || "") + ", " + TD.dataLunga(TD.oggi())) + '"></label></div>' +
+          '<p class="muted text-small">' + I("lock") + ' Al rilascio l\'attestato riceve un <strong>QR di verifica</strong> firmato con la tua chiave: chi lo inquadra vede codice, intestatario e data, senza archivi online.</p>' +
+          '<label class="check"><input type="checkbox" name="pubblico"> L\'intestatario acconsente a comparire nel registro pubblico degli attestati (facoltativo)</label>' +
           '<div class="actions"><button class="btn btn-primary" type="submit">' + I("award") + "Rilascia e scarica PDF</button><button class=\"btn\" type=\"button\" id=\"prova\">" + I("screen") + "Aggiorna anteprima</button><button class=\"btn\" type=\"button\" id=\"stampaA\">" + I("print") + "Stampa</button></div>" +
           (TD.db.profilo.firma ? "" : '<p class="muted text-small">' + I("info") + ' Aggiungi la tua firma in <a href="#/impostazioni">Impostazioni</a>: comparirà su tutti gli attestati.</p>') +
         "</form>" +
@@ -225,9 +245,10 @@
       "</div></div>";
 
     const f = document.getElementById("fa");
-    let codice = null;
+    let codice = null, urlVerifica = "";
     function dati() {
       const o = TD.form(f);
+      o.verifica = urlVerifica;
       o.competenze = (o.competenze || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 12);
       o.codice = codice || "TD-" + TD.oggi().slice(0, 4) + "-0000-0";
       return o;
@@ -242,13 +263,17 @@
       const o = dati();
       if (!o.intestatario) { TD.toast("Manca l'intestatario."); return; }
       codice = nuovoCodice(); o.codice = codice;
-      TD.db.attestati.push({ codice: codice, cliente: c.id, intestatario: o.intestatario, data: TD.oggi(), livello: TD.livello(Number(o.livello)).nome, ore: o.ore, percorsi: o.percorsi });
+      const rec = { codice: codice, cliente: c.id, intestatario: o.intestatario, data: TD.oggi(), livello: TD.livello(Number(o.livello)).nome, ore: o.ore, percorsi: o.percorsi, tutor: TD.db.profilo.nome, pubblico: !!o.pubblico };
+      TD.db.attestati.push(rec);
       TD.salva();
-      disegna().then(function (pg) {
+      TD.chiaviTutor().then(function (ch) { return ch ? TD.scambio.firmaAttestato(rec, ch) : ""; })
+        .catch(function () { return ""; })
+        .then(function (url) { rec.verifica = url; urlVerifica = url; TD.salva(); return disegna(); })
+        .then(function (pg) {
         TD.anteprima(document.getElementById("prevA"), pg);
         TD.scaricaPdf(pg, "attestato-" + TD.nomeFile(o.intestatario) + "-" + codice + ".pdf", { titolo: "Attestato " + o.intestatario });
-        TD.toast("Attestato " + codice + " rilasciato e registrato.");
-        codice = null;
+        TD.toast("Attestato " + codice + " rilasciato e registrato" + (urlVerifica ? ", con QR di verifica." : "."));
+        codice = null; urlVerifica = "";
       });
     };
   });
@@ -271,6 +296,18 @@
     x.strokeStyle = "#b8923a"; x.lineWidth = 3; x.strokeRect(90, 90, W - 180, H - 180);
     // banda livelli
     TD.LIVELLI.forEach(function (l, i) { x.fillStyle = l.colore; x.fillRect(90 + i * (W - 180) / 4, 90, (W - 180) / 4, 22); });
+    // QR di verifica in alto a destra (in anteprima un riquadro segnaposto)
+    const lq = 320, xq = W - 120 - lq, yq = 135;
+    if (o.verifica && TD.qr) {
+      try {
+        const moduli = TD.qr.codifica(o.verifica, "M").dimensione + 8, lato = Math.floor(lq / moduli) * moduli, sp = (lq - lato) / 2;
+        x.drawImage(TD.qr.canvas(o.verifica, lato, { livello: "M" }), xq + sp, yq + sp, lato, lato);
+      } catch (e) {}
+    } else {
+      x.strokeStyle = "#cbd5e1"; x.lineWidth = 3; x.setLineDash([12, 10]); x.strokeRect(xq + 20, yq + 20, lq - 40, lq - 40); x.setLineDash([]);
+      x.font = "400 24px " + TD.FONT.sans; x.fillStyle = "#94a3b8"; x.textAlign = "center"; x.fillText("QR di verifica", xq + lq / 2, yq + lq / 2 + 8); x.textAlign = "left";
+    }
+    x.font = "600 22px " + TD.FONT.sans; x.fillStyle = "#1d3557"; x.textAlign = "center"; x.fillText("INQUADRA PER VERIFICARE", xq + lq / 2, yq + lq + 34); x.textAlign = "left";
     // logo e intestazione
     if (TD.logoImg && TD.logoImg.complete) { try { x.drawImage(TD.logoImg, W / 2 - 75, 160, 150, 150); } catch (e) {} }
     x.textAlign = "center"; x.fillStyle = "#1d3557";
@@ -306,7 +343,7 @@
     x.fillText(o.luogo || "", 220, yb + 10);
     x.font = "600 26px " + N; x.fillStyle = "#1d3557"; x.fillText("Codice attestato: " + o.codice, 220, yb + 60);
     x.font = "400 22px " + N; x.fillStyle = "#6b7280";
-    x.fillText("Verificabile presso il docente. Riferimento: quadro europeo DigComp 2.2. Non costituisce titolo di studio.", 220, yb + 98);
+    x.fillText((o.verifica ? "Verificabile con il QR in alto a destra. " : "Verificabile presso il docente. ") + "Rif. quadro europeo DigComp 2.2. Non è un titolo di studio.", 220, yb + 98);
     x.textAlign = "center";
     if (firma) { const h = 120, w = Math.min(460, firma.width * h / firma.height); x.drawImage(firma, W - 520 - w / 2, yb - 120, w, h); }
     x.strokeStyle = "#374151"; x.lineWidth = 2; x.beginPath(); x.moveTo(W - 760, yb + 14); x.lineTo(W - 280, yb + 14); x.stroke();

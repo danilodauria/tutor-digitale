@@ -1,5 +1,14 @@
 # Versioni
 
+## 1.3.0 · 14 novembre 2026
+
+- **Backup cifrato con password** (miglioria 5): Impostazioni › «Backup cifrato con password» salva un file `.tdcifrato` protetto con AES-256 e PBKDF2, da tenere su chiavetta o cloud senza rischi per la privacy dei clienti; «Importa backup» riconosce da solo il file cifrato e chiede la password. In home compare un promemoria se l'ultima copia ha più di una settimana.
+- **Registro presenze per gli enti** (miglioria 6): Documenti › «Registro presenze», o dalla scheda cliente › Registro lezioni. Foglio mensile in PDF con incontri, orari, ore, argomenti, griglia presente/assente per ogni partecipante, firme del docente e del referente; a scelta un foglio firme a mano per ogni incontro e la tabella per Excel.
+- **Statistiche del lavoro** (miglioria 10): ore e incassi per mese, da incassare, clienti per luogo e città, argomenti più richiesti, progressi e andamento dei quiz di ogni allievo; tabella per Excel e riepilogo in PDF.
+- **Firma digitale dei kit** (miglioria 4): kit e correzioni escono firmati con una chiave ECDSA del tutor. L'app Allievo mostra «Kit verificato», ricorda l'impronta della chiave e rifiuta i kit modificati o firmati da un'altra chiave.
+- **Attestato con QR di verifica** (miglioria 18): il QR in alto a destra apre la pagina pubblica `verifica/`, che controlla la firma e mostra codice, intestatario, data e livello senza server né archivio online. Registro pubblico facoltativo, solo con il consenso dell'intestatario.
+- **Vademecum in PDF** (A5 da schermo, A4 da stampare e libricino da piegare), collegato nel menu e rigenerato in automatico da GitHub a ogni nuova versione.
+
 ## 1.2.0 · 13 novembre 2026
 
 - **QR code** scritto nel progetto (nessuna libreria): kit dell'allievo, sessione di assistenza a distanza e correzione si aprono inquadrando il QR con la fotocamera del telefono o del tablet.

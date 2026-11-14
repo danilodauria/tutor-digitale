@@ -72,11 +72,13 @@
 
   async function pacchettoKit(c, k) {
     const a = app(c);
-    return TD.scambio.impacchetta("kit", { id: c.id, partecipante: k.partecipante || "" }, {
+    const p = await TD.scambio.impacchetta("kit", { id: c.id, partecipante: k.partecipante || "" }, {
       allievo: { nome: nomeAllievo(c, k.partecipante), clienteId: c.id, partecipante: k.partecipante || "", tipo: c.tipo, ente: c.tipo === "ente" ? TD.nomeCliente(c) : "", livelli: c.livelli || {}, dispositivi: c.dispositivi || [] },
       tutor: datiTutor(), segreto: a.segreto,
       consegna: { id: k.id, data: k.data, scadenza: k.scadenza, messaggio: k.messaggio, compiti: k.compiti, quiz: TD.scambio.senzaSoluzioni(k.quiz) }
     }, a.segreto);
+    try { await TD.scambio.firmaPacchetto(p, await TD.chiaviTutor()); } catch (e) {}
+    return p;
   }
 
   async function mostraKit(c, k) {
@@ -87,7 +89,7 @@
     const file = TD.scambio.file(p, "tutor-digitale-kit_" + TD.nomeFile(nome) + "_" + k.data + ".json");
     const testo = "Ciao " + nome.split(" ")[0] + ", ecco i tuoi compiti di Tutor Digitale. Apri questo link (la prima volta installa l'app «Tutor Digitale · Allievo»):\n" + link;
     dialogo("Kit per " + E(nome) + " pronto",
-      '<p>Il link apre l\'app Allievo già personalizzata con nome, compiti' + (k.quiz.length ? " e quiz (senza soluzioni)" : "") + '. Il kit è firmato: le risposte che tornano si verificano da sole.</p>' +
+      '<p>Il link apre l\'app Allievo già personalizzata con nome, compiti' + (k.quiz.length ? " e quiz (senza soluzioni)" : "") + '. Il kit è firmato con la tua chiave digitale: l\'allievo vede «kit verificato» e le risposte che tornano si verificano da sole.</p>' +
       (TD.qr.adatto(link) ? '<div class="qr-box">' + TD.qr.svg(link, { etichetta: "QR del kit" }) + "<p><strong>A lezione:</strong> fai inquadrare questo QR con la fotocamera del telefono o del tablet dell'allievo. Si apre l'app già personalizzata.</p></div>" : '<p class="muted text-small">Il kit è troppo grande per un QR leggibile: usa link, condivisione o file.</p>') +
       '<label class="field"><span>Link personale (' + link.length + ' caratteri)</span><textarea readonly rows="3" class="code">' + E(link) + "</textarea></label>" +
       '<div class="actions"><button class="btn btn-primary" data-a="copia">' + I("copy") + 'Copia il link</button><button class="btn" data-a="share">' + I("upload") + 'Condividi (WhatsApp, email…)</button>' +
@@ -226,7 +228,7 @@
         consegnaId: k.id, data: TD.oggi(), esito: k.esito, commento: k.commento,
         compiti: k.compiti.map(function (cp) { const r = (k.compitiAllievo || {})[cp.id] || {}, v = val.compiti[cp.id] || {}; return { id: cp.id, testo: cp.testo, fatto: !!r.fatto, esito: v.esito || "", nota: v.nota || "" }; }),
         allegati: val.allegati.map(function (a) { return a ? { nome: a.nome, esito: a.esito, nota: a.nota } : null; }).filter(Boolean), tutor: datiTutor()
-      }, app(c).segreto);
+      }, app(c).segreto).then(function (p) { return TD.chiaviTutor().then(function (ch) { return TD.scambio.firmaPacchetto(p, ch); }).catch(function () { return p; }); });
     }
     document.getElementById("bCorr").onclick = async function () {
       const p = await pacchetto();

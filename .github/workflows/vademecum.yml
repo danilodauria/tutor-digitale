@@ -1,0 +1,97 @@
+name: Vademecum
+
+# Il vademecum in PDF si rigenera da solo quando cambia la versione del
+# programma (package.json), le novità (CHANGELOG.md), le lezioni o lo script.
+# Se il PDF cambia, lo salva nel repository e ripubblica il sito.
+# A ogni versione pubblicata (Release) allega i tre PDF.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "package.json"
+      - "CHANGELOG.md"
+      - "assets/js/data-*.js"
+      - "scripts/build_vademecum.py"
+      - "scripts/export-data.cjs"
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: vademecum-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  vademecum:
+    name: Rigenera il vademecum
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || 'main' }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Programmi per il PDF
+        run: pip install reportlab==4.2.5 pymupdf==1.24.14
+
+      - name: Genera A5, A4 e libricino
+        run: python scripts/build_vademecum.py
+
+      - name: Controlla che il vademecum sia della versione giusta
+        run: |
+          set -euo pipefail
+          versione="$(node -p "require('./package.json').version")"
+          for f in assets/pdf/vademecum-tutor-digitale.pdf assets/pdf/vademecum-tutor-digitale-a4.pdf assets/pdf/vademecum-tutor-digitale-libricino-a4.pdf; do
+            python -c "import pymupdf,sys; k=pymupdf.open(sys.argv[1]).metadata['keywords']; sys.exit(0 if 'versione='+sys.argv[2] in k else 1)" "$f" "$versione" \
+              || { echo "::error::$f non dichiara la versione $versione"; exit 1; }
+            echo "✓ $f · versione $versione"
+          done
+
+      - name: Salva nel repository e ripubblica il sito
+        if: github.event_name != 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- assets/pdf; then
+            echo "Il vademecum è già aggiornato."
+            exit 0
+          fi
+          versione="$(node -p "require('./package.json').version")"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/pdf
+          git commit -m "Vademecum aggiornato alla versione $versione"
+          for tentativo in 1 2 3; do
+            git pull --rebase origin main && git push && break
+            sleep 5
+          done
+          # un push fatto da questo workflow non avvia gli altri: la pubblicazione si chiede esplicitamente
+          gh workflow run pages.yml --ref main
+          echo "Vademecum $versione salvato e sito in ripubblicazione."
+
+      - name: Allega i PDF alla versione
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          versione="$(node -p "require('./package.json').version")"
+          dir="$RUNNER_TEMP/allegati"; mkdir -p "$dir"
+          cp assets/pdf/vademecum-tutor-digitale.pdf "$dir/Vademecum-Tutor-Digitale-$versione.pdf"
+          cp assets/pdf/vademecum-tutor-digitale-a4.pdf "$dir/Vademecum-Tutor-Digitale-$versione-A4.pdf"
+          cp assets/pdf/vademecum-tutor-digitale-libricino-a4.pdf "$dir/Vademecum-Tutor-Digitale-$versione-libricino.pdf"
+          gh release upload "$TAG" "$dir"/*.pdf --clobber --repo "$GITHUB_REPOSITORY"
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name'
