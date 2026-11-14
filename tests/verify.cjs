@@ -389,6 +389,13 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
     ok(fermato, "sicurezza: un pacchetto compresso enorme viene fermato");
     ok(TD.aula && typeof TD.aula.classifica === "function", "sicurezza: modulo aula presente");
   }
+  /* 24. chiave pubblica dell'autore: stessa nel programma e nel registro, impronta corretta */
+  {
+    const reg = JSON.parse(leggi("verifica/chiavi.json")).chiavi;
+    ok(reg.length >= 1 && reg.every((k) => TD.CHIAVI_AUTORE.includes(k.chiave) || !k.editore), "chiavi: ogni chiave editore del registro è anche nel programma");
+    for (const k of reg) ok(await S.impronta(k.chiave) === k.impronta, "chiavi: impronta di " + k.nome + " corretta");
+    for (const k of TD.CHIAVI_AUTORE) { let buona = true; try { await crypto.subtle.importKey("raw", S.deb64u(k), { name: "ECDSA", namedCurve: "P-256" }, false, ["verify"]); } catch (e) { buona = false; } ok(buona, "chiavi: chiave dell'autore valida (P-256)"); }
+  }
   ok(JSON.parse(leggi("desktop/package.json")).version === VER, "desktop/package.json deve avere la versione " + VER);
 })().then(fine, (e) => { ok(false, "scambio: " + e.stack); fine(); });
 

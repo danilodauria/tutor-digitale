@@ -1,5 +1,9 @@
 # Versioni
 
+## 1.5.2 · 14 novembre 2026
+
+- **Chiave dell'autore pubblicata** (impronta `D875-1419-D6E1-1819`): la pagina di verifica mostra «Chiave riconosciuta: Danilo D'Auria» sugli attestati firmati da Danilo, e le licenze per formatori emesse da lui risultano valide nel programma di chi le importa.
+
 ## 1.5.1 · 14 novembre 2026
 
 Revisione di sicurezza completa, con controlli automatici per le versioni future.

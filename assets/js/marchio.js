@@ -46,7 +46,9 @@
   /* Chiavi pubbliche dell'autore: solo una licenza firmata con una di queste è «valida».
      Si aggiungono qui (o in verifica/chiavi.json, con "editore": true) dopo averle copiate
      da Impostazioni › Firma digitale › «Copia la chiave pubblica». */
-  TD.CHIAVI_AUTORE = [];
+  TD.CHIAVI_AUTORE = [
+    "BPA1VZRySleIsZmx-2rj4p2TQFMWkBSwRoUkzloOsUv_rsVQm4P9lXKueEZE82LjFFYxuYaqkHJC8vfJVZ8cxos" // Danilo D'Auria · impronta D875-1419-D6E1-1819 · dal 14/11/2026
+  ];
   let chiaviPubblicate = null;
   TD.chiaviFidate = async function () {
     if (chiaviPubblicate === null) {
