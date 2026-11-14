@@ -3,9 +3,11 @@ name: Vademecum
 # Il vademecum in PDF si rigenera da solo quando cambia la versione del
 # programma (package.json), le novità (CHANGELOG.md), le lezioni o lo script.
 # Se il PDF cambia, lo salva nel repository e ripubblica il sito.
-# A ogni versione pubblicata (Release) allega i tre PDF.
+# A ogni etichetta di versione (v1.3.0…) crea la Release con le novità del
+# CHANGELOG e le allega i tre PDF; lo stesso se la Release si crea a mano.
 on:
   push:
+    tags: ["v*"]
     branches: [main]
     paths:
       - "package.json"
@@ -32,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || 'main' }}
+          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.ref_type == 'tag' && github.ref_name || 'main' }}
 
       - uses: actions/setup-node@v7
         with:
@@ -59,7 +61,7 @@ jobs:
           done
 
       - name: Salva nel repository e ripubblica il sito
-        if: github.event_name != 'release'
+        if: github.event_name != 'release' && github.ref_type != 'tag'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -81,14 +83,21 @@ jobs:
           gh workflow run pages.yml --ref main
           echo "Vademecum $versione salvato e sito in ripubblicazione."
 
-      - name: Allega i PDF alla versione
-        if: github.event_name == 'release'
+      - name: Crea la versione e allega i PDF
+        if: github.event_name == 'release' || github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.event.release.tag_name }}
+          TAG: ${{ github.event.release.tag_name || github.ref_name }}
         run: |
           set -euo pipefail
           versione="$(node -p "require('./package.json').version")"
+          if [ "v$versione" != "$TAG" ]; then echo "::error::L'etichetta $TAG non corrisponde a package.json ($versione)"; exit 1; fi
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            # note della versione: la sezione del CHANGELOG di questa versione
+            awk -v v="$versione" '/^## /{dentro=($2==v)} dentro && !/^## /' CHANGELOG.md > "$RUNNER_TEMP/note.md"
+            printf '\n**Vademecum** di questa versione allegato in tre formati: A5 da leggere, A4 da stampare, libricino da piegare.\n\nApri il programma: https://danilodauria.github.io/tutor-digitale/\n' >> "$RUNNER_TEMP/note.md"
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "Tutor Digitale $versione" --notes-file "$RUNNER_TEMP/note.md" --verify-tag
+          fi
           dir="$RUNNER_TEMP/allegati"; mkdir -p "$dir"
           cp assets/pdf/vademecum-tutor-digitale.pdf "$dir/Vademecum-Tutor-Digitale-$versione.pdf"
           cp assets/pdf/vademecum-tutor-digitale-a4.pdf "$dir/Vademecum-Tutor-Digitale-$versione-A4.pdf"
