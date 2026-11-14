@@ -57,7 +57,8 @@ window.TD = window.TD || {};
   }
   async function decifra(chiave, dati) {
     const p = await crypto.subtle.decrypt({ name: "AES-GCM", iv: dati.slice(0, 12) }, chiave, dati.slice(12));
-    return JSON.parse(dec.decode(new Uint8Array(p)));
+    const testo = dec.decode(new Uint8Array(p));
+    return TD.jsonSicuro ? TD.jsonSicuro(testo) : JSON.parse(testo);
   }
 
   /* ------------------------------------------------------------ collegamento */
@@ -93,11 +94,13 @@ window.TD = window.TD || {};
     }
     if (!ws) throw new Error("Nessun canale raggiungibile: serve Internet su entrambi i dispositivi.");
     const topic = RADICE + opz.stanza;
-    let buffer = ws._resto || new Uint8Array(0), aperto = true, idSub = 1;
+    let buffer = ws._resto || new Uint8Array(0), aperto = true, idSub = 1, visti = {};
     ws.send(subscribe(idSub++, topic));
     const ping = setInterval(function () { if (ws.readyState === 1) ws.send(new Uint8Array([0xC0, 0])); }, 25000);
     ws.onmessage = async function (e) {
-      const nuovo = new Uint8Array(e.data), tutto = new Uint8Array(buffer.length + nuovo.length);
+      const nuovo = new Uint8Array(e.data);
+      if (buffer.length + nuovo.length > 2 * 1024 * 1024) { buffer = new Uint8Array(0); return; }   // pacchetto anomalo: si scarta
+      const tutto = new Uint8Array(buffer.length + nuovo.length);
       tutto.set(buffer); tutto.set(nuovo, buffer.length);
       const r = leggiPacchetti(tutto); buffer = r.resto;
       for (const p of r.pacchetti) {
@@ -106,7 +109,15 @@ window.TD = window.TD || {};
         const dati = p.corpo.slice(2 + lt);
         try {
           const m = await decifra(chiave, dati);
-          if (m && m.__da !== io && opz.suMessaggio) opz.suMessaggio(m);
+          if (!m || m.__da === io || !opz.suMessaggio) continue;
+          /* contro la ripetizione: messaggi vecchi o già visti si scartano (la casella accetta la copia conservata) */
+          const eta = Math.abs(Date.now() - Number(m.__t || 0));
+          if (!opz.accettaVecchi && eta > 15 * 60 * 1000) continue;
+          const firma = m.__da + "|" + m.__n;
+          if (visti[firma]) continue;
+          visti[firma] = 1; visti._n = (visti._n || 0) + 1;
+          if (visti._n > 5000) { visti = {}; }
+          opz.suMessaggio(m);
         } catch (err) { /* messaggio non nostro o alterato: ignorato */ }
       }
     };
@@ -117,7 +128,7 @@ window.TD = window.TD || {};
       /* trattieni = il broker conserva l'ultimo messaggio e lo consegna a chi si collega dopo (casella) */
       invia: async function (obj, o) {
         if (ws.readyState !== 1) return false;
-        ws.send(publish(topic, await cifra(chiave, Object.assign({ __da: io }, obj)), !!(o && o.trattieni)));
+        ws.send(publish(topic, await cifra(chiave, Object.assign({}, obj, { __da: io, __t: Date.now(), __n: nuovaStanza() })), !!(o && o.trattieni)));
         return true;
       },
       chiudi: function () { aperto = false; clearInterval(ping); try { ws.send(new Uint8Array([0xE0, 0])); ws.close(); } catch (e) {} },

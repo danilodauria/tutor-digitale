@@ -103,18 +103,21 @@
       if (ver.stato === "alterata") { TD.toast("Kit rifiutato: la firma del tutor non corrisponde, il kit è stato modificato. Chiedi al tutor di rimandarlo."); return; }
       if (ver.stato === "valida" && d.chiaveTutor && d.chiaveTutor !== ver.chiave &&
         !TD.conferma("Attenzione: questo kit è firmato da una chiave diversa da quella del tuo tutor (impronta " + ver.impronta + "). Aprilo solo se il tutor ti ha detto che ha cambiato dispositivo. Continuare?")) return;
+      if (ver.stato === "assente" && d.chiaveTutor &&
+        !TD.conferma("Attenzione: questo kit NON porta la firma digitale del tuo tutor (gli altri la portavano). Potrebbe venire da qualcun altro. Aprilo solo se il tutor ti conferma di avertelo mandato lui. Continuare?")) return;
       if (ver.stato === "valida") { d.chiaveTutor = ver.chiave; d.improntaTutor = ver.impronta; }
       d.ultimaVerifica = ver.stato;
       if (d.allievo && d.allievo.clienteId !== a.clienteId && !TD.conferma("Questa app è di " + d.allievo.nome + ". Sostituire con il profilo di " + a.nome + "? I compiti attuali verranno tolti.")) return;
       if (d.allievo && d.allievo.clienteId !== a.clienteId) d.consegne = [];
       d.allievo = a; d.tutor = p.dati.tutor; d.segreto = p.dati.segreto;
       d.profilo = Object.assign({}, d.profilo, { nome: p.dati.tutor.nome || "", qualifica: p.dati.tutor.qualifica || "", email: p.dati.tutor.email || "", telefono: p.dati.tutor.telefono || "" });
-      if (p.dati.percorso) d.percorso = p.dati.percorso;
-      if (p.dati.casella && p.dati.casella.stanza) d.casella = p.dati.casella;
-      if (p.dati.marchio) { d.marchio = p.dati.marchio; if (TD.applicaMarchio) TD.applicaMarchio(); }
+      if (p.dati.percorso && Array.isArray(p.dati.percorso.incontri)) d.percorso = { nome: String(p.dati.percorso.nome || "Il mio percorso").slice(0, 120), descr: String(p.dati.percorso.descr || "").slice(0, 600),
+        incontri: p.dati.percorso.incontri.slice(0, 40).map(function (inc) { return { titolo: String((inc && inc.titolo) || "").slice(0, 120), lezioni: (inc && Array.isArray(inc.lezioni) ? inc.lezioni : []).filter(TD.idOk).slice(0, 20) }; }) };
+      if (p.dati.casella && TD.idOk(p.dati.casella.stanza) && /^[A-Za-z0-9_-]{43}$/.test(String(p.dati.casella.chiave || ""))) d.casella = { stanza: p.dati.casella.stanza, chiave: p.dati.casella.chiave };
+      if (p.dati.marchio) { d.marchio = { nome: String(p.dati.marchio.nome || "").slice(0, 40), colore: /^#[0-9a-f]{6}$/i.test(p.dati.marchio.colore || "") ? p.dati.marchio.colore : "" }; if (TD.applicaMarchio) TD.applicaMarchio(); }
       if ((p.dati.lezioniPersonali || []).length) {
         d.personali = d.personali || { lezioni: [], domande: [] };
-        p.dati.lezioniPersonali.forEach(function (l) { d.personali.lezioni = d.personali.lezioni.filter(function (x) { return x.id !== l.id; }).concat([l]); });
+        p.dati.lezioniPersonali.slice(0, 60).map(TD.lezioneSicura).filter(Boolean).forEach(function (l) { d.personali.lezioni = d.personali.lezioni.filter(function (x) { return x.id !== l.id; }).concat([l]); });
         if (TD.applicaPersonali) TD.applicaPersonali();
       }
       const k = p.dati.consegna;
@@ -127,7 +130,7 @@
     }
     if (p.tipo === "correzione") {
       const firma = await TD.scambio.verifica(p, d.segreto);
-      if (firma === false) { TD.toast("La correzione non risulta firmata dal tuo tutor."); return; }
+      if (firma === false || (firma !== true && TD.scambio.sicuro && d.segreto)) { TD.toast("La correzione non risulta firmata dal tuo tutor."); return; }
       const ver = await TD.scambio.verificaPacchetto(p);
       if (ver.stato === "alterata" || (ver.stato === "valida" && d.chiaveTutor && d.chiaveTutor !== ver.chiave)) { TD.toast("La correzione non porta la firma digitale del tuo tutor: non la apro."); return; }
       const k = consegna(p.dati.consegnaId);
@@ -181,7 +184,7 @@
       '<div class="wrap">' +
         (TD.scadenze().length ? '<section class="card"><div class="block-head"><h2>' + I("clock") + 'Scadenze</h2><a href="#/compiti">Vai ai compiti ' + I("arrow") + "</a></div>" + listaScadenze(TD.scadenze().slice(0, 4)) +
           (!(d.impostazioni || {}).avvisi && typeof Notification !== "undefined" ? '<div class="actions"><button class="btn btn-sm" id="attAvvisi">' + I("alert") + "Avvisami il giorno prima</button></div>" : "") + "</section>" : "") +
-        (nuoveCorr.length ? '<a class="note-box ok-box" href="#/correzione/' + nuoveCorr[0].id + '">' + I("award") + "<div><strong>È arrivata la correzione dei compiti del " + E(TD.dataIt(nuoveCorr[0].data)) + "</strong><br>Tocca per vedere com'è andata.</div></a>" : "") +
+        (nuoveCorr.length ? '<a class="note-box ok-box" href="#/correzione/' + E(nuoveCorr[0].id) + '">' + I("award") + "<div><strong>È arrivata la correzione dei compiti del " + E(TD.dataIt(nuoveCorr[0].data)) + "</strong><br>Tocca per vedere com'è andata.</div></a>" : "") +
         '<section class="tiles">' +
           tile("#/compiti", "pen", "Compiti", nc ? nc + " da fare" : "Tutto fatto") +
           tile("#/percorsi", "book", "Lezioni", "Ripassa quando vuoi") +
@@ -261,7 +264,7 @@
           (k.messaggio ? '<p class="q-proposta">' + I("user") + " " + E(k.messaggio) + "</p>" : "") +
           (k.compiti.length ? '<ul class="task-list">' + k.compiti.map(function (c) {
             const s = (k.statoCompiti || {})[c.id] || {};
-            return '<li class="' + (s.fatto ? "done" : "") + '"><label class="check"><input type="checkbox" data-k="' + k.id + '" data-c="' + c.id + '"' + (s.fatto ? " checked" : "") + (k.inviata ? " disabled" : "") + "> <span>" + E(c.testo) + (c.lezione ? ' <a href="#/lezione/' + c.lezione + '">rivedi la lezione</a>' : "") + "</span></label>" +
+            return '<li class="' + (s.fatto ? "done" : "") + '"><label class="check"><input type="checkbox" data-k="' + k.id + '" data-c="' + c.id + '"' + (s.fatto ? " checked" : "") + (k.inviata ? " disabled" : "") + "> <span>" + E(c.testo) + (c.lezione ? ' <a href="#/lezione/' + E(c.lezione) + '">rivedi la lezione</a>' : "") + "</span></label>" +
               (k.inviata ? (s.nota ? "<small>" + E(s.nota) + "</small>" : "") : '<input class="nota" data-nk="' + k.id + '" data-nc="' + c.id + '" placeholder="Com\'è andata? (facoltativo)" value="' + E(s.nota || "") + '">') + "</li>";
           }).join("") + "</ul>" : "") +
           (k.quiz.length ? '<div class="actions">' + (k.inviata ? "" : '<a class="btn ' + (fatto ? "" : "btn-primary") + '" href="#/consegna/' + k.id + '">' + I("quiz") + (fatto ? "Rivedi il quiz" : "Fai il quiz (" + k.quiz.length + " domande)") + "</a>") + (fatto ? '<span class="pill ok">' + I("check") + "Quiz completato</span>" : "") + "</div>" : "") +
@@ -430,7 +433,7 @@
         const ok = lez.length && lez.every(function (id) { return rip.indexOf(id) >= 0; });
         return '<li class="card' + (ok ? " fatto" : "") + '"><h2>' + (ok ? I("check") : "") + "Incontro " + (i + 1) + " · " + E(inc.titolo) + '</h2><ul class="list">' + lez.map(function (id) {
           const l = TD.lezione(id);
-          return '<li><a href="#/lezione/' + id + '"><span>' + E(l.titolo) + "<small>" + (rip.indexOf(id) >= 0 ? "ripassata ✓" : "da ripassare") + "</small></span>" + I("arrow") + "</a></li>";
+          return '<li><a href="#/lezione/' + E(id) + '"><span>' + E(l.titolo) + "<small>" + (rip.indexOf(id) >= 0 ? "ripassata ✓" : "da ripassare") + "</small></span>" + I("arrow") + "</a></li>";
         }).join("") + "</ul></li>";
       }).join("") + "</ol></div>";
   });
@@ -453,7 +456,7 @@
     const d2 = document.getElementById("disAvvisi"); if (d2) d2.onclick = function () { d.impostazioni.avvisi = false; TD.salva(); TD.controllaAvvisi(); TD.render(); };
     document.getElementById("exp").onclick = function () { TD.scarica(new Blob([JSON.stringify(TD.db)], { type: "application/json" }), "tutor-digitale-allievo-copia_" + TD.oggi() + ".json"); };
     document.getElementById("imp").onchange = function () {
-      const r = new FileReader(); r.onload = function () { try { const o = JSON.parse(r.result); if (!("consegne" in o)) throw 0; TD.db = o; TD.salva(); TD.toast("Copia ripristinata."); TD.vai("#/"); } catch (e) { TD.toast("Non è una copia valida."); } }; r.readAsText(this.files[0]);
+      const r = new FileReader(); r.onload = function () { try { const o = TD.jsonSicuro(r.result); if (!("consegne" in o)) throw 0; TD.db = o; TD.salva(); TD.toast("Copia ripristinata."); TD.vai("#/"); } catch (e) { TD.toast("Non è una copia valida."); } }; r.readAsText(this.files[0]);
     };
     document.getElementById("del").onclick = function () { if (TD.conferma("Cancellare profilo, compiti e risultati da questo dispositivo?")) { TD.azzera(); TD.vai("#/"); } };
   });

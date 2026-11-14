@@ -45,7 +45,7 @@ JSON.parse(leggi("manifest.webmanifest"));
 /* pagina di verifica degli attestati */
 const htmlV = leggi("verifica/index.html");
 ["scambio.js", "verifica.js"].forEach((f) => ok(htmlV.includes('src="../assets/js/' + f + '?v=' + VER + '"'), "verifica/index.html non carica " + f + " con ?v=" + VER));
-ok(htmlV.includes('VERSIONE: "' + VER + '"'), "verifica/index.html: versione diversa da package.json");
+ok(htmlV.includes('<span data-versione>' + VER + "</span>"), "verifica/index.html: versione diversa da package.json");
 JSON.parse(leggi("verifica/chiavi.json")); JSON.parse(leggi("verifica/registro.json"));
 ok(fs.existsSync(path.join(R, "scripts/build_vademecum.py")), "manca lo script del vademecum");
 ok(fs.existsSync(path.join(R, "assets/pdf/vademecum-tutor-digitale.pdf")), "manca il vademecum in PDF");
@@ -363,10 +363,31 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
   {
     const chL = await S.nuoveChiavi();
     const lic = await TD.emettiLicenza({ numero: "TDL-2026-001", licenziatario: "Associazione Prova", email: "a@b.it", piano: "associazione", dal: "2026-11-14", al: "2027-11-14" }, chL);
-    ok((await TD.verificaLicenza(lic, "2026-12-01")).stato === "valida", "licenza: firma valida");
-    ok((await TD.verificaLicenza(lic, "2028-01-01")).stato === "scaduta", "licenza: scadenza");
+    const fid = [chL.pubblica];
+    ok((await TD.verificaLicenza(lic, "2026-12-01", fid)).stato === "valida", "licenza: firma valida dell'autore");
+    ok((await TD.verificaLicenza(lic, "2028-01-01", fid)).stato === "scaduta", "licenza: scadenza");
+    ok((await TD.verificaLicenza(lic, "2026-12-01", ["altra-chiave"])).stato === "sconosciuta", "licenza: firmata da chi non è l'autore → non riconosciuta");
     const falsa = JSON.parse(JSON.stringify(lic)); falsa.al = "2099-12-31";
-    ok((await TD.verificaLicenza(falsa, "2026-12-01")).stato === "alterata", "licenza: una data cambiata a mano viene scoperta");
+    ok((await TD.verificaLicenza(falsa, "2026-12-01", fid)).stato === "alterata", "licenza: una data cambiata a mano viene scoperta");
+  }
+  /* 23. sicurezza dei dati che arrivano da fuori */
+  {
+    const p = TD.jsonSicuro('{"__proto__":{"inquinato":1},"constructor":{"x":1},"a":{"id":"x\\"><img src=x onerror=alert(1)>","lezione":"pc-0-1"},"b":[{"__proto__":{"y":1},"id":"ok_1"}]}');
+    ok(({}).inquinato === undefined && !Object.prototype.hasOwnProperty.call(p, "__proto__") && !Object.prototype.hasOwnProperty.call(p, "constructor"), "sicurezza: niente inquinamento dei prototipi da JSON esterno");
+    ok(TD.idOk(p.a.id) && !/[<>"]/.test(p.a.id) && p.a.lezione === "pc-0-1" && p.b[0].id === "ok_1", "sicurezza: identificativi ripuliti");
+    ok(!TD.idOk("__proto__") && !TD.idOk("a b") && TD.idOk("my-abc_1"), "sicurezza: controllo degli identificativi");
+    ok(TD.urlDati("javascript:alert(1)") === "" && TD.urlDati("data:text/html;base64,PHNjcmlwdD4=") === "" && TD.urlDati("data:image/svg+xml;base64,PHN2Zz4=") === "", "sicurezza: niente javascript:, HTML o SVG negli allegati");
+    ok(TD.urlDati("data:image/png;base64,iVBORw0KGgo=", true) !== "" && TD.urlDati("data:application/pdf;base64,JVBERi0=", true) === "" && TD.urlDati("data:application/pdf;base64,JVBERi0=") !== "", "sicurezza: immagini e PDF ammessi dove servono");
+    ok(TD.csv("=SOMMA(A1)") === "\"'=SOMMA(A1)\"" && TD.csv("+39 333") === "\"'+39 333\"" && TD.csv('Rossi "Mario"') === '"Rossi ""Mario"""', "sicurezza: niente formule eseguite nei CSV");
+    ok(TD.lezioneSicura({ id: "my-x", dev: "pc", liv: 1, titolo: "T", obiettivi: ["o"], passi: ["a", "b"], immagini: [{ src: "javascript:alert(1)" }, { src: "data:image/png;base64,AAAA" }] }).immagini.length === 1, "sicurezza: immagini delle lezioni solo come data:image");
+    ok(TD.lezioneSicura({ id: "pc-0-1", dev: "pc", liv: 1, titolo: "T", obiettivi: ["o"], passi: ["a", "b"] }) === null && TD.lezioneSicura({ id: "my-x", dev: "<b>", liv: 1, titolo: "T", obiettivi: ["o"], passi: ["a", "b"] }) === null, "sicurezza: lezioni con id o percorso non validi rifiutate");
+    const cas = TD.casellaUnisci([], [{ id: "a1", tipo: "file", titolo: "x", file: { nome: "../../evil.exe", dati: "javascript:alert(1)" } }, { id: "a2", tipo: "file", titolo: "y", file: { nome: "a/b.pdf", dati: "data:application/pdf;base64,JVBERi0=" } }, { id: "__proto__", tipo: "nota", titolo: "z" }], 1);
+    ok(cas.length === 1 && cas[0].id === "a2" && cas[0].file.nome === "a_b.pdf", "sicurezza: casella scarta file pericolosi e id strani");
+    // pacchetto «a bomba»: 60 MB di zeri compressi non devono essere scompattati
+    const bomba = await new Response(new Blob([new Uint8Array(60 * 1024 * 1024)]).stream().pipeThrough(new CompressionStream("deflate-raw"))).arrayBuffer();
+    let fermato = false; try { await S.decomprimi("TD1." + Buffer.from(bomba).toString("base64url")); } catch (e) { fermato = /grande/.test(e.message); }
+    ok(fermato, "sicurezza: un pacchetto compresso enorme viene fermato");
+    ok(TD.aula && typeof TD.aula.classifica === "function", "sicurezza: modulo aula presente");
   }
   ok(JSON.parse(leggi("desktop/package.json")).version === VER, "desktop/package.json deve avere la versione " + VER);
 })().then(fine, (e) => { ok(false, "scambio: " + e.stack); fine(); });

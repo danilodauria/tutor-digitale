@@ -136,8 +136,13 @@
   TD.importaContenuti = function (obj) {
     if (!obj || obj.formato !== FORMATO) throw new Error("Non è un file di contenuti di Tutor Digitale.");
     const p = personali(); let nl = 0, nd = 0;
-    (obj.lezioni || []).forEach(function (l) { if (!l || !l.id || TD.validaLezione(l).length) return; if (!/^my-/.test(l.id)) l.id = "my-" + l.id; p.lezioni = p.lezioni.filter(function (x) { return x.id !== l.id; }).concat([l]); nl++; });
-    (obj.domande || []).forEach(function (q) { if (TD.validaDomanda(q).length) return; if (p.domande.some(function (x) { return x[2] === q[2]; }) || TD.DOMANDE.some(function (x) { return x[2] === q[2]; })) return; p.domande.push(q); nd++; });
+    (obj.lezioni || []).forEach(function (l0) {
+      if (!l0 || typeof l0 !== "object") return;
+      const l = TD.lezioneSicura(Object.assign({}, l0, { id: /^my-/.test(String(l0.id)) ? l0.id : "my-" + String(l0.id || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 50) }));
+      if (!l || TD.validaLezione(l).length) return;
+      p.lezioni = p.lezioni.filter(function (x) { return x.id !== l.id; }).concat([l]); nl++;
+    });
+    (obj.domande || []).map(TD.domandaSicura).forEach(function (q) { if (!q || TD.validaDomanda(q).length) return; if (p.domande.some(function (x) { return x[2] === q[2]; }) || TD.DOMANDE.some(function (x) { return x[2] === q[2]; })) return; p.domande.push(q); nd++; });
     TD.salva(); TD.applicaPersonali();
     return { lezioni: nl, domande: nd };
   };
@@ -227,7 +232,7 @@
     if (im) im.onchange = function () {
       const f = this.files[0]; if (!f) return;
       const r = new FileReader();
-      r.onload = function () { try { const n = TD.importaContenuti(JSON.parse(r.result)); TD.toast("Importate " + n.lezioni + " lezioni e " + n.domande + " domande."); TD.render(); } catch (e) { TD.toast(e.message); } };
+      r.onload = function () { try { const n = TD.importaContenuti(TD.jsonSicuro(r.result)); TD.toast("Importate " + n.lezioni + " lezioni e " + n.domande + " domande."); TD.render(); } catch (e) { TD.toast(e.message); } };
       r.readAsText(f);
     };
   });

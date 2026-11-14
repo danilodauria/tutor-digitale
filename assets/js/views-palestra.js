@@ -19,13 +19,13 @@
 
     app.innerHTML = TD.intest("Esercizi", "Ogni lezione ha tre esercizi pratici di difficoltà crescente. Si fanno insieme o si assegnano come compito.") +
       '<div class="wrap">' +
-        '<nav class="chips">' + '<a class="chip' + (!dev ? " on" : "") + '" href="' + link({ dev: "" }) + '">Tutti i percorsi</a>' + TD.PERCORSI.map(function (x) { return '<a class="chip' + (dev === x.id ? " on" : "") + '" href="' + link({ dev: x.id }) + '">' + E(x.nome) + "</a>"; }).join("") + "</nav>" +
-        '<nav class="chips">' + '<a class="chip' + (liv == null ? " on" : "") + '" href="' + link({ liv: "" }) + '">Tutti i livelli</a>' + TD.LIVELLI.map(function (x) { return '<a class="chip liv-' + x.id + (liv === x.id ? " on" : "") + '" href="' + link({ liv: x.id }) + '">' + E(x.nome) + "</a>"; }).join("") + "</nav>" +
-        '<nav class="chips">' + '<a class="chip' + (!diff ? " on" : "") + '" href="' + link({ diff: "" }) + '">Ogni difficoltà</a>' + Object.keys(DIFF).map(function (k) { return '<a class="chip diff-' + k + (diff === k ? " on" : "") + '" href="' + link({ diff: k }) + '">' + DIFF[k] + "</a>"; }).join("") + "</nav>" +
+        '<nav class="chips">' + '<a class="chip' + (!dev ? " on" : "") + '" href="' + E(link({ dev: "" })) + '">Tutti i percorsi</a>' + TD.PERCORSI.map(function (x) { return '<a class="chip' + (dev === x.id ? " on" : "") + '" href="' + E(link({ dev: x.id })) + '">' + E(x.nome) + "</a>"; }).join("") + "</nav>" +
+        '<nav class="chips">' + '<a class="chip' + (liv == null ? " on" : "") + '" href="' + E(link({ liv: "" })) + '">Tutti i livelli</a>' + TD.LIVELLI.map(function (x) { return '<a class="chip liv-' + x.id + (liv === x.id ? " on" : "") + '" href="' + E(link({ liv: x.id })) + '">' + E(x.nome) + "</a>"; }).join("") + "</nav>" +
+        '<nav class="chips">' + '<a class="chip' + (!diff ? " on" : "") + '" href="' + E(link({ diff: "" })) + '">Ogni difficoltà</a>' + Object.keys(DIFF).map(function (k) { return '<a class="chip diff-' + k + (diff === k ? " on" : "") + '" href="' + E(link({ diff: k })) + '">' + DIFF[k] + "</a>"; }).join("") + "</nav>" +
         '<div class="toolbar"><span class="muted">' + elenco.length + " esercizi" + (c ? " · cliente attivo: <strong>" + E(TD.nomeCliente(c)) + "</strong>" : " · scegli un cliente nella lezione per assegnarli") + '</span><button class="btn" id="pdfEs">' + I("download") + "Scheda esercizi PDF</button></div>" +
         '<div class="ex-list">' + elenco.map(function (x, i) {
           return '<div class="ex-item ex-' + x.k + '"><span class="ex-tag">' + DIFF[x.k] + "</span>" + TD.badgeLiv(x.l.liv) +
-            '<p>' + E(x.t) + '</p><a class="muted text-small" href="#/lezione/' + x.l.id + '">' + I(TD.percorso(x.l.dev).icona) + E(x.l.titolo) + "</a>" +
+            '<p>' + E(x.t) + '</p><a class="muted text-small" href="#/lezione/' + E(x.l.id) + '">' + I(TD.percorso(x.l.dev).icona) + E(x.l.titolo) + "</a>" +
             (c ? '<button class="btn btn-sm" data-ass="' + i + '">' + I("pen") + "Assegna</button>" : "") + "</div>";
         }).join("") + "</div>" +
         '<section class="block"><h2>Esercizi interattivi</h2><p>Per allenare mano, occhio e prudenza c\'è la <a href="#/palestra">Palestra</a>: mouse, trascinamento, tastiera, «Truffa o no?» e password.</p></section>' +

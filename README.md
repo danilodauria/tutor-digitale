@@ -98,11 +98,16 @@ Non ci sono server, account o statistiche. Modalità aula, sincronizzazione e ca
 
 Kit, correzioni e attestati sono firmati con una **chiave ECDSA del tutor** creata sul dispositivo: l'app Allievo mostra «Kit verificato» e rifiuta i kit modificati; la pagina `verifica/` controlla gli attestati senza server.
 
+## Sicurezza
+
+Content-Security-Policy in ogni pagina, dati in arrivo ripuliti, firme digitali su kit, correzioni, attestati e licenze, backup cifrato. Ogni pubblicazione passa da `node scripts/sicurezza.cjs`; ogni lunedì il workflow «Controllo di sicurezza» ripete i controlli con `npm audit` e CodeQL. Dettagli e segnalazioni: [SECURITY.md](SECURITY.md).
+
 ## Come si prova in locale
 
 ```bash
 python3 -m http.server 8000      # poi apri http://localhost:8000
 node tests/verify.cjs            # verifiche automatiche
+node scripts/sicurezza.cjs       # controllo di sicurezza (--aggiorna rigenera la CSP)
 ```
 
 Le verifiche controllano sintassi, file in cache delle due app, coerenza delle versioni, completezza delle 40 lezioni e della banca delle domande, che in 40 partite consecutive la risposta giusta cambi sempre posizione e stile di numerazione, che il kit non contenga soluzioni, che la correzione automatica sia esatta, che un pacchetto alterato o una password sbagliata vengano rifiutati, che il backup cifrato non contenga dati in chiaro, che firma dei kit e QR degli attestati rilevino ogni modifica, che statistiche e registro presenze facciano i conti giusti.

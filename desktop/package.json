@@ -1,6 +1,6 @@
 {
   "name": "tutor-digitale",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "private": true,
   "description": "Tutor Digitale per Windows, Linux e macOS: lezioni di tecnologia su misura, clienti, documenti e app Allievo, anche offline.",
   "author": "Danilo D'Auria <danilodauria.site@gmail.com>",
@@ -14,11 +14,11 @@
     "dist:mac": "electron-builder --mac --publish never"
   },
   "dependencies": {
-    "electron-updater": "^6.3.9"
+    "electron-updater": "^6.8.11"
   },
   "devDependencies": {
-    "electron": "^38.2.0",
-    "electron-builder": "^26.0.12"
+    "electron": "^45.3.2",
+    "electron-builder": "^26.18.0"
   },
   "build": {
     "appId": "it.danilodauria.tutordigitale",

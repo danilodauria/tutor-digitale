@@ -109,9 +109,9 @@
     document.getElementById("stP").onclick = function () { costruisci().then(TD.stampa); };
     document.getElementById("csvP").onclick = function () {
       const o = opz(), inc = TD.incontriDelMese(o.cliente, o.mese, o.pianificati), parts = partecipanti(o.cliente);
-      const righe = [["Partecipante"].concat(inc.map(function (r) { return TD.dataIt(r.data); })).concat(["Ore"]).join(";")].concat(parts.map(function (x) {
+      const righe = [["Partecipante"].concat(inc.map(function (r) { return TD.csv(TD.dataIt(r.data)); })).concat(["Ore"]).join(";")].concat(parts.map(function (x) {
         const min = inc.filter(function (r) { return presente(r, x) && r.stato !== "pianificata"; }).reduce(function (s, r) { return s + (Number(r.durata) || 0); }, 0);
-        return ['"' + x.nome.replace(/"/g, '""') + '"'].concat(inc.map(function (r) { return presente(r, x) ? "P" : "A"; })).concat([oreTesto(min)]).join(";");
+        return [TD.csv(x.nome)].concat(inc.map(function (r) { return presente(r, x) ? "P" : "A"; })).concat([oreTesto(min)]).join(";");
       }));
       TD.scarica(new Blob(["﻿" + righe.join("\r\n")], { type: "text/csv" }), "presenze-" + TD.nomeFile(TD.nomeCliente(o.cliente)) + "-" + o.mese + ".csv");
     };

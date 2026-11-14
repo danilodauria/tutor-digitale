@@ -19,6 +19,12 @@ protocol.registerSchemesAsPrivileged([
 
 if (!app.requestSingleInstanceLock()) { app.quit(); }
 
+/* fuori dal programma si aprono solo siti web, email, telefono e RustDesk: mai file locali o altri protocolli */
+const ESTERNI = /^(https?:|mailto:|tel:|rustdesk:)/i;
+function apriFuori(url) {
+  if (ESTERNI.test(String(url))) shell.openExternal(url).catch(() => {});
+}
+
 function finestra(pagina) {
   const win = new BrowserWindow({
     width: 1280, height: 860, minWidth: 380, minHeight: 500,
@@ -32,14 +38,18 @@ function finestra(pagina) {
   // i collegamenti esterni (siti, email, rustdesk://) si aprono fuori dal programma
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith(SCHEMA + "://")) return { action: "allow" };
-    shell.openExternal(url).catch(() => {});
+    apriFuori(url);
     return { action: "deny" };
   });
   win.webContents.on("will-navigate", (e, url) => {
-    if (!url.startsWith(SCHEMA + "://")) { e.preventDefault(); shell.openExternal(url).catch(() => {}); }
+    if (!url.startsWith(SCHEMA + "://")) { e.preventDefault(); apriFuori(url); }
   });
+  win.webContents.on("will-redirect", (e, url) => { if (!url.startsWith(SCHEMA + "://")) e.preventDefault(); });
+  win.webContents.on("will-attach-webview", (e) => e.preventDefault());
   // fotocamera, microfono e schermo servono a QR, assistente vocale e assistenza a distanza
-  win.webContents.session.setPermissionRequestHandler((_wc, permesso, ok) => ok(["media", "display-capture", "notifications", "clipboard-sanitized-write", "fullscreen"].includes(permesso)));
+  const ammessi = ["media", "display-capture", "notifications", "clipboard-sanitized-write", "fullscreen"];
+  win.webContents.session.setPermissionRequestHandler((wc, permesso, ok) => ok(ammessi.includes(permesso) && wc.getURL().startsWith(SCHEMA + "://")));
+  win.webContents.session.setPermissionCheckHandler((_wc, permesso, origine) => ammessi.includes(permesso) && String(origine || "").startsWith(SCHEMA + "://"));
   return win;
 }
 
@@ -50,7 +60,7 @@ function menu() {
     { label: "Visualizza", submenu: [{ role: "reload", label: "Ricarica" }, { role: "togglefullscreen", label: "Schermo intero (per la TV)" }, { role: "zoomIn", label: "Ingrandisci" }, { role: "zoomOut", label: "Riduci" }, { role: "resetZoom", label: "Dimensione normale" }] },
     { label: "Aiuto", submenu: [
       { label: "Vademecum (PDF)", click: () => shell.openPath(path.join(CARTELLA, "assets", "pdf", "vademecum-tutor-digitale.pdf")) },
-      { label: "Sito del progetto", click: () => shell.openExternal("https://danilodauria.github.io/tutor-digitale/") },
+      { label: "Sito del progetto", click: () => apriFuori("https://danilodauria.github.io/tutor-digitale/") },
       { label: "Informazioni", click: () => dialog.showMessageBox({ type: "info", title: "Tutor Digitale", message: "Tutor Digitale " + app.getVersion(), detail: "Ideato, scritto e sviluppato da Danilo D'Auria.\nCodice MIT, contenuti CC BY-NC-SA 4.0.\nI dati restano su questo computer." }) }
     ] }
   ]));
@@ -62,7 +72,7 @@ app.whenReady().then(() => {
     let rel = decodeURIComponent(u.pathname).replace(/^\/+/, "");
     if (!rel || rel.endsWith("/")) rel += "index.html";
     const file = path.normalize(path.join(CARTELLA, rel));
-    if (!file.startsWith(CARTELLA)) return new Response("Vietato", { status: 403 });
+    if (u.host !== "app" || !file.startsWith(CARTELLA + path.sep)) return new Response("Vietato", { status: 403 });
     return net.fetch(pathToFileURL(file).toString());
   });
   menu();

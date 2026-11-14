@@ -8,7 +8,7 @@ window.TD = window.TD || {};
 (function () {
   "use strict";
 
-  TD.VERSIONE = "1.5.0";
+  TD.VERSIONE = "1.5.1";
   TD.MODO = TD.MODO || "tutor";
   const KEY = TD.MODO === "allievo" ? "tutor-digitale-allievo:v1:db" : "tutor-digitale:v1:db";
   TD.CHIAVE = KEY;
@@ -42,10 +42,35 @@ window.TD = window.TD || {};
 
   /* lezioni e domande create dal tutor (editor) o arrivate con il kit: si aggiungono a quelle del programma */
   const BASE_LEZ = (TD.LEZIONI || []).slice(), BASE_DOM = (TD.DOMANDE || []).slice();
+  /* una lezione «tua» (editor, kit, file di un collega) viene ricostruita con soli campi e tipi attesi */
+  TD.lezioneSicura = function (l) {
+    if (!l || typeof l !== "object" || !/^my-[A-Za-z0-9_-]{1,60}$/.test(String(l.id || ""))) return null;
+    const dev = (TD.PERCORSI || []).some(function (p) { return p.id === l.dev; }) ? l.dev : null;
+    const liv = Number(l.liv);
+    if (!dev || !(liv >= 0 && liv <= 3) || Math.floor(liv) !== liv) return null;
+    const t = function (x, max) { return String(x == null ? "" : x).slice(0, max || 2000); };
+    const lista = function (a, n) { return (Array.isArray(a) ? a : []).slice(0, n || 30).map(function (x) { return t(x); }).filter(Boolean); };
+    const es = l.esercizi || {};
+    const out = { id: l.id, dev: dev, liv: liv, n: 9, titolo: t(l.titolo, 160), durata: Math.min(480, Math.max(5, Number(l.durata) || 60)),
+      obiettivi: lista(l.obiettivi, 12), spiegazione: lista(l.spiegazione, 20), passi: lista(l.passi, 30),
+      esercizi: { facile: t(es.facile), medio: t(es.medio), esperto: t(es.esperto) }, compito: t(l.compito),
+      digcomp: (Array.isArray(l.digcomp) ? l.digcomp : []).map(Number).filter(function (a) { return TD.DIGCOMP && TD.DIGCOMP[a]; }).slice(0, 5),
+      immagini: (Array.isArray(l.immagini) ? l.immagini : []).slice(0, 12).map(function (im) { const src = im && TD.urlDati(im.src, true); return src ? { src: src, didascalia: t(im.didascalia, 200) } : null; }).filter(Boolean),
+      personale: true };
+    if (!out.titolo || !out.obiettivi.length || out.passi.length < 2) return null;
+    if (!out.digcomp.length) out.digcomp = [1];
+    return out;
+  };
+  TD.domandaSicura = function (q) {
+    if (!Array.isArray(q) || !(Number(q[0]) >= 0 && Number(q[0]) <= 3) || !(TD.PERCORSI || []).some(function (p) { return p.id === q[1]; })) return null;
+    const t = function (x) { return String(x == null ? "" : x).slice(0, 400); };
+    if (!q[2] || !q[3] || !Array.isArray(q[4]) || q[4].length !== 3) return null;
+    return [Math.floor(Number(q[0])), q[1], t(q[2]), t(q[3]), q[4].map(t), t(q[5])];
+  };
   TD.applicaPersonali = function () {
     const p = TD.db.personali || {};
-    if (TD.LEZIONI) { TD.LEZIONI.length = 0; BASE_LEZ.concat((p.lezioni || []).filter(function (l) { return l && l.id && l.titolo; })).forEach(function (l) { TD.LEZIONI.push(l); }); }
-    if (TD.DOMANDE) { TD.DOMANDE.length = 0; BASE_DOM.concat((p.domande || []).filter(function (q) { return Array.isArray(q) && q[2] && q[3] && q[4] && q[4].length === 3; })).forEach(function (q) { TD.DOMANDE.push(q); }); }
+    if (TD.LEZIONI) { TD.LEZIONI.length = 0; BASE_LEZ.concat((p.lezioni || []).map(TD.lezioneSicura).filter(Boolean)).forEach(function (l) { TD.LEZIONI.push(l); }); }
+    if (TD.DOMANDE) { TD.DOMANDE.length = 0; BASE_DOM.concat((p.domande || []).map(TD.domandaSicura).filter(Boolean)).forEach(function (q) { TD.DOMANDE.push(q); }); }
   };
   TD.applicaPersonali();
   /* ------------------------------------------------------------ timbri per la sincronizzazione (13)
@@ -143,6 +168,38 @@ window.TD = window.TD || {};
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   };
+  /* ------------------------------------------------------------ sicurezza dei dati che arrivano da fuori
+     (kit, risposte, casella, aula, file importati): niente chiavi che toccano i prototipi, identificativi
+     solo alfanumerici, indirizzi «data:» solo dei tipi attesi, testi di lunghezza ragionevole */
+  const CHIAVI_VIETATE = { "__proto__": 1, "constructor": 1, "prototype": 1 };
+  TD.idOk = function (s) { return typeof s === "string" && /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$/.test(s) && !CHIAVI_VIETATE[s]; };
+  const TIPI_DATI = /^data:(image\/(png|jpeg|gif|webp)|application\/(pdf|json|octet-stream|zip|vnd\.[a-z0-9.+-]+|msword)|text\/plain|audio\/(mpeg|mp4|ogg|webm|wav)|video\/(mp4|webm))(;[a-z]+=[A-Za-z0-9._-]+)*;base64,[A-Za-z0-9+\/]*={0,2}$/;
+  TD.urlDati = function (s, soloImmagini) {
+    s = typeof s === "string" ? s : "";
+    if (s.length > 12 * 1024 * 1024 || !TIPI_DATI.test(s)) return "";
+    if (soloImmagini && !/^data:image\//.test(s)) return "";
+    return s;
+  };
+  const CAMPI_ID = { id: 1, clienteId: 1, partecipante: 1, consegnaId: 1, lezione: 1, cliente: 1 };
+  TD.pulisci = function (v, profondita) {
+    profondita = profondita || 0;
+    if (profondita > 40) return null;
+    if (typeof v === "string") return v.length > 2e7 ? v.slice(0, 2e7) : v;
+    if (Array.isArray(v)) return v.slice(0, 20000).map(function (x) { return TD.pulisci(x, profondita + 1); });
+    if (!v || typeof v !== "object") return typeof v === "number" && !isFinite(v) ? 0 : v;
+    const o = {};
+    Object.keys(v).forEach(function (k) {
+      if (CHIAVI_VIETATE[k]) return;
+      let x = TD.pulisci(v[k], profondita + 1);
+      if (CAMPI_ID[k] && x != null && x !== "" && typeof x !== "object") { x = String(x); if (!TD.idOk(x)) x = "x" + Array.from(x).reduce(function (h, ch) { return (h * 31 + ch.charCodeAt(0)) >>> 0; }, 7).toString(36); }
+      o[k] = x;
+    });
+    return o;
+  };
+  TD.jsonSicuro = function (testo) { return TD.pulisci(JSON.parse(testo)); };
+  /* celle CSV: niente formule eseguite da Excel o Calc (=, +, -, @ all'inizio) */
+  TD.csv = function (v) { let s = String(v == null ? "" : v); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
+
   TD.uid = function (pref) {
     return (pref || "") + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   };
@@ -331,13 +388,14 @@ window.TD = window.TD || {};
     const percorso = (location.hash || "#/").slice(1) || "/";
     const [path, qs] = percorso.split("?");
     const query = {};
-    if (qs) qs.split("&").forEach(function (kv) { const p = kv.split("="); query[decodeURIComponent(p[0])] = decodeURIComponent(p[1] || ""); });
+    const dec = function (x) { try { return decodeURIComponent(x); } catch (e) { return ""; } };
+    if (qs) qs.split("&").forEach(function (kv) { const p = kv.split("="); const k = dec(p[0]); if (!CHIAVI_VIETATE[k]) query[k] = dec(p[1] || ""); });
     const app = document.getElementById("app");
     for (const r of rotte) {
       const m = path.match(r.re);
       if (m) {
         const par = {};
-        r.chiavi.forEach(function (k, i) { par[k] = decodeURIComponent(m[i + 1]); });
+        r.chiavi.forEach(function (k, i) { par[k] = dec(m[i + 1]); });
         if (app._cleanup) { try { app._cleanup(); } catch (e) {} app._cleanup = null; }
         app.innerHTML = "";
         try { r.fn(app, par, query); }

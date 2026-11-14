@@ -1,4 +1,4 @@
 {
-  "nota": "Chiavi pubbliche dei tutor riconosciuti. Dal programma: Impostazioni › Firma digitale dei kit › Copia la chiave pubblica, poi incollare qui la riga.",
+  "nota": "Chiavi pubbliche dei tutor riconosciuti. Dal programma: Impostazioni › Firma digitale dei kit › Copia la chiave pubblica, poi incollare qui la riga. Con \"editore\": true la chiave firma anche le licenze per formatori.",
   "chiavi": []
 }

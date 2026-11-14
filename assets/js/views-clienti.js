@@ -52,7 +52,7 @@
       const righe = [col.join(";")].concat(TD.db.clienti.map(function (c) {
         return col.map(function (k) {
           let v = k === "dispositivi" ? (c.dispositivi || []).join(",") : k === "lezioni" ? (c.registro || []).length : k === "ore" ? TD.oreCliente(c).toFixed(1) : k === "liberatoria" ? (c.liberatoria && c.liberatoria.firmata ? "firmata " + c.liberatoria.data : "no") : (c[k] || "");
-          return '"' + String(v).replace(/"/g, '""') + '"';
+          return TD.csv(v);
         }).join(";");
       }));
       TD.scarica(new Blob(["﻿" + righe.join("\r\n")], { type: "text/csv;charset=utf-8" }), "clienti-tutor-digitale-" + TD.oggi() + ".csv");
@@ -102,7 +102,7 @@
         '<label class="field"><span>Note</span><textarea name="note" rows="3">' + E(c.note || "") + "</textarea></label>" +
         '<label class="field"><span>Stato</span><select name="stato"><option value="attivo"' + (c.stato !== "concluso" ? " selected" : "") + '>Attivo</option><option value="concluso"' + (c.stato === "concluso" ? " selected" : "") + ">Percorso concluso</option></select></label>" +
         '<div class="actions"><button class="btn btn-primary btn-lg" type="submit">' + I("check") + "Salva</button>" +
-          '<a class="btn" href="' + (nuovo ? "#/clienti" : "#/cliente/" + c.id) + '">Annulla</a>' +
+          '<a class="btn" href="' + E(nuovo ? "#/clienti" : "#/cliente/" + c.id) + '">Annulla</a>' +
           (nuovo ? "" : '<button class="btn btn-danger" type="button" id="elimina">' + I("trash") + "Elimina cliente</button>") + "</div>" +
       "</form></div>";
 

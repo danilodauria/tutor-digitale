@@ -32,7 +32,7 @@ jobs:
       tag: ${{ steps.c.outputs.tag }}
       fai: ${{ steps.c.outputs.fai }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
       - id: c
@@ -62,17 +62,17 @@ jobs:
           - { os: windows-latest, script: "dist:win", nome: Windows }
           - { os: macos-latest, script: "dist:mac", nome: macOS }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.controlla.outputs.tag }}
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
       - name: Prepara il contenuto dell'app
         run: node scripts/prepare-desktop.cjs
       - name: Installa Electron
         working-directory: desktop
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Genera i pacchetti
         working-directory: desktop
         run: npm run ${{ matrix.script }}

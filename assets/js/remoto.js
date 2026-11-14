@@ -61,13 +61,13 @@
     dc.bufferedAmountLowThreshold = 1 << 20;
     dc.onopen = function () { S.fase = "collegato"; S.codice = ""; invia({ t: "ciao", nome: mioNome(), modo: TD.MODO || "tutor" }); TD.toast("Collegato!"); ridisegna(); };
     dc.onclose = function () { if (S.fase === "collegato") chiudi("Sessione terminata."); };
-    dc.onmessage = function (e) { if (typeof e.data === "string") messaggio(JSON.parse(e.data)); else pezzo(e.data); };
+    dc.onmessage = function (e) { if (typeof e.data === "string") { let m; try { m = TD.jsonSicuro(e.data); } catch (x) { return; } if (m && typeof m === "object") messaggio(m); } else pezzo(e.data); };
   }
   function invia(o) { if (S.dc && S.dc.readyState === "open") S.dc.send(JSON.stringify(o)); }
 
   async function messaggio(m) {
-    if (m.t === "ciao") { S.altro = m.nome; ridisegna(); }
-    else if (m.t === "chat") { S.chat.push({ da: S.altro || "L'altro", testo: m.testo, mio: false, ora: ora() }); ridisegna(); suono(); }
+    if (m.t === "ciao") { S.altro = String(m.nome || "").slice(0, 60); ridisegna(); }
+    else if (m.t === "chat") { S.chat.push({ da: S.altro || "L'altro", testo: String(m.testo || "").slice(0, 4000), mio: false, ora: ora() }); S.chat = S.chat.slice(-200); ridisegna(); suono(); }
     else if (m.t === "sdp") {
       const pc = S.pc;
       if (m.sdp.type === "offer") {
@@ -78,9 +78,14 @@
       } else await pc.setRemoteDescription(m.sdp);
     }
     else if (m.t === "schermo-fine") { S.remoto = null; ridisegna(); }
-    else if (m.t === "file") { S.ingresso = { meta: m, parti: [], ricevuti: 0 }; ridisegna(); }
+    else if (m.t === "file") {
+      /* nome ripulito e contenuto sempre «da scaricare»: un file HTML ricevuto non può aprirsi dentro il programma */
+      const meta = { nome: String(m.nome || "file").replace(/[\\/:*?"<>|\u0000-\u001f]/g, "_").slice(0, 120) || "file", size: Math.max(0, Number(m.size) || 0) };
+      if (meta.size > 500 * 1024 * 1024) { TD.toast("File troppo grande: rifiutato."); return; }
+      S.ingresso = { meta: meta, parti: [], ricevuti: 0 }; ridisegna();
+    }
     else if (m.t === "file-fine" && S.ingresso) {
-      const blob = new Blob(S.ingresso.parti, { type: S.ingresso.meta.tipo || "application/octet-stream" });
+      const blob = new Blob(S.ingresso.parti, { type: "application/octet-stream" });
       S.ricevuti.unshift({ nome: S.ingresso.meta.nome, blob: blob, url: URL.createObjectURL(blob), ora: ora() });
       S.ingresso = null; TD.toast("File ricevuto: " + S.ricevuti[0].nome); suono(); ridisegna();
     }
@@ -88,6 +93,7 @@
   function pezzo(buf) {
     if (!S.ingresso) return;
     S.ingresso.parti.push(buf); S.ingresso.ricevuti += buf.byteLength;
+    if (S.ingresso.ricevuti > Math.max(S.ingresso.meta.size, 1) + 64 * 1024) { S.ingresso = null; TD.toast("Trasferimento interrotto: il file non corrisponde a quanto annunciato."); return; }
     const p = document.getElementById("rProg"); if (p) p.textContent = "Ricevo «" + S.ingresso.meta.nome + "»: " + Math.round(100 * S.ingresso.ricevuti / (S.ingresso.meta.size || 1)) + "%";
   }
   async function inviaFile(f) {

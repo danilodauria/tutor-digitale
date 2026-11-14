@@ -2,6 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-soeFBXeCSFZ9es+xEbVAABjhrvgPxLGYRR3UPjlEz/c=' 'sha256-YZy3u4iQN9v7JCHkZ7S8BZyot7MNOvzomNIbOrCJa/o='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self'; connect-src 'self' wss://broker.hivemq.com:8884 wss://broker.emqx.io:8084 wss://test.mosquitto.org:8081; worker-src 'self'; manifest-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Verifica attestato · Tutor Digitale</title>
   <meta name="description" content="Verifica dell'attestato di Tutor Digitale: controlla la firma digitale del docente, il codice, l'intestatario e la data.">
@@ -13,7 +14,7 @@
   <script>
     (function () { try { var t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; document.documentElement.setAttribute("data-theme", t); } catch (e) {} })();
   </script>
-  <link rel="stylesheet" href="../assets/css/styles.css?v=1.5.0">
+  <link rel="stylesheet" href="../assets/css/styles.css?v=1.5.1">
 </head>
 <body>
   <header class="site-header">
@@ -36,10 +37,10 @@
     </div>
   </main>
   <footer class="site-footer">
-    <div class="wrap footer-bottom"><span>Tutor Digitale · versione <span data-versione>1.5.0</span> · © 2026 Danilo D'Auria</span><span><a href="../">Torna al sito</a></span></div>
+    <div class="wrap footer-bottom"><span>Tutor Digitale · versione <span data-versione>1.5.1</span> · © 2026 Danilo D'Auria</span><span><a href="../">Torna al sito</a></span></div>
   </footer>
-  <script>window.TD = { MODO: "verifica", VERSIONE: "1.5.0" };</script>
-  <script src="../assets/js/scambio.js?v=1.5.0"></script>
-  <script src="../assets/js/verifica.js?v=1.5.0"></script>
+  <script>window.TD = { MODO: "verifica" };</script>
+  <script src="../assets/js/scambio.js?v=1.5.1"></script>
+  <script src="../assets/js/verifica.js?v=1.5.1"></script>
 </body>
 </html>

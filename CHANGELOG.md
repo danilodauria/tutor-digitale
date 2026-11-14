@@ -1,5 +1,20 @@
 # Versioni
 
+## 1.5.1 · 14 novembre 2026
+
+Revisione di sicurezza completa, con controlli automatici per le versioni future.
+
+- **Allegati delle risposte**: un allegato preparato ad arte poteva eseguire codice nel programma del tutor; ora gli allegati sono accettati solo come immagini o file `data:` di tipi ammessi e sempre protetti.
+- **Dati in arrivo ripuliti** da kit, risposte, casella, aula, sincronizzazione e file importati: niente inquinamento dei prototipi, identificativi controllati, lezioni e domande ricostruite campo per campo, pacchetti compressi limitati a 40 MB, messaggi ripetuti o vecchi scartati.
+- **Firme più severe**: risposte e correzioni senza firma vengono rifiutate; l'app Allievo avvisa se un kit arriva senza la firma del tutor; le licenze sono valide solo se firmate da una chiave dell'autore pubblicata.
+- **Content-Security-Policy** in tutte le pagine e protezione contro l'inserimento in cornici di altri siti.
+- **CSV senza formule eseguibili** (clienti, presenze, statistiche) e calendario .ics più robusto.
+- **Backup cifrato** con 600.000 giri di PBKDF2; i backup precedenti si aprono come prima.
+- **Assistenza a distanza**: i file ricevuti si scaricano sempre (mai aperti nel programma), nomi e dimensioni controllati.
+- **Casella**: corretta una condizione di gara che poteva svuotare la copia condivisa quando l'altro dispositivo si collegava.
+- **Versione desktop**: Electron 45 (la 38 non riceveva più correzioni), collegamenti esterni filtrati, permessi solo per le pagine del programma, controllo dei percorsi rafforzato, dipendenze bloccate con `package-lock.json`.
+- **Automazioni**: `scripts/sicurezza.cjs` nei test di ogni pubblicazione; workflow «Controllo di sicurezza» settimanale con `npm audit`, verifica del supporto di Electron e CodeQL; Dependabot; azioni dei workflow fissate all'impronta del commit; [SECURITY.md](SECURITY.md).
+
 ## 1.5.0 · 14 novembre 2026
 
 - **Sincronizzazione tra i tuoi dispositivi** (miglioria 13): abbinamento con un QR, poi PC, tablet e telefono si scambiano l'archivio cifrato end-to-end e lo uniscono (vince la modifica più recente, le cancellazioni si propagano). Senza Internet: Importa backup › «Unisci».

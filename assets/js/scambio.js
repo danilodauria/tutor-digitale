@@ -26,10 +26,23 @@ window.TD = window.TD || {};
     for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i);
     return u;
   }
+  /* compressione e decompressione; in uscita al massimo 40 MB: un pacchetto «a bomba» non blocca il dispositivo */
+  const LIMITE = 40 * 1024 * 1024;
   async function flusso(bytes, Classe) {
-    const s = new Blob([bytes]).stream().pipeThrough(new Classe("deflate-raw"));
-    return new Uint8Array(await new Response(s).arrayBuffer());
+    const lettore = new Blob([bytes]).stream().pipeThrough(new Classe("deflate-raw")).getReader();
+    const parti = []; let tot = 0;
+    for (;;) {
+      const r = await lettore.read();
+      if (r.done) break;
+      tot += r.value.length;
+      if (tot > LIMITE) { try { lettore.cancel(); } catch (e) {} throw new Error("Pacchetto troppo grande o danneggiato."); }
+      parti.push(r.value);
+    }
+    const out = new Uint8Array(tot); let o = 0;
+    parti.forEach(function (x) { out.set(x, o); o += x.length; });
+    return out;
   }
+  function analizza(testo) { return TD.jsonSicuro ? TD.jsonSicuro(testo) : JSON.parse(testo); }
   const haCompressione = typeof CompressionStream !== "undefined" && typeof DecompressionStream !== "undefined";
 
   /* testo compatto: «TD1.» + JSON compresso in base64url (o «TD0.» senza compressione) */
@@ -40,8 +53,9 @@ window.TD = window.TD || {};
   }
   async function decomprimi(codice) {
     const c = String(codice).trim();
-    if (c.indexOf("TD1.") === 0) return JSON.parse(dec.decode(await flusso(deb64u(c.slice(4)), DecompressionStream)));
-    if (c.indexOf("TD0.") === 0) return JSON.parse(dec.decode(deb64u(c.slice(4))));
+    if (c.length > LIMITE) throw new Error("Codice troppo lungo.");
+    if (c.indexOf("TD1.") === 0) return analizza(dec.decode(await flusso(deb64u(c.slice(4)), DecompressionStream)));
+    if (c.indexOf("TD0.") === 0) return analizza(dec.decode(deb64u(c.slice(4))));
     throw new Error("Codice non riconosciuto");
   }
 
@@ -70,7 +84,7 @@ window.TD = window.TD || {};
     const m = t.match(/(?:^|[?&#])k=([A-Za-z0-9._-]+)/);
     if (m) t = m[1];
     let p;
-    if (t.charAt(0) === "{") p = JSON.parse(t);
+    if (t.charAt(0) === "{") p = analizza(t);
     else if (/^TD[01]\./.test(t)) p = await decomprimi(t);
     else throw new Error("Non riconosco questo contenuto: incolla il codice o scegli il file .json ricevuto.");
     if (!p || p.formato !== FORMATO || !p.tipo) throw new Error("Il file non è un pacchetto di Tutor Digitale.");
@@ -133,11 +147,11 @@ window.TD = window.TD || {};
     try { chiaro = new Uint8Array(await subtle.decrypt({ name: "AES-GCM", iv: deb64u(p[2]) }, await chiavePin(pin, deb64u(p[1])), deb64u(p[3]))); }
     catch (e) { throw new Error("Password sbagliata o codice incompleto."); }
     if (haCompressione) chiaro = await flusso(chiaro, DecompressionStream);
-    return JSON.parse(dec.decode(chiaro));
+    return analizza(dec.decode(chiaro));
   }
 
   /* ---------------------------------------------------------- backup cifrato (5)
-     PBKDF2-SHA-256 (310.000 giri) + AES-GCM 256: senza password il file è illeggibile. */
+     PBKDF2-SHA-256 (600.000 giri, come raccomanda OWASP) + AES-GCM 256: senza password il file è illeggibile. */
   const FORMATO_BACKUP = "tutor-digitale-backup-cifrato";
   async function chiaveBackup(password, sale, giri) {
     const base = await subtle.importKey("raw", enc.encode(String(password)), "PBKDF2", false, ["deriveKey"]);
@@ -146,7 +160,7 @@ window.TD = window.TD || {};
   async function cifraBackup(password, obj) {
     if (!subtle) throw new Error("Serve una connessione sicura (https) o l'app installata per cifrare.");
     if (String(password || "").length < 8) throw new Error("La password deve avere almeno 8 caratteri.");
-    const giri = 310000, sale = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+    const giri = 600000, sale = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
     let dati = enc.encode(JSON.stringify(obj)), compresso = false;
     if (haCompressione) { try { dati = await flusso(dati, CompressionStream); compresso = true; } catch (e) {} }
     const c = await subtle.encrypt({ name: "AES-GCM", iv: iv }, await chiaveBackup(password, sale, giri), dati);
@@ -159,11 +173,12 @@ window.TD = window.TD || {};
     if (!subtle) throw new Error("Serve una connessione sicura (https) o l'app installata per aprire il backup.");
     let chiaro;
     try {
-      const k = await chiaveBackup(password, deb64u(obj.kdf.sale), obj.kdf.giri || 310000);
+      const giri = Math.min(5000000, Math.max(100000, Number(obj.kdf.giri) || 310000));
+      const k = await chiaveBackup(password, deb64u(obj.kdf.sale), giri);
       chiaro = new Uint8Array(await subtle.decrypt({ name: "AES-GCM", iv: deb64u(obj.cifra.iv) }, k, deb64u(obj.dati)));
     } catch (e) { throw new Error("Password sbagliata o file danneggiato."); }
     if (obj.compresso) chiaro = await flusso(chiaro, DecompressionStream);
-    return JSON.parse(dec.decode(chiaro));
+    return analizza(dec.decode(chiaro));
   }
 
   /* ---------------------------------------------------------- firma del tutor (4)
@@ -222,7 +237,8 @@ window.TD = window.TD || {};
     const m = String(testo || "").match(/a=([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)/);
     if (!m) return { stato: "illeggibile" };
     let dati;
-    try { dati = JSON.parse(dec.decode(deb64u(m[1]))); } catch (e) { return { stato: "illeggibile" }; }
+    try { dati = analizza(dec.decode(deb64u(m[1]))); } catch (e) { return { stato: "illeggibile" }; }
+    if (!dati || typeof dati !== "object") return { stato: "illeggibile" };
     if (Array.isArray(dati)) dati = { v: dati[0], c: dati[1], n: dati[2], d: dati[3], l: dati[4], o: dati[5], p: dati[6], t: dati[7] };
     const ok = await verificaTesto(m[3], m[1], m[2]);
     const d = String(dati.d || "");

@@ -16,11 +16,25 @@
   const DURATE = [[3600e3, "1 ora"], [86400e3, "1 giorno"], [7 * 86400e3, "7 giorni"], [30 * 86400e3, "30 giorni"], [0, "Non scade"]];
 
   /* ------------------------------------------------------------ dati (puri) */
+  /* ogni voce che arriva dall'altro dispositivo viene ricostruita campo per campo */
+  function voceSicura(v) {
+    if (!v || typeof v !== "object" || !TD.idOk(v.id)) return null;
+    const n = function (x) { x = Number(x); return isFinite(x) && x > 0 ? x : 0; };
+    if (v.eliminata) return { id: v.id, eliminata: true, t: n(v.t) };
+    const tipo = ["nota", "password", "file"].indexOf(v.tipo) >= 0 ? v.tipo : "nota";
+    const o = { id: v.id, tipo: tipo, titolo: String(v.titolo || "").slice(0, 80), da: String(v.da || "").slice(0, 60), creato: n(v.creato), t: n(v.t), scade: n(v.scade) };
+    if (tipo === "file") {
+      const dati = v.file && TD.urlDati(v.file.dati);
+      if (!dati) return null;
+      o.file = { nome: String(v.file.nome || "file").replace(/[\\/:*?"<>|\u0000-\u001f]/g, "_").slice(0, 100), tipo: String(v.file.tipo || "").slice(0, 80), dati: dati };
+    } else o.testo = String(v.testo || "").slice(0, 4000);
+    return o;
+  }
   TD.casellaUnisci = function (mie, altre, ora) {
     ora = ora || Date.now();
-    const m = {};
-    (mie || []).concat(altre || []).forEach(function (v) {
-      if (!v || !v.id) return;
+    const m = Object.create(null);
+    (mie || []).concat(altre || []).map(voceSicura).forEach(function (v) {
+      if (!v) return;
       const p = m[v.id];
       if (!p || (v.t || 0) > (p.t || 0) || (v.eliminata && !p.eliminata)) m[v.id] = v;
     });
@@ -46,14 +60,16 @@
     if (C.canale) C.canale.chiudi();
     C.canale = null; C.chiave = s.conf.chiave; C.stato = "collegamento"; ridisegna();
     try {
-      C.canale = await TD.relay.collega({ stanza: s.conf.stanza + "-casella", chiave: s.conf.chiave, suMessaggio: function (m) {
+      C.canale = await TD.relay.collega({ stanza: s.conf.stanza + "-casella", chiave: s.conf.chiave, accettaVecchi: true, suMessaggio: function (m) {
         if (m.t !== "casella") return;
         const prima = JSON.stringify(s.voci());
         s.voci(TD.casellaUnisci(s.voci(), m.voci)); TD.salva();
         if (JSON.stringify(s.voci()) !== prima) { ridisegna(); if (m.nuova) TD.toast("Nuovo nella casella da " + (m.da || "l'altro")); }
       }, suStato: function (st) { if (st === "chiuso") { C.canale = null; C.stato = "fermo"; ridisegna(); } } });
       C.stato = "attivo"; ridisegna();
-      pubblica(s, false);
+      /* prima si aspetta la copia conservata sul canale, poi si pubblica la propria unita a quella:
+         pubblicando subito si rischierebbe di sovrascrivere le voci dell'altro con una casella vuota */
+      setTimeout(function () { if (C.canale) pubblica(s, false); }, 3000);
     } catch (e) { C.stato = "fermo"; C.errore = e.message; ridisegna(); }
   }
   function pubblica(s, nuova) {
@@ -84,10 +100,10 @@
       '<section class="card"><h2>' + I("layers") + "Nella casella (" + voci.length + ")</h2>" +
         (voci.length ? '<ul class="casella">' + voci.map(function (v) {
           return '<li class="casella-voce"><div><strong>' + I(v.tipo === "password" ? "lock" : v.tipo === "file" ? "doc" : "pen") + " " + E(v.titolo) + "</strong><small>da " + E(v.da) + " · " + E(quando(v.creato)) + (v.scade ? " · si cancella tra " + resto(v.scade) : "") + "</small>" +
-            (v.tipo === "password" ? '<p><code class="segreto" data-seg="' + v.id + '">••••••••</code></p>' : v.tipo === "file" ? '<p class="text-small">' + E(v.file.nome) + " · " + Math.round(v.file.dati.length * 0.75 / 1024) + " kB</p>" : '<p class="read">' + E(v.testo) + "</p>") +
-            '</div><div class="actions">' + (v.tipo === "password" ? '<button class="btn btn-sm" data-mostra="' + v.id + '">' + I("eye") + 'Mostra</button><button class="btn btn-sm" data-copia="' + v.id + '">' + I("copy") + "Copia</button>" : "") +
-            (v.tipo === "file" ? '<a class="btn btn-sm" href="' + E(v.file.dati) + '" download="' + E(v.file.nome) + '">' + I("download") + "Salva</a>" : "") +
-            '<button class="btn btn-sm btn-ghost" data-via="' + v.id + '" aria-label="Cancella «' + E(v.titolo) + '»">' + I("trash") + "</button></div></li>";
+            (v.tipo === "password" ? '<p><code class="segreto" data-seg="' + E(v.id) + '">••••••••</code></p>' : v.tipo === "file" ? '<p class="text-small">' + E(v.file.nome) + " · " + Math.round(v.file.dati.length * 0.75 / 1024) + " kB</p>" : '<p class="read">' + E(v.testo) + "</p>") +
+            '</div><div class="actions">' + (v.tipo === "password" ? '<button class="btn btn-sm" data-mostra="' + E(v.id) + '">' + I("eye") + 'Mostra</button><button class="btn btn-sm" data-copia="' + E(v.id) + '">' + I("copy") + "Copia</button>" : "") +
+            (v.tipo === "file" ? '<a class="btn btn-sm" href="' + E(TD.urlDati(v.file.dati)) + '" download="' + E(v.file.nome) + '">' + I("download") + "Salva</a>" : "") +
+            '<button class="btn btn-sm btn-ghost" data-via="' + E(v.id) + '" aria-label="Cancella «' + E(v.titolo) + '»">' + I("trash") + "</button></div></li>";
         }).join("") + "</ul>" : '<p class="muted">La casella è vuota.</p>') +
         '<p class="muted text-small">Peso attuale: ' + Math.round(TD.casellaPeso(s.voci()) / 1024) + " kB su " + Math.round(MAX_TOTALE / 1024) + " kB.</p></section></div>" +
       '<p class="muted text-small">Come funziona: la casella passa da un canale pubblico gratuito (MQTT) che conserva soltanto l\'ultima versione cifrata con AES-256: chi lo gestisce non può leggerla. È un servizio senza garanzie: per documenti importanti usa anche la copia di sicurezza. Le voci scadute vengono cancellate su entrambi i dispositivi alla prima apertura.</p></div>';
@@ -106,7 +122,11 @@
       if (t === "file") {
         const file = f.file.files[0]; if (!file) { TD.toast("Scegli il file."); return; }
         if (file.size > MAX_FILE) { TD.toast("File troppo grande (massimo 150 kB). Per i file grandi usa l'assistenza a distanza."); return; }
-        const r = new FileReader(); r.onload = function () { v.file = { nome: file.name, tipo: file.type, dati: r.result }; metti(); }; r.readAsDataURL(file);
+        const r = new FileReader(); r.onload = function () {
+          let dati = String(r.result);
+          if (!TD.urlDati(dati)) dati = "data:application/octet-stream;base64," + dati.split(",").pop();   // tipi insoliti: si scarica come file generico
+          v.file = { nome: file.name, tipo: file.type, dati: dati }; metti();
+        }; r.readAsDataURL(file);
       } else { v.testo = f.testo.value; if (!v.testo.trim()) { TD.toast("Scrivi il testo."); return; } metti(); }
     };
     function voce(id) { return s.voci().find(function (x) { return x.id === id; }); }

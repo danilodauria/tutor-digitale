@@ -6,6 +6,11 @@
 (function () {
   "use strict";
 
+  /* il programma non si lascia incorniciare da altri siti (difesa dal «clickjacking») */
+  if (window.top !== window.self) {
+    try { window.top.location.replace(window.self.location.href); } catch (e) { document.documentElement.innerHTML = ""; return; }
+  }
+
   TD.logoImg = new Image();
   TD.logoImg.src = (TD.MODO === "allievo" ? "../" : "") + "assets/img/icon-512.png";
 

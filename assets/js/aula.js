@@ -35,7 +35,7 @@
   };
 
   /* ================================================================ TUTOR: proiettore */
-  const H = { fase: "pronto", stanza: "", chiave: "", canale: null, domande: [], i: -1, giocatori: {}, risposte: {}, inizio: 0, tempo: 30, mostra: false, manuale: false, conta: [], timer: null, clienteId: "" };
+  const H = { fase: "pronto", stanza: "", chiave: "", canale: null, domande: [], i: -1, giocatori: Object.create(null), risposte: Object.create(null), inizio: 0, tempo: 30, mostra: false, manuale: false, conta: [], timer: null, clienteId: "" };
   TD.aulaStato = H;
 
   function linkAula() { return URL_AULA + "?s=" + H.stanza + "&k=" + H.chiave; }
@@ -49,7 +49,7 @@
       classifica: H.fase === "fine" || H.mostra ? TD.aula.classifica(H.giocatori).slice(0, 10).map(function (g) { return { id: g.id, nome: g.nome, punti: g.punti }; }) : [] };
   }
   async function apriStanza(manuale) {
-    H.manuale = !!manuale; H.giocatori = {}; H.risposte = {}; H.i = -1; H.mostra = false;
+    H.manuale = !!manuale; H.giocatori = Object.create(null); H.risposte = Object.create(null); H.i = -1; H.mostra = false;
     if (manuale) { H.fase = "attesa"; ridisegna(); return; }
     H.stanza = TD.relay.nuovaStanza(); H.chiave = TD.relay.nuovaChiave(); H.fase = "collegamento"; ridisegna();
     try {
@@ -59,19 +59,22 @@
     } catch (e) { H.fase = "pronto"; TD.toast(e.message + " Puoi usare la conta per alzata di mano."); ridisegna(); }
   }
   function ricevi(m) {
-    if (m.t === "entra" && m.id) {
+    if (!TD.idOk(m.id)) return;   // identificativi strani (anche «__proto__») si ignorano
+    if (m.t === "entra" && Object.keys(H.giocatori).length < 200) {
       const nome = String(m.nome || "Partecipante").slice(0, 24);
       if (!H.giocatori[m.id]) H.giocatori[m.id] = { nome: nome, punti: 0, giuste: 0 };
       else H.giocatori[m.id].nome = nome;
       trasmetti(statoPubblico()); ridisegna();
-    } else if (m.t === "risposta" && m.id && H.giocatori[m.id] && domanda() && m.n === domanda().n && !H.mostra && !H.risposte[m.id]) {
-      H.risposte[m.id] = { scelta: Number(m.scelta), ms: Date.now() - H.inizio };
+    } else if (m.t === "risposta" && Object.prototype.hasOwnProperty.call(H.giocatori, m.id) && domanda() && m.n === domanda().n && !H.mostra && !H.risposte[m.id]) {
+      const sc = Math.floor(Number(m.scelta));
+      if (!(sc >= 0 && sc < domanda().opzioni.length)) return;
+      H.risposte[m.id] = { scelta: sc, ms: Date.now() - H.inizio };
       ridisegna();
       if (Object.keys(H.risposte).length >= Object.keys(H.giocatori).length) rivela();
     }
   }
   function prossima() {
-    H.i++; H.mostra = false; H.risposte = {};
+    H.i++; H.mostra = false; H.risposte = Object.create(null);
     if (H.i >= H.domande.length) { H.fase = "fine"; clearInterval(H.timer); trasmetti(statoPubblico()); ridisegna(); return; }
     H.conta = new Array(domanda().opzioni.length).fill(0);
     H.fase = "domanda"; H.inizio = Date.now();
@@ -97,7 +100,7 @@
   function chiudiAula() {
     clearInterval(H.timer); clearInterval(H.eco);
     if (H.canale) { trasmetti({ t: "stato", fase: "chiusa" }); setTimeout(function () { if (H.canale) H.canale.chiudi(); H.canale = null; }, 300); }
-    Object.assign(H, { fase: "pronto", domande: [], i: -1, giocatori: {}, risposte: {}, mostra: false, manuale: false });
+    Object.assign(H, { fase: "pronto", domande: [], i: -1, giocatori: Object.create(null), risposte: Object.create(null), mostra: false, manuale: false });
     ridisegna();
   }
 
@@ -187,13 +190,22 @@
   function idGiocatore() {
     try { let v = sessionStorage.getItem("td-aula-id"); if (!v) { v = TD.uid("g"); sessionStorage.setItem("td-aula-id", v); } return v; } catch (e) { return G.id || TD.uid("g"); }
   }
+  /* ciò che arriva dalla «TV» si ricostruisce con tipi certi: numeri come numeri, testi come testi */
+  function statoSicuro(m) {
+    const n = function (x, d) { x = Number(x); return isFinite(x) ? x : (d || 0); };
+    const t = function (x, max) { return String(x == null ? "" : x).slice(0, max || 500); };
+    const q = m.domanda && typeof m.domanda === "object" ? { n: n(m.domanda.n), testo: t(m.domanda.testo), proposta: t(m.domanda.proposta), tipo: t(m.domanda.tipo, 20), opzioni: (Array.isArray(m.domanda.opzioni) ? m.domanda.opzioni : []).slice(0, 4).map(function (o) { return t(o, 300); }) } : null;
+    return { fase: ["attesa", "domanda", "fine", "chiusa"].indexOf(m.fase) >= 0 ? m.fase : "attesa", n: n(m.n), totale: n(m.totale), giusta: n(m.giusta, -1), domanda: q,
+      classifica: (Array.isArray(m.classifica) ? m.classifica : []).slice(0, 20).map(function (g) { return { id: t(g && g.id, 80), nome: t(g && g.nome, 24), punti: n(g && g.punti) }; }) };
+  }
   async function entraAula() {
     G.id = idGiocatore();
     try {
       G.canale = await TD.relay.collega({ stanza: G.s, chiave: G.k, suMessaggio: function (m) {
         if (m.t !== "stato") return;
-        if (m.n !== G.n) { G.n = m.n; G.scelta = -1; }
-        G.stato = m; ridisegna();
+        G.stato = statoSicuro(m);
+        if (G.stato.n !== G.n) { G.n = G.stato.n; G.scelta = -1; }
+        ridisegna();
       }, suStato: function (s) { if (s === "chiuso") { G.errore = "Collegamento interrotto. Inquadra di nuovo il QR."; ridisegna(); } } });
       await G.canale.invia({ t: "entra", id: G.id, nome: G.nome });
       clearInterval(G.rientra); G.rientra = setInterval(function () { if (G.canale && (!G.stato || G.stato.fase === "attesa")) G.canale.invia({ t: "entra", id: G.id, nome: G.nome }); }, 5000);

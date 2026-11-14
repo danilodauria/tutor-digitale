@@ -545,6 +545,13 @@ def costruisci(percorso, formato, d):
         "Salva il file <font face='Courier'>.tdcifrato</font> su una chiavetta e, se vuoi, su Google Drive o OneDrive: senza password è illeggibile (AES-256).",
         "Per ripristinare: Impostazioni › Importa backup, scegli il file e scrivi la password.",
     ])
+    sez("Come è protetto il programma")
+    elenco([
+        "Kit, correzioni, attestati e licenze portano una firma digitale: ciò che è stato modificato o non è firmato viene rifiutato o segnalato.",
+        "Tutto ciò che arriva da fuori (risposte, allegati, casella, aula, file importati) viene controllato prima di essere mostrato.",
+        "Le pagine accettano solo il codice del programma; i file CSV non contengono formule eseguibili.",
+        "A ogni versione e ogni settimana GitHub ripete in automatico i controlli di sicurezza e quelli sulle dipendenze.",
+    ])
     box("Se perdi la password, il backup cifrato <b>non si recupera</b>, nemmeno dall'autore del programma. "
         "Scrivila su carta e conservala lontano dalla chiavetta.", "attenzione")
     p("Quando l'ultima copia ha più di una settimana, la home mostra un promemoria. Il backup contiene anche "

@@ -43,13 +43,30 @@
     l.firma = { chiave: chiavi.pubblica, valore: await TD.scambio.firmaTesto(chiavi, corpoLicenza(l)) };
     return l;
   };
-  /* { stato: "valida" | "scaduta" | "alterata" | "illeggibile", impronta } */
-  TD.verificaLicenza = async function (l, oggi) {
-    if (!l || l.formato !== FORMATO || !l.firma) return { stato: "illeggibile" };
+  /* Chiavi pubbliche dell'autore: solo una licenza firmata con una di queste è «valida».
+     Si aggiungono qui (o in verifica/chiavi.json, con "editore": true) dopo averle copiate
+     da Impostazioni › Firma digitale › «Copia la chiave pubblica». */
+  TD.CHIAVI_AUTORE = [];
+  let chiaviPubblicate = null;
+  TD.chiaviFidate = async function () {
+    if (chiaviPubblicate === null) {
+      chiaviPubblicate = [];
+      try {
+        const r = await fetch((TD.MODO === "allievo" ? "../" : "") + "verifica/chiavi.json", { cache: "no-store" });
+        if (r.ok) chiaviPubblicate = ((await r.json()).chiavi || []).filter(function (k) { return k && k.editore && typeof k.chiave === "string"; }).map(function (k) { return k.chiave; });
+      } catch (e) { /* offline: restano quelle scritte nel programma */ }
+    }
+    /* la propria chiave NON basta: altrimenti chiunque potrebbe firmarsi da solo una licenza «valida» */
+    return TD.CHIAVI_AUTORE.concat(chiaviPubblicate);
+  };
+  /* { stato: "valida" | "scaduta" | "sconosciuta" | "alterata" | "illeggibile", impronta } */
+  TD.verificaLicenza = async function (l, oggi, fidate) {
+    if (!l || l.formato !== FORMATO || !l.firma || typeof l.firma.chiave !== "string") return { stato: "illeggibile" };
     const ok = await TD.scambio.verificaTesto(l.firma.chiave, corpoLicenza(l), l.firma.valore);
     const imp = await TD.scambio.impronta(l.firma.chiave);
     if (ok !== true) return { stato: "alterata", impronta: imp };
-    return { stato: (oggi || TD.oggi()) > l.al ? "scaduta" : "valida", impronta: imp };
+    if ((fidate || await TD.chiaviFidate()).indexOf(l.firma.chiave) < 0) return { stato: "sconosciuta", impronta: imp };
+    return { stato: (oggi || TD.oggi()) > String(l.al) ? "scaduta" : "valida", impronta: imp };
   };
 
   function pdfCertificato(l, imp) {
@@ -125,16 +142,17 @@
       const f = this.files[0]; if (!f) return;
       const r = new FileReader();
       r.onload = async function () {
-        let l; try { l = JSON.parse(r.result); } catch (e) { TD.toast("File di licenza non leggibile."); return; }
+        let l; try { l = TD.jsonSicuro(r.result); } catch (e) { TD.toast("File di licenza non leggibile."); return; }
         const v = await TD.verificaLicenza(l);
         if (v.stato === "alterata" || v.stato === "illeggibile") { TD.toast("Licenza non valida: la firma non corrisponde."); return; }
+        if (v.stato === "sconosciuta" && !TD.conferma("La firma è integra ma la chiave (impronta " + v.impronta + ") non è quella pubblicata dall'autore di Tutor Digitale. Importarla comunque? Verrà mostrata come «non riconosciuta».")) return;
         pr.licenza = l; TD.salva(); TD.toast(v.stato === "scaduta" ? "Licenza importata, ma è scaduta." : "Licenza valida importata."); TD.render();
       };
       r.readAsText(f);
     };
     if (lic) TD.verificaLicenza(lic).then(function (v) {
       const el = document.getElementById("licStato"); if (!el) return;
-      el.innerHTML = v.stato === "valida" ? '<span class="pill ok">' + I("check") + "Licenza valida · firma " + E(v.impronta) + "</span>" : v.stato === "scaduta" ? '<span class="pill warn">Licenza scaduta: chiedi il rinnovo</span>' : '<span class="pill ko">Licenza non valida</span>';
+      el.innerHTML = v.stato === "valida" ? '<span class="pill ok">' + I("check") + "Licenza valida · firma " + E(v.impronta) + "</span>" : v.stato === "scaduta" ? '<span class="pill warn">Licenza scaduta: chiedi il rinnovo</span>' : v.stato === "sconosciuta" ? '<span class="pill warn">Firma integra ma chiave non riconosciuta (impronta ' + E(v.impronta) + ")</span>" : '<span class="pill ko">Licenza non valida</span>';
     });
   });
 })();

@@ -1,0 +1,77 @@
+# Come si ferma: scheda Actions › «Controllo di sicurezza» › menu «…» › Disable workflow.
+
+name: Controllo di sicurezza
+
+# A ogni modifica e ogni lunedì: controlli del progetto (CSP, iniezioni, segreti, workflow,
+# desktop), vulnerabilità note delle dipendenze di Electron e analisi CodeQL del codice.
+# Se trova qualcosa l'esecuzione diventa rossa e GitHub manda un'email.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 5 * * 1"   # lunedì alle 05:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sicurezza-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  progetto:
+    name: Controlli del progetto
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+      - name: Controllo di sicurezza
+        run: node scripts/sicurezza.cjs
+      - name: Verifiche funzionali
+        run: node tests/verify.cjs
+
+  dipendenze:
+    name: Dipendenze della versione desktop
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+      # Quello che finisce nel programma installato non deve avere vulnerabilità note di nessun livello;
+      # gli strumenti che servono solo a costruire i pacchetti fermano tutto solo se gravi.
+      - name: Vulnerabilità note
+        working-directory: desktop
+        run: |
+          npm audit --omit=dev --audit-level=low
+          npm audit --audit-level=high
+      - name: Electron ancora supportato
+        working-directory: desktop
+        run: |
+          set -euo pipefail
+          usata="$(node -p "require('./package-lock.json').packages['node_modules/electron'].version.split('.')[0]")"
+          ultima="$(npm view electron version | cut -d. -f1)"
+          echo "Electron in uso: $usata · ultima: $ultima"
+          if [ $((ultima - usata)) -ge 3 ]; then
+            echo "::error::Electron $usata non riceve più correzioni di sicurezza (supportate le ultime 3 versioni principali, ultima $ultima): aggiornalo in desktop/package.json."
+            exit 1
+          fi
+
+  codeql:
+    name: Analisi CodeQL
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+      - uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          category: "/language:javascript-typescript"

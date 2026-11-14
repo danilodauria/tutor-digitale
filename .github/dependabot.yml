@@ -1,0 +1,21 @@
+# Aggiornamenti delle dipendenze, proposti da soli (pull request da guardare con calma):
+# ogni proposta passa dai controlli del progetto prima di poter essere unita.
+version: 2
+updates:
+  # Electron, electron-builder ed electron-updater della versione desktop:
+  # Electron riceve correzioni di sicurezza ogni poche settimane.
+  - package-ecosystem: npm
+    directory: "/desktop"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "dipendenze desktop"
+  # Le azioni dei workflow sono fissate all'impronta del commit: Dependabot aggiorna impronta e commento.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "azioni"

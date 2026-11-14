@@ -97,7 +97,7 @@
       (TD.qr.adatto(link) ? '<div class="qr-box">' + TD.qr.svg(link, { etichetta: "QR del kit" }) + "<p><strong>A lezione:</strong> fai inquadrare questo QR con la fotocamera del telefono o del tablet dell'allievo. Si apre l'app già personalizzata.</p></div>" : '<p class="muted text-small">Il kit è troppo grande per un QR leggibile: usa link, condivisione o file.</p>') +
       '<label class="field"><span>Link personale (' + link.length + ' caratteri)</span><textarea readonly rows="3" class="code">' + E(link) + "</textarea></label>" +
       '<div class="actions"><button class="btn btn-primary" data-a="copia">' + I("copy") + 'Copia il link</button><button class="btn" data-a="share">' + I("upload") + 'Condividi (WhatsApp, email…)</button>' +
-      (c.email ? '<a class="btn" href="' + TD.scambio.mailto(c.email, "Tutor Digitale · i tuoi compiti", testo) + '">' + I("doc") + "Email con il link</a>" : "") +
+      (c.email ? '<a class="btn" href="' + E(TD.scambio.mailto(c.email, "Tutor Digitale · i tuoi compiti", testo)) + '">' + I("doc") + "Email con il link</a>" : "") +
       '<button class="btn" data-a="file">' + I("download") + "File del kit</button></div>" +
       '<p class="muted text-small">Il file del kit serve quando il link è troppo lungo per il programma di messaggi: l\'allievo lo apre da «Attiva o aggiorna» nella sua app.</p>',
       { copia: function () { TD.scambio.copia(testo).then(function (ok) { TD.toast(ok ? "Messaggio con il link copiato." : "Copia il link a mano."); }); },
@@ -127,6 +127,7 @@
     if (!k) { TD.toast("Non trovo la consegna di queste risposte nella scheda di " + TD.nomeCliente(c) + "."); return; }
     const firma = await TD.scambio.verifica(p, (c.app || {}).segreto);
     if (firma === false) { TD.toast("Attenzione: il file risulta modificato dopo l'invio. Non lo importo."); return; }
+    if (firma !== true && TD.scambio.sicuro && (c.app || {}).segreto) { TD.toast("Queste risposte non portano la firma del kit di " + TD.nomeCliente(c) + ": non le importo."); return; }
     k.risposte = p.dati.risposte || {};
     k.compitiAllievo = p.dati.compiti || {};
     k.allegati = (p.dati.allegati || []).slice(0, 4);
@@ -166,7 +167,7 @@
           '<label class="field"><span>…oppure incolla il codice ricevuto (inizia con TD1.)</span><textarea id="tRisp" rows="3"></textarea></label><button class="btn" id="bRisp">' + I("check") + "Correggi</button></section>" +
         '<section class="card"><h2>' + I("layers") + "Tutte le consegne</h2>" + (attesa.length ? '<ul class="reg-list">' + attesa.slice(0, 30).map(function (x) {
           const st = STATI[x.k.stato] || STATI.inviata;
-          return '<li><a href="' + (x.k.esito ? "#/allievi?consegna=" + x.k.id + "&cliente=" + x.c.id : "#/cliente/" + x.c.id + "?tab=allievo") + '"><span class="when"><strong>' + E(TD.dataIt(x.k.data)) + "</strong>" + E(nomeAllievo(x.c, x.k.partecipante)) + "</span><span>" + (x.k.esito ? x.k.esito.perc + "% · " : "") + x.k.compiti.length + ' compiti</span><span class="pill ' + st[1] + '">' + st[0] + "</span></a></li>";
+          return '<li><a href="' + E(x.k.esito ? "#/allievi?consegna=" + x.k.id + "&cliente=" + x.c.id : "#/cliente/" + x.c.id + "?tab=allievo") + '"><span class="when"><strong>' + E(TD.dataIt(x.k.data)) + "</strong>" + E(nomeAllievo(x.c, x.k.partecipante)) + "</span><span>" + (x.k.esito ? x.k.esito.perc + "% · " : "") + x.k.compiti.length + ' compiti</span><span class="pill ' + st[1] + '">' + st[0] + "</span></a></li>";
         }).join("") + "</ul>" : '<p class="muted">Nessuna consegna: creale dalla scheda del cliente › App allievo.</p>') + "</section>" +
       "</div></div>";
 
@@ -197,7 +198,8 @@
       (k.notaAllievo ? '<p class="q-proposta">«' + E(k.notaAllievo) + "»</p>" : "") +
       ((k.allegati || []).length ? "<h3>Foto e file allegati</h3><div class=\"allegati\">" + k.allegati.map(function (a, i) {
         const v = ((k.valutazioni || {}).allegati || [])[i] || {};
-        return "<figure>" + (/^data:image\//.test(a.dati) ? '<a href="' + a.dati + '" target="_blank" rel="noopener"><img src="' + a.dati + '" alt="Foto inviata: ' + E(a.nome) + '"></a>' : '<a class="btn btn-sm" download="' + E(a.nome) + '" href="' + a.dati + '">' + I("download") + E(a.nome) + "</a>") + "<figcaption>" + E(a.nome) + "</figcaption>" + valuta("a", String(i), v, true) + "</figure>";
+        const dati = TD.urlDati(a.dati), img = TD.urlDati(a.dati, true);
+        return "<figure>" + (img ? '<img src="' + E(img) + '" alt="Foto inviata: ' + E(a.nome) + '">' : dati ? '<a class="btn btn-sm" download="' + E(a.nome) + '" href="' + E(dati) + '">' + I("download") + E(a.nome) + "</a>" : '<p class="muted text-small">Allegato non valido scartato: ' + E(a.nome) + "</p>") + "<figcaption>" + E(a.nome) + "</figcaption>" + valuta("a", String(i), v, true) + "</figure>";
       }).join("") + "</div>" : "") +
       '<label class="field"><span>Il tuo commento per l\'allievo</span><textarea id="comm" rows="3">' + E(k.commento || (e ? (e.perc >= 80 ? "Ottimo lavoro! " : e.perc >= 60 ? "Bene, ci siamo quasi. " : "Ripassiamo insieme alla prossima lezione. ") : "Grazie per i compiti! ")) + "</textarea></label>" +
       '<div class="actions"><button class="btn btn-primary" id="bCorr">' + I("upload") + "Rimanda la correzione</button>" + (c.email ? '<a class="btn" id="mCorr" href="#">' + I("doc") + "Email</a>" : "") + '<button class="btn" id="cCorr">' + I("copy") + 'Copia come codice</button><button class="btn" id="qCorr">' + I("screen") + 'QR per il telefono</button><a class="btn btn-ghost" href="#/cliente/' + c.id + '?tab=allievo">Scheda cliente</a></div></section>';

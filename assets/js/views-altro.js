@@ -84,7 +84,7 @@
         ris[pc.id] = liv;
       });
       const cl = TD.cliente(o.cliente);
-      document.getElementById("esitoTest").innerHTML = '<section class="card"><h2>Da dove partire</h2><ul class="list">' + Object.keys(ris).map(function (k) { return "<li><span>" + TD.iconaPercorso(k) + E(TD.percorso(k).nome) + "</span>" + TD.badgeLiv(ris[k]) + ' <a href="#/percorso/' + k + '">Apri il percorso</a></li>'; }).join("") + "</ul>" +
+      document.getElementById("esitoTest").innerHTML = '<section class="card"><h2>Da dove partire</h2><ul class="list">' + Object.keys(ris).map(function (k) { return "<li><span>" + TD.iconaPercorso(k) + E(TD.percorso(k).nome) + "</span>" + TD.badgeLiv(ris[k]) + ' <a href="#/percorso/' + E(k) + '">Apri il percorso</a></li>'; }).join("") + "</ul>" +
         (cl ? '<button class="btn btn-primary" type="button" id="salvaTest">' + I("check") + "Salva nella scheda di " + E(TD.nomeCliente(cl)) + "</button>" : '<p class="muted">Scegli un cliente per salvare i livelli.</p>') + "</section>";
       const st = document.getElementById("salvaTest");
       if (st) st.onclick = function () {
@@ -142,7 +142,7 @@
     document.getElementById("ics").onclick = function () {
       function dt(d, o) { return d.replace(/-/g, "") + "T" + (o || "10:00").replace(":", "") + "00"; }
       function fine(d, o, min) { const t = new Date(d + "T" + (o || "10:00") + ":00"); t.setMinutes(t.getMinutes() + (Number(min) || 60)); const p = function (n) { return String(n).padStart(2, "0"); }; return t.getFullYear() + p(t.getMonth() + 1) + p(t.getDate()) + "T" + p(t.getHours()) + p(t.getMinutes()) + "00"; }
-      function esc(s) { return String(s || "").replace(/[\\;,]/g, function (c) { return "\\" + c; }).replace(/\n/g, "\\n"); }
+      function esc(s) { return String(s || "").replace(/[\\;,]/g, function (c) { return "\\" + c; }).replace(/\r?\n|\r/g, "\\n"); }
       const ev = future.map(function (x) {
         return ["BEGIN:VEVENT", "UID:" + x.r.id + "@tutor-digitale", "DTSTAMP:" + new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z", "DTSTART:" + dt(x.r.data, x.r.ora), "DTEND:" + fine(x.r.data, x.r.ora, x.r.durata),
           "SUMMARY:" + esc("Lezione · " + TD.nomeCliente(x.c)), "LOCATION:" + esc([x.c.indirizzo, x.c.citta].filter(Boolean).join(", ") || x.r.luogo), "DESCRIPTION:" + esc(((x.r.argomenti || []).map(function (id) { const l = TD.lezione(id); return l ? l.titolo : ""; }).join("; ")) + (x.r.note ? " — " + x.r.note : "")), "END:VEVENT"].join("\r\n");
@@ -228,7 +228,7 @@
       const r = new FileReader();
       r.onload = async function () {
         let obj;
-        try { obj = JSON.parse(r.result); } catch (e) { TD.toast("Il file non è un backup valido di Tutor Digitale."); return; }
+        try { obj = TD.jsonSicuro(r.result); } catch (e) { TD.toast("Il file non è un backup valido di Tutor Digitale."); return; }
         if (TD.scambio.eBackupCifrato(obj)) {
           const pw = await TD.chiediPassword("Apri il backup cifrato", "Scrivi la password scelta quando hai salvato la copia del " + E(TD.dataIt(obj.creato)) + ".", false);
           if (!pw) return;

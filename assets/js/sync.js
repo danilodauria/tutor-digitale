@@ -13,7 +13,7 @@
   const E = TD.esc, I = TD.icona;
   const URL_TUTOR = "https://danilodauria.github.io/tutor-digitale/";
   const PEZZO = 60000;
-  const ST = { canale: null, stato: "fermo", log: [], ricevendo: {}, altri: {} };
+  const ST = { canale: null, stato: "fermo", log: [], ricevendo: Object.create(null), altri: Object.create(null) };
 
   function abbinamento() { return TD.db.sync && TD.db.sync.stanza ? TD.db.sync : null; }
   function nomeDispositivo() {
@@ -37,11 +37,13 @@
   }
   async function ricevi(m) {
     if (m.t === "ciao" || m.t === "ciao2") {
+      m.da = String(m.da || "dispositivo").slice(0, 30);
       ST.altri[m.da] = Date.now();
       registra("Trovato: " + m.da);
       if (m.t === "ciao") ST.canale.invia({ t: "ciao2", da: nomeDispositivo() });
       inviaArchivio().catch(function (e) { registra("Errore nell'invio: " + e.message); });
     } else if (m.t === "pezzo") {
+      if (!TD.idOk(m.id) || !(m.n >= 1 && m.n <= 2000) || !(m.i >= 0 && m.i < m.n) || typeof m.d !== "string" || m.d.length > PEZZO) return;
       const r = ST.ricevendo[m.id] = ST.ricevendo[m.id] || { parti: [], n: m.n, ricevuti: 0 };
       if (r.parti[m.i] == null) { r.parti[m.i] = m.d; r.ricevuti++; }
       if (r.ricevuti === r.n) {
