@@ -60,7 +60,7 @@ jobs:
         run: |
           set -euo pipefail
           versione="$(node -p "require('./package.json').version")"
-          for f in assets/pdf/vademecum-tutor-digitale.pdf assets/pdf/vademecum-tutor-digitale-a4.pdf assets/pdf/vademecum-tutor-digitale-libricino-a4.pdf; do
+          for f in assets/pdf/vademecum-tutor-digitale.pdf assets/pdf/vademecum-tutor-digitale-a4.pdf assets/pdf/vademecum-tutor-digitale-libricino-a4.pdf assets/pdf/vademecum-tutor-digitale-libricino-a4-solo-fronti.pdf assets/pdf/vademecum-tutor-digitale-libricino-a4-solo-retri.pdf; do
             python -c "import pymupdf,sys; k=pymupdf.open(sys.argv[1]).metadata['keywords']; sys.exit(0 if 'versione='+sys.argv[2] in k else 1)" "$f" "$versione" \
               || { echo "::error::$f non dichiara la versione $versione"; exit 1; }
             echo "✓ $f · versione $versione"
@@ -102,12 +102,14 @@ jobs:
           if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             # note della versione: la sezione del CHANGELOG di questa versione
             awk -v v="$versione" '/^## /{dentro=($2==v)} dentro && !/^## /' CHANGELOG.md > "$RUNNER_TEMP/note.md"
-            printf '\n**Vademecum** di questa versione allegato in tre formati: A5 da leggere, A4 da stampare, libricino da piegare.\n\nApri il programma: https://danilodauria.github.io/tutor-digitale/\n' >> "$RUNNER_TEMP/note.md"
+            printf '\n**Vademecum** di questa versione allegato in tre formati: A5 da leggere, A4 da stampare, libricino da stampare fronte-retro (capovolgi sul lato corto), mettere in pila con il foglio 1 sotto, piegare a metà e pinzare sulla piega; per le stampanti senza fronte-retro ci sono i file «solo fronti» e «solo retri».\n\nApri il programma: https://danilodauria.github.io/tutor-digitale/\n' >> "$RUNNER_TEMP/note.md"
             gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "Tutor Digitale $versione" --notes-file "$RUNNER_TEMP/note.md" --target "$(git rev-parse HEAD)"
           fi
           dir="$RUNNER_TEMP/allegati"; mkdir -p "$dir"
           cp assets/pdf/vademecum-tutor-digitale.pdf "$dir/Vademecum-Tutor-Digitale-$versione.pdf"
           cp assets/pdf/vademecum-tutor-digitale-a4.pdf "$dir/Vademecum-Tutor-Digitale-$versione-A4.pdf"
           cp assets/pdf/vademecum-tutor-digitale-libricino-a4.pdf "$dir/Vademecum-Tutor-Digitale-$versione-libricino.pdf"
+          cp assets/pdf/vademecum-tutor-digitale-libricino-a4-solo-fronti.pdf "$dir/Vademecum-Tutor-Digitale-$versione-libricino-solo-fronti.pdf"
+          cp assets/pdf/vademecum-tutor-digitale-libricino-a4-solo-retri.pdf "$dir/Vademecum-Tutor-Digitale-$versione-libricino-solo-retri.pdf"
           gh release upload "$TAG" "$dir"/*.pdf --clobber --repo "$GITHUB_REPOSITORY"
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name'

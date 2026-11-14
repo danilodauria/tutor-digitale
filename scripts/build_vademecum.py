@@ -6,7 +6,7 @@
 #  Produce tre file in assets/pdf/:
 #    vademecum-tutor-digitale.pdf              A5, lettura su schermo e telefono
 #    vademecum-tutor-digitale-a4.pdf           A4, stampa domestica
-#    vademecum-tutor-digitale-libricino-a4.pdf A4 orizzontale, già imposto:
+#    vademecum-tutor-digitale-libricino-a4.pdf A4 orizzontale, già imposto (anche -solo-fronti e -solo-retri):
 #                                              fronte-retro, piega a metà, graffetta
 #
 #  I numeri (versione, lezioni, domande, novità) vengono dal programma stesso:
@@ -295,6 +295,14 @@ def costruisci(percorso, formato, d):
     box("Questo vademecum si aggiorna da solo: a ogni nuova versione GitHub lo rigenera con i numeri e le "
         "novità del programma. L'ultima edizione è sempre in Altro › Vademecum (PDF) e allegata alla "
         "versione su GitHub, in tre formati: A5 da leggere, A4 da stampare, libricino da piegare.")
+
+    sez("Stampare e rilegare il libricino")
+    passi([
+        "Apri il file <b>libricino</b> e stampa <b>fronte-retro</b> scegliendo «capovolgi sul lato corto», in orizzontale, al 100% (senza «adatta alla pagina»). Senza fronte-retro: stampa il file <b>solo fronti</b>, rimetti i fogli nel cassetto e stampa <b>solo retri</b> (se escono in ordine inverso, attiva «ordine inverso»).",
+        "Metti i fogli <b>in pila nell'ordine</b>: il foglio 1 sotto, l'ultimo sopra, tutti con il lato «fronte» verso il basso. Il numero del foglio è scritto in piccolo in basso, vicino alla piega.",
+        "<b>Piega tutta la pila insieme</b> a metà lungo la linea tratteggiata, con la copertina all'esterno.",
+        "Metti <b>due graffette sulla piega</b>, dove ci sono le tacche sul foglio 1 (con una cucitrice a braccio lungo, o aprendo la pila su un cartone e ribattendo le punte a mano).",
+    ])
 
     # ------------------------------------------------------------ 3
     cap("3. Il primo avvio, in dieci minuti")
@@ -610,38 +618,110 @@ def costruisci(percorso, formato, d):
     return doc.page
 
 
-def imponi_libricino(origine, destinazione, versione):
-    """Dispone le pagine A5 su fogli A4 orizzontali, pronte per la stampa fronte-retro."""
+def imponi_libricino(origine, destinazione, versione, sito=""):
+    """Libricino a punto metallico: fogli A4 orizzontali stampati fronte-retro (capovolgi sul lato corto),
+    messi in pila con il foglio 1 sotto, piegati tutti insieme a metà e pinzati sulla piega.
+    Le pagine sono già nell'ordine giusto: 1 e l'ultima sul foglio esterno, le due centrali sul più interno.
+    Le facciate che mancano per arrivare a un multiplo di 4 diventano pagine «Appunti» prima della
+    quarta di copertina. Ogni foglio porta, vicino alla piega, «Foglio n di N · fronte/retro»; sul fronte
+    del foglio 1 due tacche indicano dove mettere le graffette.
+    Produce anche le versioni «solo fronti» e «solo retri» per le stampanti senza fronte-retro."""
     import pymupdf
 
     src = pymupdf.open(origine)
-    vere = src.page_count            # le facciate in più restano bianche
-    pagine = vere + (-vere) % 4
-    out = pymupdf.open()
+    vere = src.page_count
+    lw, lh = src[0].rect.width, src[0].rect.height
+    appunti = (-(vere + 1)) % 4                 # +1: la quarta di copertina
+    extra = pymupdf.open()
+    blu, oro, grigio = (0.114, 0.208, 0.341), (0.722, 0.573, 0.227), (0.36, 0.39, 0.45)
+    carta = (0.984, 0.973, 0.945)
+    colori = [(0.247, 0.604, 0.388), (0.184, 0.498, 0.753), (0.788, 0.541, 0.141), (0.49, 0.333, 0.753)]
+    for _ in range(appunti):
+        pg = extra.new_page(width=lw, height=lh)
+        pg.draw_rect(pg.rect, color=None, fill=carta)
+        pg.insert_text((37, 62), "Appunti", fontname="tibo", fontsize=15, color=blu)
+        y = 92
+        while y < lh - 45:
+            pg.draw_line((37, y), (lw - 37, y), color=(0.85, 0.82, 0.75), width=0.5)
+            y += 22
+    q = extra.new_page(width=lw, height=lh)          # quarta di copertina
+    q.draw_rect(q.rect, color=None, fill=carta)
+    for k, col in enumerate(colori):
+        q.draw_rect(pymupdf.Rect(k * lw / 4, lh - 10, (k + 1) * lw / 4, lh), color=None, fill=col)
+    q.insert_textbox(pymupdf.Rect(30, lh * 0.36 - 22, lw - 30, lh * 0.36 + 40), "Tutor Digitale", fontname="tibo", fontsize=24, color=blu, align=1)
+    q.insert_textbox(pymupdf.Rect(30, lh * 0.36 + 38, lw - 30, lh * 0.36 + 60), "Lezioni di tecnologia su misura", fontname="tiit", fontsize=11, color=grigio, align=1)
+    q.draw_line((lw / 2 - 60, lh * 0.36 + 70), (lw / 2 + 60, lh * 0.36 + 70), color=oro, width=1)
+    q.insert_textbox(pymupdf.Rect(30, lh * 0.36 + 82, lw - 30, lh * 0.36 + 140), "Vademecum \u00b7 versione " + versione + "\n" + (sito or "danilodauria.github.io/tutor-digitale") + "\n\nIdeato, scritto e sviluppato da Danilo D'Auria", fontname="helv", fontsize=8.5, color=grigio, align=1)
+    q.insert_textbox(pymupdf.Rect(30, lh - 60, lw - 30, lh - 20), "Codice MIT \u00b7 contenuti CC BY-NC-SA 4.0", fontname="helv", fontsize=7, color=grigio, align=1)
+
+    # sequenza delle facciate: (documento, indice)
+    seq = [(src, i) for i in range(vere)] + [(extra, i) for i in range(appunti + 1)]
+    pagine = len(seq)
+    fogli = pagine // 4
     larghezza, altezza = landscape(A4)
-    for foglio in range(pagine // 4):
+    cx = larghezza / 2
+    out, fronti, retri = pymupdf.open(), pymupdf.open(), pymupdf.open()
+    for foglio in range(fogli):
         fronte = [pagine - 2 * foglio, 1 + 2 * foglio]
         retro = [2 + 2 * foglio, pagine - 1 - 2 * foglio]
-        for coppia in (fronte, retro):
+        for lato, coppia in (("fronte", fronte), ("retro", retro)):
             pagina = out.new_page(width=larghezza, height=altezza)
             for indice, numero in enumerate(coppia):
-                if 1 <= numero <= vere:
-                    r = pymupdf.Rect(indice * larghezza / 2, 0, (indice + 1) * larghezza / 2, altezza)
-                    pagina.show_pdf_page(r, src, numero - 1)
-            cx = larghezza / 2
-            pagina.draw_line((cx, 8), (cx, altezza - 8), color=(0.8, 0.77, 0.7), width=0.3, dashes="[2 3] 0")
-    out.set_metadata({
-        "title": "Vademecum · Tutor Digitale " + versione + " (libricino)",
-        "author": "Danilo D'Auria",
-        "subject": "Libricino da stampare fronte-retro sul lato corto e piegare a metà",
-        "keywords": "tutor digitale, vademecum, libricino, versione=" + versione,
-        "creator": "scripts/build_vademecum.py", "producer": "PyMuPDF",
-        "creationDate": "", "modDate": "",
-    })
-    out.save(destinazione, deflate=True, garbage=3, no_new_id=True)
-    out.close()
-    src.close()
+                doc, k = seq[numero - 1]
+                pagina.show_pdf_page(pymupdf.Rect(indice * cx, 0, (indice + 1) * cx, altezza), doc, k)
+            pagina.draw_line((cx, 6), (cx, altezza - 6), color=(0.78, 0.75, 0.68), width=0.3, dashes="[2 3] 0")
+            etichetta = "Foglio %d di %d \u00b7 %s" % (foglio + 1, fogli, lato)
+            larg = pymupdf.get_text_length(etichetta, fontname="helv", fontsize=5.5)
+            pagina.insert_text((cx - 6 - larg, altezza - 5), etichetta, fontname="helv", fontsize=5.5, color=(0.55, 0.55, 0.55))
+            if foglio == 0 and lato == "fronte":
+                for y in (altezza / 4, altezza * 3 / 4):          # dove vanno le graffette
+                    pagina.draw_line((cx - 7, y), (cx + 7, y), color=(0.4, 0.4, 0.4), width=0.8)
+            (fronti if lato == "fronte" else retri).insert_pdf(out, from_page=out.page_count - 1, to_page=out.page_count - 1)
+    for doc, dest, sotto in ((out, destinazione, ""), (fronti, destinazione.replace(".pdf", "-solo-fronti.pdf"), " (solo fronti)"), (retri, destinazione.replace(".pdf", "-solo-retri.pdf"), " (solo retri)")):
+        doc.set_metadata({
+            "title": "Vademecum \u00b7 Tutor Digitale " + versione + " (libricino" + sotto + ")",
+            "author": "Danilo D'Auria",
+            "subject": "Stampa fronte-retro capovolgendo sul lato corto, fogli in pila con il foglio 1 sotto, piega a metà e graffette sulla piega",
+            "keywords": "tutor digitale, vademecum, libricino, versione=" + versione,
+            "creator": "scripts/build_vademecum.py", "producer": "PyMuPDF",
+            "creationDate": "", "modDate": "",
+        })
+        doc.save(dest, deflate=True, garbage=3, no_new_id=True)
+        doc.close()
+    src.close(); extra.close()
     return pagine
+
+
+def verifica_libricino(percorso, attese):
+    """Simula la piegatura: fogli in pila (il foglio 1 sotto), piegati insieme. Le pagine devono leggersi
+    nell'ordine 1, 2, 3… con la copertina davanti e la quarta di copertina dietro."""
+    import pymupdf
+
+    d = pymupdf.open(percorso)
+    if d.page_count % 2:
+        raise SystemExit("libricino: numero di facciate dispari")
+    meta = d[0].rect.width / 2
+
+    def facciata(p, lato):
+        r = pymupdf.Rect(0, 0, meta, p.rect.height) if lato == 0 else pymupdf.Rect(meta, 0, 2 * meta, p.rect.height)
+        t = p.get_text(clip=r)
+        if "Appunti" in t[:40]:
+            return "A"
+        if "Codice MIT" in t and "Lezioni di tecnologia su misura" in t:
+            return "Q"
+        n = [x.strip() for x in t.split("\n") if x.strip().isdigit()]
+        return int(n[-1]) if n else "C"
+
+    n = d.page_count // 2
+    ordine = []
+    for f in range(n):
+        ordine += [facciata(d[2 * f], 1), facciata(d[2 * f + 1], 0)]
+    for f in reversed(range(n)):
+        ordine += [facciata(d[2 * f + 1], 1), facciata(d[2 * f], 0)]
+    numeri = [x for x in ordine if isinstance(x, int)]
+    if ordine[0] != "C" or ordine[-1] != "Q" or numeri != list(range(2, attese + 1)) or any(x not in ("A", "Q") for x in ordine[attese:]):
+        raise SystemExit("libricino: ordine delle pagine sbagliato " + str(ordine))
+    return ordine
 
 
 def main():
@@ -652,7 +732,8 @@ def main():
     lib = os.path.join(USCITA, NOME + "-libricino-a4.pdf")
     n5 = costruisci(a5, "a5", d)
     n4 = costruisci(a4, "a4", d)
-    tot = imponi_libricino(a5, lib, d["versione"])
+    tot = imponi_libricino(a5, lib, d["versione"], d.get("sito", ""))
+    verifica_libricino(lib, n5)
     for f, n in ((a5, n5), (a4, n4)):
         print("%-46s %3d pagine  %6.1f KB" % (os.path.basename(f), n, os.path.getsize(f) / 1024))
     print("%-46s %3d fogli   %6.1f KB" % (os.path.basename(lib), tot // 4, os.path.getsize(lib) / 1024))

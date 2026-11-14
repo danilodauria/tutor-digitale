@@ -77,7 +77,7 @@ node scripts/prepare-desktop.cjs && cd desktop && npm install && npm start   # p
 
 ## Vademecum
 
-Guida pratica in PDF, in tre formati: [A5 da leggere](assets/pdf/vademecum-tutor-digitale.pdf), [A4 da stampare](assets/pdf/vademecum-tutor-digitale-a4.pdf) e [libricino](assets/pdf/vademecum-tutor-digitale-libricino-a4.pdf) già imposto (stampa fronte-retro sul lato corto, piega a metà). Si apre anche dal menu del programma (Altro › Vademecum).
+Guida pratica in PDF, in tre formati: [A5 da leggere](assets/pdf/vademecum-tutor-digitale.pdf), [A4 da stampare](assets/pdf/vademecum-tutor-digitale-a4.pdf) e [libricino](assets/pdf/vademecum-tutor-digitale-libricino-a4.pdf) già imposto: stampa fronte-retro capovolgendo sul lato corto, metti i fogli in pila con il foglio 1 sotto, piega tutto a metà e pinza sulla piega (per le stampanti senza fronte-retro: [solo fronti](assets/pdf/vademecum-tutor-digitale-libricino-a4-solo-fronti.pdf) e [solo retri](assets/pdf/vademecum-tutor-digitale-libricino-a4-solo-retri.pdf)). Lo script controlla da solo, simulando la piegatura, che le pagine si leggano nell'ordine giusto. Si apre anche dal menu del programma (Altro › Vademecum).
 
 Il vademecum **si aggiorna da solo**: `scripts/build_vademecum.py` prende versione, novità e lezioni direttamente dal programma, e il workflow [Vademecum](.github/workflows/vademecum.yml) lo rigenera a ogni cambio di versione, lo salva nel repository, ripubblica il sito e allega i tre PDF alla Release.
 

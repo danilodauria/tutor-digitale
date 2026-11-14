@@ -2,6 +2,8 @@
 
 ## 1.5.2 · 14 novembre 2026
 
+- **Libricino da pinzare**: i fogli si mettono in pila (foglio 1 sotto), si piegano insieme e si pinzano sulla piega; ogni foglio porta «Foglio n di N · fronte/retro» vicino alla piega, il foglio 1 ha le tacche per le graffette, le facciate in più diventano «Appunti» e c'è una vera quarta di copertina. Nuovi file «solo fronti» e «solo retri» per le stampanti senza fronte-retro. Il programma che crea il PDF simula la piegatura e si ferma se l'ordine delle pagine non torna.
+
 - **Chiave dell'autore pubblicata** (impronta `D875-1419-D6E1-1819`): la pagina di verifica mostra «Chiave riconosciuta: Danilo D'Auria» sugli attestati firmati da Danilo, e le licenze per formatori emesse da lui risultano valide nel programma di chi le importa.
 
 ## 1.5.1 · 14 novembre 2026

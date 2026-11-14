@@ -48,7 +48,7 @@ const htmlV = leggi("verifica/index.html");
 ok(htmlV.includes('<span data-versione>' + VER + "</span>"), "verifica/index.html: versione diversa da package.json");
 JSON.parse(leggi("verifica/chiavi.json")); JSON.parse(leggi("verifica/registro.json"));
 ok(fs.existsSync(path.join(R, "scripts/build_vademecum.py")), "manca lo script del vademecum");
-ok(fs.existsSync(path.join(R, "assets/pdf/vademecum-tutor-digitale.pdf")), "manca il vademecum in PDF");
+["", "-a4", "-libricino-a4", "-libricino-a4-solo-fronti", "-libricino-a4-solo-retri"].forEach((x) => ok(fs.existsSync(path.join(R, "assets/pdf/vademecum-tutor-digitale" + x + ".pdf")), "manca il vademecum" + x + ".pdf"));
 
 /* 3. ambiente simulato per caricare i dati e il motore dei quiz */
 const store = {};
