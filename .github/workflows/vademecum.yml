@@ -4,7 +4,8 @@ name: Vademecum
 # programma (package.json), le novità (CHANGELOG.md), le lezioni o lo script.
 # Se il PDF cambia, lo salva nel repository e ripubblica il sito.
 # A ogni etichetta di versione (v1.3.0…) crea la Release con le novità del
-# CHANGELOG e le allega i tre PDF; lo stesso se la Release si crea a mano.
+# CHANGELOG e le allega i tre PDF; lo stesso se la Release si crea a mano o
+# se si avvia questo workflow dalla scheda Actions con «rilascia» spuntato.
 on:
   push:
     tags: ["v*"]
@@ -18,6 +19,11 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      rilascia:
+        description: "Crea anche la Release della versione in package.json (con etichetta e PDF allegati)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -84,19 +90,20 @@ jobs:
           echo "Vademecum $versione salvato e sito in ripubblicazione."
 
       - name: Crea la versione e allega i PDF
-        if: github.event_name == 'release' || github.ref_type == 'tag'
+        if: github.event_name == 'release' || github.ref_type == 'tag' || inputs.rilascia
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.event.release.tag_name || github.ref_name }}
+          TAG_EVENTO: ${{ github.event.release.tag_name || (github.ref_type == 'tag' && github.ref_name) || '' }}
         run: |
           set -euo pipefail
           versione="$(node -p "require('./package.json').version")"
+          TAG="${TAG_EVENTO:-v$versione}"
           if [ "v$versione" != "$TAG" ]; then echo "::error::L'etichetta $TAG non corrisponde a package.json ($versione)"; exit 1; fi
           if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             # note della versione: la sezione del CHANGELOG di questa versione
             awk -v v="$versione" '/^## /{dentro=($2==v)} dentro && !/^## /' CHANGELOG.md > "$RUNNER_TEMP/note.md"
             printf '\n**Vademecum** di questa versione allegato in tre formati: A5 da leggere, A4 da stampare, libricino da piegare.\n\nApri il programma: https://danilodauria.github.io/tutor-digitale/\n' >> "$RUNNER_TEMP/note.md"
-            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "Tutor Digitale $versione" --notes-file "$RUNNER_TEMP/note.md" --verify-tag
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "Tutor Digitale $versione" --notes-file "$RUNNER_TEMP/note.md" --target "$(git rev-parse HEAD)"
           fi
           dir="$RUNNER_TEMP/allegati"; mkdir -p "$dir"
           cp assets/pdf/vademecum-tutor-digitale.pdf "$dir/Vademecum-Tutor-Digitale-$versione.pdf"
