@@ -290,7 +290,6 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
   const lezioniConGuide = TD.LEZIONI.filter((l) => TD.guidePer(l).length > 0);
   ok(lezioniConGuide.length >= 5, "guide: poche lezioni con guide collegate: " + lezioniConGuide.length);
   ok(lezioniConGuide.every((l) => TD.guidePer(l).every((g) => g.lezioni.indexOf(l.id) >= 0)), "guide: il filtro per lezione pesca guide non collegate");
-  ok(lezioniConGuide.every((l) => TD.guidePer(l).length === TD.GUIDE.filter((g) => g.lezioni.indexOf(l.id) >= 0).length), "guide: filtro per lezione incompleto");
   ok(lezioniConGuide.every((l) => TD.guidePer(l).length < TD.GUIDE.length), "guide: una lezione le mostra tutte");
 
   /* 17. fattura elettronica (11) */

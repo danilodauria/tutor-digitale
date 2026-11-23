@@ -32,7 +32,7 @@ Chi insegna tecnologia a domicilio o nelle associazioni ha bisogno di tre cose i
 | **Statistiche** | Ore e incassi per mese, da incassare, clienti per luogo e città, argomenti più richiesti, progressi e andamento dei quiz di ogni allievo; tabella per Excel e riepilogo PDF. |
 | **Percorsi su misura** | Percorsi incontro per incontro, sei modelli pronti, programma in PDF, assegnazione con agenda e compiti, «Il mio percorso» nell'app Allievo. |
 | **Editor** | Lezioni, domande e schermate annotate (frecce, cerchi, numeri, scritte) proprie, con esportazione e importazione. |
-| **Schermate guida** | Sedici guide disegnate per Android, iPhone, Windows, Mac, Smart TV, stampante, scanner, chiavette e dischi esterni, cuffie Bluetooth, con il punto da toccare a ogni passo, stampabili e filtrabili per dispositivo e per lezione. |
+| **Schermate guida** | Diciassette guide disegnate per Android, iPhone, Windows, Mac, Smart TV, stampante, scanner, chiavette e dischi esterni, cuffie Bluetooth, con il punto da toccare a ogni passo, stampabili e filtrabili per dispositivo e per lezione. |
 | **Modalità aula** | Domanda sulla Smart TV, risposte dai telefoni con un QR, classifica; canale cifrato end-to-end, oppure alzata di mano senza Internet. |
 | **Fattura elettronica** | File XML FatturaPA (FPR12) per forfettari, minimi e regime ordinario, con PDF di cortesia, da caricare nel portale dell'Agenzia delle Entrate. |
 | **Accessibilità** | Contrasto elevato, pulsanti grandi, niente animazioni, «un pulsante alla volta» per chi ha difficoltà motorie; controllo axe WCAG 2 AA. |

@@ -43,6 +43,43 @@
     t(306, 10, "mar 23 nov  10:24", { size: 5.4, fill: "#4a5365", anchor: "end" }) +
     r(8, 22, 304, 178, "#fff", { rx: 8, stroke: "#cfd6e4" }) +
     c(18, 32, 3.2, "#e4572e") + c(28, 32, 3.2, "#c98a24") + c(38, 32, 3.2, "#3f9a63");
+  /* sfondo chiaro delle scene che non sono una finestra */
+  const SFONDO = r(0, 0, 320, 210, "#f4f6fb", { rx: 8 });
+  /* barra delle applicazioni: la stessa in tutte le schermate di Windows */
+  const BARRA = r(6, 166, 308, 20, "#e7ebf3", { rx: 0 }) + r(110, 169, 14, 14, "#2f7fc0", { rx: 2 }) +
+    p("M113 172 h3 v3 h-3z M118 172 h3 v3 h-3z M113 177 h3 v3 h-3z M118 177 h3 v3 h-3z", { fill: "#fff", stroke: "#fff", sw: 0.5 }) +
+    r(196, 172, 12, 9, "#c98a24", { rx: 1.5 }) + r(196, 170, 6, 3, "#c98a24", { rx: 1 });
+  /* scrivania di Windows: cornice, sfondo, contenuto e barra in basso */
+  function scrivania(contenuto) { return r(0, 0, 320, 210, "#1b2333", { rx: 8 }) + r(6, 6, 308, 180, "#2f6f9e", { rx: 3 }) + BARRA + (contenuto || ""); }
+  /* scanner da tavolo: il disegno è lo stesso, la didascalia sulla freccia
+     serve solo al passo che infila il foglio nell'alimentatore */
+  function scannerTavolo(conFreccia) {
+    return SFONDO +
+      r(96, 34, 128, 34, "#fff", { rx: 2, stroke: "#cfd6e4" }) +
+      r(40, 66, 240, 92, "#dfe6f1", { rx: 10, stroke: "#cfd6e4" }) +
+      r(40, 66, 240, 12, "#c6cdda", { rx: 4 }) +
+      p("M160 71 v19", { stroke: "#2f7fc0", sw: 3 }) + p("M152 80 l8 10 l8 -10", { stroke: "#2f7fc0", sw: 3 }) +
+      r(56, 96, 208, 6, "#c6cdda", { rx: 3 }) +
+      r(56, 132, 34, 14, "#e4572e", { rx: 3 }) + t(96, 143, "blocco del carrello", { size: 6, fill: "#6b7385" }) +
+      c(262, 138, 12, "#3a4458") + c(262, 138, 5, "none", { stroke: "#fff", sw: 1.5 }) + p("M262 131 v7", { stroke: "#fff", sw: 1.5 }) +
+      t(262, 162, "On/Off", { size: 6, anchor: "middle" }) +
+      (conFreccia ? t(160, 193, "Freccia sul coperchio: lato stampato in giù", { size: 7.4, anchor: "middle", fill: "#3a4458" }) : "");
+  }
+  const PUNTI_SCANNER_TAVOLO = { foglio: [160, 51, 0, 128, 34], blocco: [73, 139, 0, 34, 14] };
+  /* nota di iPhone: pagina bianca, barra «Note» e strumenti in basso */
+  function notaIPhone(contenuto, opz) {
+    opz = opz || {};
+    return r(8, 34, 164, 300, "#fff", { rx: 0 }) +
+      r(8, 50, 164, 30, "#f4f6fb", { rx: 0 }) + t(22, 69, "‹ Note", { size: 8, fill: "#c98a24" }) +
+      (opz.condividi ? r(144, 64, 14, 12, "none", { stroke: "#c98a24", sw: 1.4, rx: 2 }) + p("M151 74 v-11 M146 67 l5 -5 l5 5", { stroke: "#c98a24", sw: 1.5 }) : "") +
+      t(22, 100, "Bolletta luce", { size: 13, bold: true }) +
+      contenuto +
+      (opz.senzaBarra ? "" : r(12, 294, 156, 28, "#f4f6fb", { rx: 8 }) +
+        p("M26 303 h4 M26 308 h4 M26 313 h4", { stroke: "#4a5365", sw: 1.2 }) + c(24, 303, 1.5, "#4a5365") + c(24, 308, 1.5, "#4a5365") + c(24, 313, 1.5, "#4a5365") +
+        r(54, 303, 20, 13, "none", { stroke: "#c98a24", sw: 1.5, rx: 3 }) + r(58, 300, 8, 4, "#c98a24", { rx: 1 }) + c(64, 309, 3.6, "none", { stroke: "#c98a24", sw: 1.4 }) +
+        p("M94 302 l6 12 h-12 z", { stroke: "#4a5365", sw: 1.2 }) +
+        p("M146 302 v12 M140 308 h12", { stroke: "#4a5365", sw: 1.6 }));
+  }
 
   /* ------------------------------------------------------------ scene */
   const SCENE = {
@@ -106,40 +143,66 @@
         r(140, 252, 14, 14, "none", { stroke: "#4a5365", sw: 1.4, rx: 3 }) + p("M147 255 v8 M143 259 h8", { stroke: "#4a5365", sw: 1.4 }), { iphone: true });
     }, punti: { home: [85, 262, 0, 138, 26] } },
 
+    "iphone-nota": { tipo: "telefono", iphone: true, disegno: function () {
+      return telefono(notaIPhone(
+        t(22, 118, "Luce ottobre: 78 euro", { size: 9 }) +
+        r(22, 126, 100, 3, "#cfd6e4", { rx: 1.5 }) + r(22, 136, 124, 3, "#cfd6e4", { rx: 1.5 })), { iphone: true });
+    }, punti: { fotocamera: [64, 309, 13] } },
+
+    "iphone-menu-foto": { tipo: "telefono", iphone: true, disegno: function () {
+      return telefono(notaIPhone(
+        t(22, 118, "Luce ottobre: 78 euro", { size: 9 }) +
+        r(22, 126, 100, 3, "#cfd6e4", { rx: 1.5 }) +
+        r(12, 190, 156, 112, "#f4f6fb", { rx: 12 }) +
+        r(18, 198, 144, 22, "#fff", { rx: 6 }) + t(30, 213, "Scansiona documento", { size: 8.5, bold: true }) +
+        r(18, 224, 144, 22, "#fff", { rx: 6 }) + t(30, 239, "Fotografa o video", { size: 8.5 }) +
+        r(18, 250, 144, 22, "#fff", { rx: 6 }) + t(30, 265, "Aggiungi schizzo", { size: 8.5 }) +
+        r(18, 276, 144, 20, "#fff", { rx: 6 }) + t(90, 290, "Annulla", { size: 8.5, anchor: "middle", fill: "#2f7fc0" }), { senzaBarra: true }), { iphone: true });
+    }, punti: { scansiona: [90, 209, 0, 144, 22] } },
+
+    "iphone-scansione": { tipo: "telefono", iphone: true, disegno: function () {
+      return telefono(
+        r(8, 34, 164, 300, "#1b2333", { rx: 0 }) +
+        t(22, 60, "Annulla", { size: 7.5, fill: "#f2c14e" }) + t(90, 60, "Scansiona documento", { size: 8, anchor: "middle", fill: "#fff" }) +
+        r(46, 92, 88, 118, "#fff", { rx: 2 }) +
+        r(54, 104, 56, 3, "#cfd6e4", { rx: 1.5 }) + r(54, 114, 68, 3, "#cfd6e4", { rx: 1.5 }) + r(54, 124, 48, 3, "#cfd6e4", { rx: 1.5 }) +
+        r(54, 140, 60, 3, "#cfd6e4", { rx: 1.5 }) + r(54, 150, 70, 3, "#cfd6e4", { rx: 1.5 }) + r(54, 160, 40, 3, "#cfd6e4", { rx: 1.5 }) +
+        p("M46 104 V92 H58 M124 92 H136 V104 M136 198 V210 H124 M58 210 H46 V198", { stroke: "#f2c14e", sw: 3 }) +
+        c(90, 304, 14, "none", { stroke: "#fff", sw: 2 }) + c(90, 304, 11, "#fff") +
+        r(120, 288, 46, 22, "#f2c14e", { rx: 11 }) + t(143, 303, "Salva", { size: 9, bold: true, anchor: "middle" }), { iphone: true });
+    }, punti: { salva: [143, 299, 0, 46, 22] } },
+
+    "iphone-nota-pdf": { tipo: "telefono", iphone: true, disegno: function () {
+      return telefono(notaIPhone(
+        r(20, 112, 128, 46, "#f4f6fb", { rx: 5, stroke: "#cfd6e4" }) +
+        r(28, 120, 16, 20, "#fff", { rx: 2, stroke: "#cfd6e4" }) + t(36, 134, "PDF", { size: 4.5, fill: "#b23a32", anchor: "middle", bold: true }) +
+        t(52, 128, "Bolletta luce.pdf", { size: 7.5, bold: true }) + t(52, 140, "1 pagina · scansione", { size: 6, fill: "#6b7385" }) +
+        t(22, 176, "Pagata il 12 ottobre.", { size: 8 }), { condividi: true }), { iphone: true });
+    }, punti: { condividi: [151, 68, 10] } },
+
     "windows-desktop": { tipo: "pc", disegno: function () {
-      return r(0, 0, 320, 210, "#1b2333", { rx: 8 }) + r(6, 6, 308, 180, "#2f6f9e", { rx: 3 }) +
-        icona(16, 16, "#c98a24", "Documenti", r(22, 25, 18, 13, "#fff", { rx: 2 })).replace(/fill="#1b2333"/g, 'fill="#fff"') +
-        icona(16, 66, "#8fb3e8", "Cestino", p("M25 74 h12 l-2 16 h-8 z", { fill: "#fff", stroke: "#fff", sw: 1 })).replace(/fill="#1b2333"/g, 'fill="#fff"') +
-        r(6, 166, 308, 20, "#e7ebf3", { rx: 0 }) + r(110, 169, 14, 14, "#2f7fc0", { rx: 2 }) + p("M113 172 h3 v3 h-3z M118 172 h3 v3 h-3z M113 177 h3 v3 h-3z M118 177 h3 v3 h-3z", { fill: "#fff", stroke: "#fff", sw: 0.5 }) +
-        r(130, 170, 60, 12, "#fff", { rx: 6 }) + t(138, 179, "Cerca", { size: 7, fill: "#6b7385" }) +
-        r(196, 172, 12, 9, "#c98a24", { rx: 1.5 }) + r(196, 170, 6, 3, "#c98a24", { rx: 1 }) + r(212, 170, 12, 12, "#3f9a63", { rx: 2 }) +
-        t(300, 180, "10:24", { size: 7, anchor: "end" }) + r(130, 190, 60, 12, "#3a4458", { rx: 2 });
-    }, punti: { start: [117, 176, 12], cerca: [160, 176, 0, 66, 18], cartella: [204, 176, 11] } },
+      return scrivania();
+    }, punti: { start: [117, 176, 12], cartella: [204, 176, 11] } },
 
     "windows-start": { tipo: "pc", disegno: function () {
-      return r(0, 0, 320, 210, "#1b2333", { rx: 8 }) + r(6, 6, 308, 180, "#2f6f9e", { rx: 3 }) +
-        r(70, 22, 180, 140, "#f4f6fb", { rx: 8 }) + r(80, 30, 160, 14, "#fff", { rx: 7 }) + t(90, 40, "Cerca app, impostazioni e file", { size: 6.5, fill: "#6b7385" }) +
-        t(80, 58, "Aggiunte", { size: 7, bold: true }) +
-        [0, 1, 2, 3, 4, 5].map(function (i) { const x = 84 + (i % 3) * 52, y = 66 + Math.floor(i / 3) * 34; return r(x, y, 18, 18, ["#2f7fc0", "#c98a24", "#3f9a63", "#7d55c0", "#b23a32", "#5b6472"][i], { rx: 4 }) + t(x + 9, y + 27, ["Posta", "File", "Foto", "Note", "Browser", "Impost."][i], { size: 5.5, anchor: "middle" }); }).join("") +
+      return scrivania(
+        r(70, 22, 180, 140, "#f4f6fb", { rx: 8 }) +
+        r(170, 58, 72, 44, "#fff", { rx: 4, stroke: "#cfd6e4" }) + t(178, 70, "Sospendi", { size: 6.5 }) + t(178, 84, "Arresta il sistema", { size: 6.5, bold: true }) + t(178, 97, "Riavvia", { size: 6.5 }) +
         r(70, 138, 180, 24, "#e7ebf3", { rx: 0 }) + c(86, 150, 6, "#8fb3e8") + t(96, 153, "Danilo", { size: 7 }) +
-        c(232, 150, 6, "none", { stroke: "#1b2333", sw: 1.4 }) + p("M232 143 v6", { sw: 1.4 }) +
-        r(170, 92, 72, 44, "#fff", { rx: 4, stroke: "#cfd6e4" }) + t(178, 104, "Sospendi", { size: 6.5 }) + t(178, 118, "Arresta il sistema", { size: 6.5, bold: true }) + t(178, 131, "Riavvia", { size: 6.5 }) +
-        r(6, 166, 308, 20, "#e7ebf3", { rx: 0 }) + r(110, 169, 14, 14, "#2f7fc0", { rx: 2 });
-    }, punti: { accensione: [232, 150, 11], arresta: [206, 115, 0, 70, 14], impostazioni: [196, 106, 12] } },
+        c(232, 150, 6, "none", { stroke: "#1b2333", sw: 1.4 }) + p("M232 143 v6", { sw: 1.4 }));
+    }, punti: { accensione: [232, 150, 11], arresta: [206, 81, 0, 70, 14] } },
 
     "windows-esplora": { tipo: "pc", disegno: function () {
-      return r(0, 0, 320, 210, "#1b2333", { rx: 8 }) + r(6, 6, 308, 180, "#2f6f9e", { rx: 3 }) +
+      return scrivania(
         r(26, 16, 270, 146, "#fff", { rx: 6 }) + r(26, 16, 270, 18, "#e7ebf3", { rx: 6 }) + t(36, 28, "Documenti", { size: 7.5, bold: true }) +
-        r(34, 40, 42, 14, "#e1eef9", { rx: 3 }) + t(38, 50, "+ Nuovo", { size: 6.5, bold: true }) + t(86, 50, "✂  ⧉  🗑  ↕ Ordina", { size: 6.5, fill: "#4a5365" }) +
+        r(34, 40, 42, 14, "#e1eef9", { rx: 3 }) + t(38, 50, "+ Nuovo", { size: 6.5, bold: true }) +
         r(34, 58, 60, 98, "#f4f6fb", { rx: 3 }) + t(40, 72, "Desktop", { size: 6.5 }) + t(40, 86, "Download", { size: 6.5 }) + t(40, 100, "Documenti", { size: 6.5, bold: true }) + t(40, 114, "Immagini", { size: 6.5 }) + t(40, 128, "Chiavetta (E:)", { size: 6.5 }) +
-        [["Bollette", 70], ["Lettere", 96], ["Foto viaggio", 122]].map(function (x) { return r(104, x[1] - 9, 14, 11, "#c98a24", { rx: 2 }) + t(124, x[1], x[0], { size: 6.5 }); }).join("") +
-        r(34, 58, 0, 0, "none") + r(38, 41, 0, 0, "none") +
-        r(40, 52, 58, 48, "#fff", { rx: 4, stroke: "#cfd6e4" }) + t(46, 64, "Cartella", { size: 6.5, bold: true }) + t(46, 77, "Documento", { size: 6.5 }) + t(46, 90, "Collegamento", { size: 6.5 }) +
-        r(6, 166, 308, 20, "#e7ebf3", { rx: 0 }) + r(110, 169, 14, 14, "#2f7fc0", { rx: 2 });
-    }, punti: { nuovo: [55, 47, 0, 46, 16], cartella: [69, 62, 0, 56, 14], chiavetta: [64, 125, 0, 62, 14] } },
+        [["Bollette", 84], ["Lettere", 110], ["Foto viaggio", 136]].map(function (x) { return r(104, x[1] - 9, 14, 11, "#c98a24", { rx: 2 }) + t(124, x[1], x[0], { size: 6.5 }); }).join("") +
+        r(98, 54, 74, 20, "#fff", { rx: 4, stroke: "#cfd6e4" }) + t(106, 66, "Cartella", { size: 6.5, bold: true }));
+    }, punti: { nuovo: [55, 47, 0, 46, 16], cartella: [135, 64, 0, 74, 14], chiavetta: [64, 125, 0, 62, 14] } },
 
     "stampante-pannello": { tipo: "pc", disegno: function () {
-      return r(0, 0, 320, 210, "#f4f6fb", { rx: 8 }) +
+      return SFONDO +
         r(72, 44, 176, 14, "#fff", { rx: 2, stroke: "#cfd6e4" }) +
         r(46, 58, 228, 98, "#e7ebf3", { rx: 10, stroke: "#cfd6e4" }) +
         t(56, 74, "Stampante", { size: 8, bold: true, fill: "#6b7385" }) +
@@ -161,24 +224,24 @@
         }).join("") +
         t(122, 44, "Stampanti e scanner", { size: 8.5, bold: true }) +
         r(122, 52, 96, 18, "#2f7fc0", { rx: 9 }) + t(170, 64, "+ Aggiungi dispositivo", { size: 6, fill: "#fff", anchor: "middle", bold: true }) +
-        [["HP DeskJet 2700", "Wi-Fi · pronta"], ["EPSON ET-2850", "USB · pronta"], ["Microsoft Print to PDF", "stampante virtuale"]].map(function (x, i) {
+        [["HP DeskJet 2700", "Wi-Fi · pronta"], ["EPSON ET-2850", "USB · pronta"]].map(function (x, i) {
           const y = 78 + i * 32;
           return r(122, y, 178, 28, "#fff", { rx: 5, stroke: "#cfd6e4" }) + r(130, y + 7, 14, 14, "#8fb3e8", { rx: 3 }) + t(152, y + 12, x[0], { size: 7, bold: true }) + t(152, y + 22, x[1], { size: 6, fill: "#6b7385" });
         }).join("");
     }, punti: { stampanti: [54, 76, 0, 96, 20] } },
 
     "windows-aggiungi": { tipo: "pc", disegno: function () {
-      return r(0, 0, 320, 210, "#2f6f9e", { rx: 8 }) + r(46, 14, 228, 182, "#fff", { rx: 8, stroke: "#cfd6e4" }) +
-        t(58, 34, "Aggiungi stampante", { size: 9, bold: true }) + t(58, 48, "Ricerca delle stampanti disponibili…", { size: 6.5, fill: "#6b7385" }) +
-        [["HP DeskJet 2700", "Wi-Fi"], ["EPSON ET-2850", "Wi-Fi"], ["Microsoft Print to PDF", "virtuale"]].map(function (x, i) {
-          const y = 58 + i * 32, on = i === 0;
-          return r(58, y, 204, 26, on ? "#e1eef9" : "#fff", { rx: 5, stroke: on ? "#2f7fc0" : "#cfd6e4" }) +
-            r(66, y + 6, 14, 14, on ? "#2f7fc0" : "#8fb3e8", { rx: 3 }) + t(88, y + 12, x[0], { size: 7.2, bold: true }) + t(88, y + 21, x[1], { size: 6, fill: "#6b7385" });
+      return CORNICE + r(34, 18, 252, 176, "#fff", { rx: 8, stroke: "#cfd6e4" }) +
+        t(46, 38, "Aggiungi stampante", { size: 9, bold: true }) + t(46, 52, "Ricerca delle stampanti disponibili…", { size: 6.5, fill: "#6b7385" }) +
+        [["HP DeskJet 2700", "Wi-Fi"], ["EPSON ET-2850", "Wi-Fi"]].map(function (x, i) {
+          const y = 64 + i * 32, on = i === 0;
+          return r(46, y, 228, 26, on ? "#e1eef9" : "#fff", { rx: 5, stroke: on ? "#2f7fc0" : "#cfd6e4" }) +
+            r(54, y + 6, 14, 14, on ? "#2f7fc0" : "#8fb3e8", { rx: 3 }) + t(76, y + 12, x[0], { size: 7.2, bold: true }) + t(76, y + 21, x[1], { size: 6, fill: "#6b7385" });
         }).join("") +
-        t(58, 158, "La stampante deve essere accesa e sulla stessa rete.", { size: 6.2, fill: "#6b7385" }) +
-        r(140, 166, 52, 20, "#e7ebf3", { rx: 10 }) + t(166, 179, "Annulla", { size: 6.4, anchor: "middle" }) +
-        r(198, 166, 64, 20, "#2f7fc0", { rx: 10 }) + t(230, 179, "Aggiungi", { size: 6.6, fill: "#fff", anchor: "middle", bold: true });
-    }, punti: { elenco: [117, 71, 0, 110, 26] } },
+        t(46, 150, "Deve essere accesa e sulla stessa rete.", { size: 6.2, fill: "#6b7385" }) +
+        r(140, 164, 56, 20, "#e7ebf3", { rx: 10 }) + t(168, 178, "Annulla", { size: 6.4, anchor: "middle" }) +
+        r(202, 164, 64, 20, "#2f7fc0", { rx: 10 }) + t(234, 178, "Aggiungi", { size: 6.6, fill: "#fff", anchor: "middle", bold: true });
+    }, punti: { elenco: [117, 77, 0, 120, 26] } },
 
     "windows-prova-stampa": { tipo: "pc", disegno: function () {
       return CORNICE +
@@ -209,7 +272,7 @@
     }, punti: { stampanti: [54, 156.5, 0, 84, 17] } },
 
     "mac-aggiungi": { tipo: "pc", disegno: function () {
-      return r(0, 0, 320, 210, "#c9d2e0", { rx: 8 }) +
+      return MAC +
         r(40, 38, 240, 158, "#fff", { rx: 10 }) +
         t(56, 60, "Aggiungi stampante, scanner o fax", { size: 8.2, bold: true }) +
         t(56, 74, "Ricerca dei dispositivi sulla rete Wi-Fi…", { size: 6, fill: "#6b7385" }) +
@@ -237,7 +300,7 @@
     }, punti: { prova: [95, 164, 0, 142, 16] } },
 
     "scanner-vetro": { tipo: "pc", disegno: function () {
-      return r(0, 0, 320, 210, "#f4f6fb", { rx: 8 }) +
+      return SFONDO +
         r(48, 40, 224, 20, "#dfe6f1", { rx: 8, stroke: "#cfd6e4" }) +
         r(48, 62, 224, 108, "#e7ebf3", { rx: 12, stroke: "#cfd6e4" }) +
         r(66, 78, 188, 78, "#cdd9e8", { rx: 5 }) +
@@ -246,18 +309,8 @@
         t(160, 188, "Foglio sul vetro, testo verso il vetro", { size: 6.4, anchor: "middle", fill: "#6b7385" });
     }, punti: { foglio: [158, 116, 0, 100, 66] } },
 
-    "scanner-tavolo": { tipo: "pc", disegno: function () {
-      return r(0, 0, 320, 210, "#f4f6fb", { rx: 8 }) +
-        r(96, 34, 128, 34, "#fff", { rx: 2, stroke: "#cfd6e4" }) +
-        r(40, 66, 240, 92, "#dfe6f1", { rx: 10, stroke: "#cfd6e4" }) +
-        r(40, 66, 240, 12, "#c6cdda", { rx: 4 }) +
-        p("M160 71 v19", { stroke: "#2f7fc0", sw: 3 }) + p("M152 80 l8 10 l8 -10", { stroke: "#2f7fc0", sw: 3 }) +
-        r(56, 96, 208, 6, "#c6cdda", { rx: 3 }) +
-        r(56, 132, 34, 14, "#e4572e", { rx: 3 }) + t(96, 143, "blocco del carrello", { size: 6, fill: "#6b7385" }) +
-        c(262, 138, 12, "#3a4458") + c(262, 138, 5, "none", { stroke: "#fff", sw: 1.5 }) + p("M262 131 v7", { stroke: "#fff", sw: 1.5 }) +
-        t(262, 162, "On/Off", { size: 6, anchor: "middle" }) +
-        t(160, 193, "Freccia sul coperchio: lato stampato in giù", { size: 7.4, anchor: "middle", fill: "#3a4458" });
-    }, punti: { foglio: [160, 51, 0, 128, 34], blocco: [73, 139, 0, 34, 14] } },
+    "scanner-tavolo": { tipo: "pc", disegno: function () { return scannerTavolo(true); }, punti: PUNTI_SCANNER_TAVOLO },
+    "scanner-tavolo-blocco": { tipo: "pc", disegno: function () { return scannerTavolo(false); }, punti: PUNTI_SCANNER_TAVOLO },
 
     "windows-scanner": { tipo: "pc", disegno: function () {
       return finestra("Scanner") +
@@ -278,7 +331,7 @@
     }, punti: { anteprima: [88, 106, 0, 140, 132], salva: [235, 159, 0, 90, 26] } },
 
     "disco-collegamento": { tipo: "pc", disegno: function () {
-      return r(0, 0, 320, 210, "#f4f6fb", { rx: 8 }) +
+      return SFONDO +
         r(16, 36, 130, 80, "#1b2333", { rx: 6 }) + r(24, 44, 114, 64, "#2f6f9e", { rx: 2 }) +
         r(8, 116, 146, 10, "#c6cdda", { rx: 4 }) +
         r(196, 96, 26, 14, "#3a4458", { rx: 3 }) + r(222, 99, 10, 8, "#8fb3e8", { rx: 1 }) +
@@ -295,7 +348,7 @@
         [["Disco locale (C:)", "Windows · 240 GB", "#8fb3e8", 56], ["Chiavetta (D:)", "32 GB · rimovibile", "#c98a24", 86], ["Disco esterno (E:)", "1 TB · rimovibile", "#3f9a63", 116]].map(function (x) {
           return r(28, x[3], 264, 26, "#fff", { rx: 4, stroke: "#cfd6e4" }) + r(36, x[3] + 6, 14, 14, x[2], { rx: 3 }) + t(58, x[3] + 12, x[0], { size: 7, bold: true }) + t(58, x[3] + 21, x[1], { size: 6, fill: "#6b7385" });
         }).join("") +
-        r(6, 166, 308, 20, "#e7ebf3", { rx: 0 }) + r(110, 169, 14, 14, "#2f7fc0", { rx: 2 });
+        BARRA;
     }, punti: { unita: [110, 99, 0, 120, 26] } },
 
     "windows-copia": { tipo: "pc", disegno: function () {
@@ -303,8 +356,7 @@
         r(40, 96, 240, 74, "#fff", { rx: 8, stroke: "#cfd6e4" }) +
         t(56, 118, "Copia di 1 elemento", { size: 8, bold: true }) + t(56, 132, "in «Documenti»", { size: 6.4, fill: "#6b7385" }) +
         r(56, 140, 144, 10, "#e7ebf3", { rx: 5 }) + r(56, 140, 90, 10, "#2f7fc0", { rx: 5 }) +
-        t(56, 164, "Bollette 2026 · 34 MB di 120 MB", { size: 6.2, fill: "#6b7385" }) +
-        r(196, 152, 60, 18, "#e7ebf3", { rx: 9 }) + t(226, 164, "Annulla", { size: 6.4, anchor: "middle" });
+        t(56, 164, "Bollette 2026 · 34 MB di 120 MB", { size: 6.2, fill: "#6b7385" });
     }, punti: { barra: [128, 145, 0, 144, 12] } },
 
     "windows-rimozione": { tipo: "pc", disegno: function () {
@@ -313,12 +365,11 @@
         t(200, 56, "Rimozione sicura", { size: 6.6, bold: true }) + t(200, 70, "dell'hardware", { size: 6.2, fill: "#6b7385" }) +
         r(196, 86, 104, 24, "#e1eef9", { rx: 4 }) + t(204, 101, "Chiavetta (D:)", { size: 6.4 }) +
         t(204, 121, "Disco esterno (E:)", { size: 6.2, fill: "#6b7385" }) +
-        r(6, 166, 308, 20, "#e7ebf3", { rx: 0 }) + r(110, 169, 14, 14, "#2f7fc0", { rx: 2 }) +
-        r(268, 169, 12, 12, "#c6cdda", { rx: 2 }) + r(286, 169, 12, 12, "#c98a24", { rx: 2 }) + p("M289 173 h6 M292 171 v8", { stroke: "#fff", sw: 1.4 });
+        BARRA + r(286, 169, 12, 12, "#c98a24", { rx: 2 }) + p("M289 173 h6 M292 171 v8", { stroke: "#fff", sw: 1.4 });
     }, punti: { icona: [292, 175, 11] } },
 
     "cuffie-abbinamento": { tipo: "pc", disegno: function () {
-      return r(0, 0, 320, 210, "#f4f6fb", { rx: 8 }) +
+      return SFONDO +
         p("M96 118 a64 64 0 0 1 128 0", { stroke: "#1b2333", sw: 12 }) +
         r(76, 108, 40, 62, "#1b2333", { rx: 14 }) + r(86, 124, 20, 30, "#3a4458", { rx: 8 }) +
         r(204, 108, 40, 62, "#1b2333", { rx: 14 }) + r(214, 124, 20, 30, "#3a4458", { rx: 8 }) +
@@ -356,14 +407,13 @@
         r(42, 236, 18, 50, "#3a4458", { rx: 9 }) + t(51, 250, "+", { size: 10, fill: "#fff", anchor: "middle" }) + t(51, 266, "VOL", { size: 4.5, fill: "#fff", anchor: "middle" }) + t(51, 281, "−", { size: 10, fill: "#fff", anchor: "middle" }) +
         r(100, 236, 18, 50, "#3a4458", { rx: 9 }) + t(109, 250, "▲", { size: 6, fill: "#fff", anchor: "middle" }) + t(109, 266, "CH", { size: 4.5, fill: "#fff", anchor: "middle" }) + t(109, 281, "▼", { size: 6, fill: "#fff", anchor: "middle" }) +
         r(66, 242, 28, 14, "#3a4458", { rx: 4 }) + t(80, 252, "GUIDA", { size: 5, fill: "#fff", anchor: "middle" }) + r(66, 264, 28, 14, "#3a4458", { rx: 4 }) + t(80, 274, "SUB", { size: 5.5, fill: "#fff", anchor: "middle" }) +
-        r(42, 300, 76, 12, "#3a4458", { rx: 4 }) + [0, 1, 2, 3].map(function (i) { return r(46 + i * 18, 303, 14, 6, ["#b23a32", "#3f9a63", "#c98a24", "#2f7fc0"][i], { rx: 2 }); }).join("") +
         r(42, 320, 76, 14, "#3a4458", { rx: 4 }) + t(80, 330, "SETTINGS ⚙", { size: 5.5, fill: "#fff", anchor: "middle" });
     }, punti: { accensione: [56, 26, 13], source: [101, 26, 0, 36, 22], ok: [80, 170, 16], frecce: [80, 170, 34], indietro: [55, 217, 0, 32, 20], home: [105, 217, 0, 32, 20], volume: [51, 261, 0, 26, 56], sub: [80, 271, 0, 34, 20], guida: [80, 249, 0, 34, 20], impostazioni: [80, 327, 0, 82, 20], canali: [109, 261, 0, 26, 56] } },
 
     "tv-sorgenti": { tipo: "pc", disegno: function () {
       return r(0, 0, 320, 200, "#1b2333", { rx: 6 }) + r(6, 6, 308, 172, "#0f1f36", { rx: 2 }) + t(20, 30, "Sorgente", { size: 11, fill: "#fff", bold: true }) +
         [["TV", "#5b6472"], ["HDMI 1", "#2f7fc0"], ["HDMI 2", "#5b6472"], ["USB", "#5b6472"]].map(function (x, i) { return r(20 + i * 72, 60, 62, 62, x[1], { rx: 8 }) + t(51 + i * 72, 97, x[0], { size: 9, fill: "#fff", anchor: "middle", bold: true }); }).join("") +
-        t(20, 150, "HDMI 1: computer collegato con il cavo", { size: 8, fill: "#cfd6e4" }) + r(140, 182, 40, 12, "#3a4458", { rx: 2 });
+        t(20, 150, "HDMI 1: computer collegato con il cavo", { size: 8, fill: "#cfd6e4" });
     }, punti: { hdmi: [123, 91, 0, 70, 70] } },
 
     "sms-truffa": { tipo: "telefono", disegno: function () {
@@ -418,17 +468,22 @@
       ["mac-stampanti", "stampanti", "Dal Mac apri «Impostazioni di Sistema» dal menu in alto a sinistra (accanto a «Finder») › «Stampanti e scanner», poi «+ Aggiungi stampante, scanner o fax…»."],
       ["mac-aggiungi", "elenco", "Nella finestra «Aggiungi stampante, scanner o fax» aspetta che l'elenco si riempia e scegli il nome: col cavo è quella «USB»."],
       ["mac-prova-stampa", "prova", "Scegli «Stampa pagina di prova…»: se esce il foglio è installata; se no, riaccendila e ripeti."]] },
-    { id: "g-scanner-multifunzione", titolo: "Acquisire un documento con la stampante multifunzione", dispositivo: "Scanner", lezioni: ["accessori-0-1", "accessori-2-3", "accessori-3-1"], passi: [
+    { id: "g-scanner-multifunzione", titolo: "Acquisire un documento con la stampante multifunzione", dispositivo: "Scanner", lezioni: ["accessori-2-3", "accessori-3-1"], passi: [
       ["scanner-vetro", "foglio", "Alza il coperchio e appoggia il foglio sul vetro, con il testo rivolto verso il vetro e l'angolo in alto a sinistra."],
       ["windows-scanner", "profilo", "Sul computer apri «Scanner» (o «Scanner e fotocamera») e scegli il profilo «Documento»: PDF, 300 dpi, bianco e nero."],
       ["windows-scanner", "acquisisci", "Premi «Acquisisci» e aspetta: il carrello scorre sotto il vetro — non guardare la luce."],
       ["windows-anteprima", "anteprima", "Guarda l'anteprima: testo dritto e leggibile, nessuna pagina tagliata. Se è storta, rimetti il foglio e ripeti."],
       ["windows-anteprima", "salva", "Premi «Salva» e scegli Documenti: il PDF si chiama con la data e si può allegare a un'email o stampare."]] },
     { id: "g-scanner-tavolo", titolo: "Acquisire con uno scanner da tavolo", dispositivo: "Scanner", lezioni: ["accessori-2-3", "accessori-3-1"], passi: [
-      ["scanner-tavolo", "blocco", "Togli il blocco arancione del carrello (serve solo per il trasporto) e accendi lo scanner."],
+      ["scanner-tavolo-blocco", "blocco", "Togli il blocco arancione del carrello (serve solo per il trasporto) e accendi lo scanner."],
       ["scanner-tavolo", "foglio", "Infila il foglio nell'alimentatore con il lato stampato verso il basso, come mostra la freccia sul coperchio."],
       ["windows-scanner", "acquisisci", "Sul computer apri «Scanner», controlla che sia scelto lo scanner giusto e premi «Acquisisci»."],
       ["windows-anteprima", "salva", "Controlla l'anteprima e premi «Salva»: il PDF finisce in Documenti, pronto da inviare."]] },
+    { id: "g-scanner-iphone", titolo: "Scansionare un documento con iPhone", dispositivo: "iPhone", lezioni: ["accessori-2-3"], passi: [
+      ["iphone-nota", "fotocamera", "Apri Note e tocca l'icona della fotocamera, in basso nella nota."],
+      ["iphone-menu-foto", "scansiona", "Scegli «Scansiona documento»."],
+      ["iphone-scansione", "salva", "Inquadra il foglio: l'iPhone lo riconosce e lo raddrizza, poi tocca «Salva»."],
+      ["iphone-nota-pdf", "condividi", "Il PDF è allegato alla nota: tocca «Condividi», il quadrato con la freccia in su, per inviarlo o salvarlo in File."]] },
     { id: "g-disco-esterno", titolo: "Copiare i file su una chiavetta o un disco esterno", dispositivo: "Windows", lezioni: ["accessori-1-1", "accessori-3-1"], passi: [
       ["disco-collegamento", "chiavetta", "Infila la chiavetta in una porta USB (o collega il disco esterno con il suo cavo) e aspetta qualche secondo senza toccarla."],
       ["windows-disco", "unita", "Apri Esplora file › Questo PC e cerca l'unità nuova: «Chiavetta (D:)» o «Disco esterno (E:)»."],
@@ -484,6 +539,15 @@
   };
   TD.guida = function (id) { return TD.GUIDE.find(function (g) { return g.id === id; }); };
   TD.guidePer = function (l) { return TD.GUIDE.filter(function (g) { return g.lezioni.indexOf(l.id) >= 0; }); };
+  /* indirizzo della pagina guide con i due filtri insieme; encodeURIComponent
+     e non URLSearchParams: il router decodifica con decodeURIComponent e
+     scriverebbe «+» al posto dello spazio di «Smart TV» */
+  TD.linkGuida = function (dispositivo, lezione) {
+    const p = [];
+    if (dispositivo) p.push("d=" + encodeURIComponent(dispositivo));
+    if (lezione) p.push("l=" + encodeURIComponent(lezione));
+    return "#/guide" + (p.length ? "?" + p.join("&") : "");
+  };
   TD.guidaHtml = function (g, compatta) {
     return '<div class="guida' + (compatta ? " compatta" : "") + '"><h3>' + (compatta ? '<a href="#/guida/' + g.id + '">' + E(g.titolo) + "</a>" : E(g.titolo)) + ' <span class="pill">' + E(g.dispositivo) + '</span></h3><ol class="guida-passi">' +
       g.passi.map(function (x, i) { return "<li>" + TD.svgPasso(x[0], x[1], i + 1, { etichetta: "Passo " + (i + 1) + ": " + x[2] }) + "<p><strong>" + (i + 1) + ".</strong> " + E(x[2]) + "</p></li>"; }).join("") + "</ol></div>";
@@ -502,45 +566,116 @@
     d.intestazione(TD.db.profilo, "Schermate guida");
     d.h1(g.titolo);
     d.piccolo("Dispositivo: " + g.dispositivo + ". I disegni sono indicativi: le scritte possono cambiare un po' da modello a modello.");
+
+    const passi = [];
     for (let i = 0; i < g.passi.length; i++) {
       const x = g.passi[i];
-      const svg = TD.svgPasso(x[0], x[1], i + 1);
-      const im = await immagineSvg(svg);
-      /* i disegni di computer e stampanti vanno larghi quanto la pagina: a 640
-         le scritte interne finivano a 2-3 punti e sul foglio non si leggevano */
-      const larg = scena(x[0]).tipo === "pc" ? Math.min(d.W - d.m * 2, 900) : 300, alt = im ? larg * im.height / im.width : 0;
-      d.spazio(alt + 40);
-      if (im) d.x.drawImage(im, d.m, d.y, larg, alt);
-      const salva = d.y;
-      d.y = salva + 10;
-      d.testo((i + 1) + ". " + x[2], { size: 30, rientro: larg + 40, dopo: 0 });
-      d.y = Math.max(d.y, salva + alt) + 30;
+      const im = await immagineSvg(TD.svgPasso(x[0], x[1], i + 1));
+      const stretto = scena(x[0]).tipo !== "pc";
+      passi.push({ im: im, stretto: stretto, ratio: im ? im.height / im.width : (stretto ? 372 / 192 : 222 / 332), testo: (i + 1) + ". " + x[2] });
     }
+
+    /* I passi si distribuiscono sul foglio in proporzione allo spazio: il primo
+       ne ha meno per l'intestazione. Ogni disegno prende la larghezza massima
+       che sta nel suo spazio; se il testo accanto fa risparmiare un foglio si
+       usa quello, altrimenti il testo va sotto a tutta pagina. Per computer e
+       stampanti il disegno non scende sotto gli 820-900 px, così le scritte
+       interne restano leggibili anche sul foglio stampato. */
+    const largo = d.W - d.m * 2, fondo = d.H - d.m - 40, FONT = "400 30px " + TD.FONT.sans;
+    const cap = function (prima) { return prima ? fondo - d.y : fondo - d.m; };
+    const aLato = function (p, lato) { return p.stretto || lato; };
+    const minima = function (p, lato) { return p.stretto ? 240 : lato ? 800 : 900; };
+    const massima = function (p, lato) { return p.stretto ? 460 : lato ? Math.min(largo - 500, 980) : largo; };
+    const altezza = function (p, w, lato) {
+      const alt = w * p.ratio;
+      const righe = d.righe(p.testo, FONT, aLato(p, lato) ? largo - w - 40 : largo).length * 44;
+      return aLato(p, lato) ? Math.max(alt, righe) + 34 : alt + 20 + righe + 34;
+    };
+
+    /* Fra le distribuzioni possibili sullo stesso numero di fogli sceglie
+       quella che lascia meno spazio bianco sulla pagina più vuota. */
+    const impagina = function (lato) {
+      for (let pagine = 1; pagine <= passi.length; pagine++) {
+        const capacita = [cap(true)];
+        for (let i = 1; i < pagine; i++) capacita.push(cap(false));
+        let migliore = null, punteggio = -1;
+        const prova = [];
+        const cerca = function (restanti, pagina) {
+          if (pagina === pagine) {
+            if (restanti) return;
+            let n = 0, minimo = 1;
+            for (let i = 0; i < pagine; i++) {
+              let alto = 0;
+              for (let k = 0; k < prova[i]; k++) { alto += altezza(passi[n], minima(passi[n], lato), lato); n++; }
+              if (alto > capacita[i]) return;
+              minimo = Math.min(minimo, alto / capacita[i]);
+            }
+            if (minimo > punteggio) { punteggio = minimo; migliore = prova.slice(); }
+            return;
+          }
+          const dopo = pagine - pagina - 1;
+          for (let quanti = 1; quanti <= restanti - dopo; quanti++) { prova[pagina] = quanti; cerca(restanti - quanti, pagina + 1); }
+        };
+        cerca(passi.length, 0);
+        if (migliore) return migliore;
+      }
+      return null;
+    };
+    const sotto = impagina(false), accanto = impagina(true);
+    const lato = !!(accanto && (!sotto || accanto.length < sotto.length));
+    const conteggi = lato ? accanto : (sotto || [passi.length]);
+
+    let indice = 0;
+    conteggi.forEach(function (quanti, pagina) {
+      if (pagina > 0) d.nuovaPagina();
+      const inizio = pagina === 0 ? d.y : d.m, spazio = pagina === 0 ? cap(true) : cap(false);
+      d.y = inizio;
+      const righe = passi.slice(indice, indice + quanti); indice += quanti;
+      righe.forEach(function (p, k) {
+        const budget = (inizio + spazio - d.y) / (righe.length - k);
+        const min = minima(p, lato), max = massima(p, lato);
+        let w = min;
+        for (let cand = max; cand >= min; cand -= 10) {
+          if (altezza(p, cand, lato) <= budget) { w = cand; break; }
+        }
+        const y = d.y, alt = w * p.ratio;
+        if (p.im) d.x.drawImage(p.im, d.m, y, w, alt);
+        if (aLato(p, lato)) {
+          d.y = y;
+          d.testo(p.testo, { size: 30, rientro: w + 40, dopo: 0 });
+        } else {
+          d.y = y + alt + 20;
+          d.testo(p.testo, { size: 30, dopo: 0 });
+        }
+        d.y = Math.max(d.y, y + alt) + 34;
+      });
+    });
     return d.chiudi();
   };
 
   /* ------------------------------------------------------------ pagine */
-  TD.rotta("/guide", function (app, par, q) {
+  TD.rotta("/guide", function (app, q) {
     const disp = q.d || "";
-    const lez = q.l ? TD.lezione(q.l) : null;
-    const elenco = TD.GUIDE.filter(function (g) {
-      return (!disp || g.dispositivo === disp) && (!lez || g.lezioni.indexOf(lez.id) >= 0);
+    const lez = TD.lezione(q.l);
+    const lezId = lez ? lez.id : "";
+    const elenco = (lez ? TD.guidePer(lez) : TD.GUIDE).filter(function (g) {
+      return !disp || g.dispositivo === disp;
     });
-    /* il filtro per lezione elenca solo le lezioni che hanno almeno una guida */
-    const conGuide = TD.LEZIONI.filter(function (l) { return TD.GUIDE.some(function (g) { return g.lezioni.indexOf(l.id) >= 0; }); });
-    const link = function (d, l) {
-      const p = [];
-      if (d) p.push("d=" + encodeURIComponent(d));
-      if (l) p.push("l=" + encodeURIComponent(l));
-      return "#/guide" + (p.length ? "?" + p.join("&") : "");
-    };
+    const chips = [""].concat(TD.GUIDE_DISPOSITIVI).map(function (x) {
+      return '<a class="chip' + (x === disp ? " on" : "") + '" href="' + E(TD.linkGuida(x, lezId)) + '">' + E(x || "Tutte") + "</a>";
+    }).join("");
     const mie = TD.MODO === "allievo" ? [] : (TD.db.schermate || []);
     app.innerHTML = TD.intest("Schermate guida",
       "Disegni passo per passo, con il cerchio dove toccare: da mostrare a lezione, proiettare sulla TV o stampare per casa." +
         (lez ? ' Solo le guide collegate a <a href="' + E("#/lezione/" + lez.id) + '">' + E(lez.titolo) + "</a>." : ""),
-      '<nav class="chips">' + [""].concat(TD.GUIDE_DISPOSITIVI).map(function (x) { return '<a class="chip' + (x === disp ? " on" : "") + '" href="' + E(link(x, lez && lez.id)) + '">' + E(x || "Tutte") + "</a>"; }).join("") + "</nav>" +
+      '<nav class="chips">' + chips + "</nav>" +
       '<label class="field" style="max-width:26rem"><span>Filtra per lezione</span><select id="gLez"><option value="">Tutte le lezioni</option>' +
-      conGuide.map(function (l) { return '<option value="' + E(l.id) + '"' + (lez && lez.id === l.id ? " selected" : "") + ">" + E(TD.percorso(l.dev).nome + " · " + l.titolo) + "</option>"; }).join("") +
+      TD.PERCORSI.map(function (pc) {
+        const sue = TD.lezioniDi(pc.id).filter(function (l) { return TD.guidePer(l).length; });
+        return sue.length ? '<optgroup label="' + E(pc.nome) + '">' + sue.map(function (l) {
+          return '<option value="' + E(l.id) + '"' + (l.id === lezId ? " selected" : "") + ">" + E(TD.livello(l.liv).breve + " · " + l.titolo) + "</option>";
+        }).join("") + "</optgroup>" : "";
+      }).join("") +
       "</select></label>") +
       '<div class="wrap">' + (elenco.length ? "" : '<p class="muted">Nessuna guida con questo filtro.</p>') + '<div class="guide-grid">' + elenco.map(function (g) {
         return '<a class="card guida-card" href="#/guida/' + g.id + '">' + TD.svgPasso(g.passi[0][0], g.passi[0][1], 1) + "<h3>" + E(g.titolo) + '</h3><p class="muted text-small">' + E(g.dispositivo) + " · " + g.passi.length + " passi</p></a>";
@@ -549,8 +684,7 @@
         '<div class="actions"><label class="btn btn-primary">' + I("upload") + 'Nuova schermata<input type="file" id="gNuova" accept="image/*" hidden></label><a class="btn" href="#/editor">' + I("book") + "Editor delle lezioni</a></div>" +
         (mie.length ? '<div class="guide-grid">' + mie.map(function (s) { return '<figure class="card schermata"><img src="' + E(s.src) + '" alt="' + E(s.titolo) + '"><figcaption>' + E(s.titolo) + ' <button class="icon-btn" data-via="' + s.id + '" aria-label="Elimina la schermata">' + I("trash") + "</button></figcaption></figure>"; }).join("") + "</div>" : "") + "</section>") +
       "</div>";
-    const scelta = document.getElementById("gLez");
-    if (scelta) scelta.onchange = function () { TD.vai(link(disp, this.value)); };
+    document.getElementById("gLez").onchange = function () { TD.vai(TD.linkGuida(disp, this.value)); };
     const n = document.getElementById("gNuova");
     if (n) n.onchange = function () {
       const f = this.files[0]; if (!f) return;

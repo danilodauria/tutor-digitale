@@ -166,6 +166,7 @@
     const prec = tutte[idx - 1], succ = tutte[idx + 1];
     const c = TD.clienteAttivo();
     const fatta = c && (c.completate || []).indexOf(l.id) >= 0;
+    const guide = TD.guidePer(l);
 
     app.innerHTML =
       '<header class="page-head lesson-head liv-' + l.liv + '"><div class="wrap">' +
@@ -186,7 +187,7 @@
           '<section class="card"><h2>' + I("target") + "Obiettivi</h2><ul class=\"checks\">" + l.obiettivi.map(function (o) { return "<li>" + E(o) + "</li>"; }).join("") + "</ul></section>" +
           '<section class="card"><h2>' + I("bulb") + "Spiegazione</h2>" + l.spiegazione.map(function (s) { return '<p class="read">' + E(s) + "</p>"; }).join("") + "</section>" +
           '<section class="card"><h2>' + I("layers") + "Passo per passo</h2><ol class=\"steps\">" + l.passi.map(function (s) { return "<li><span>" + E(s) + "</span></li>"; }).join("") + "</ol></section>" +
-          ((l.immagini || []).length || (TD.guidePer && TD.guidePer(l).length) ? '<section class="card"><h2>' + I("screen") + "Schermate guida</h2>" + (TD.guidePer ? TD.guidePer(l).map(function (g) { return TD.guidaHtml(g, true); }).join("") : "") + (TD.guidePer && TD.guidePer(l).length ? '<p class="actions"><a class="btn btn-ghost" href="#/guide?l=' + encodeURIComponent(l.id) + '">' + I("screen") + "Tutte le guide di questa lezione</a></p>" : "") + (l.immagini || []).map(function (im) { return '<figure class="schermata"><img src="' + E(im.src) + '" alt="' + E(im.didascalia || "Schermata della lezione") + '" loading="lazy"><figcaption>' + E(im.didascalia || "") + "</figcaption></figure>"; }).join("") + "</section>" : "") +
+          ((l.immagini || []).length || guide.length ? '<section class="card"><h2>' + I("screen") + "Schermate guida</h2>" + guide.map(function (g) { return TD.guidaHtml(g, true); }).join("") + (guide.length ? '<p class="actions"><a class="btn btn-ghost" href="' + E(TD.linkGuida("", l.id)) + '">' + I("screen") + "Tutte le guide di questa lezione</a></p>" : "") + (l.immagini || []).map(function (im) { return '<figure class="schermata"><img src="' + E(im.src) + '" alt="' + E(im.didascalia || "Schermata della lezione") + '" loading="lazy"><figcaption>' + E(im.didascalia || "") + "</figcaption></figure>"; }).join("") + "</section>" : "") +
           '<section class="card"><h2>' + I("star") + "Esercizi</h2><div class=\"ex-grid\">" +
             ["facile", "medio", "esperto"].map(function (k, i) {
               return '<div class="ex ex-' + k + '"><span class="ex-tag">' + ["Facile", "Medio", "Esperto"][i] + "</span><p>" + E(l.esercizi[k]) + "</p></div>";

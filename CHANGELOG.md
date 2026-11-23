@@ -1,5 +1,14 @@
 # Versioni
 
+## 1.6.1 · 23 novembre 2026
+
+- **Schermate guida ripulite**: la cornice di Windows, lo sfondo e la barra delle applicazioni ora si disegnano una volta sola e le condividono tutte le scene; tolti i dettagli decorativi che non servono al passo (orologio, campo «Cerca», icone sulla scrivania, tasti colorati del telecomando, barra della TV). Nessun passo è cambiato.
+- **Barra di Windows completa**: l'icona «Esplora file» c'è in tutte le schermate, anche in quella iniziale che la indica come primo passo (prima il cerchio evidenziava un punto vuoto). Il menu di spegnimento non è più coperto dal numero arancione.
+- **Disegni controllati a 360 px**: in tutte le 16 guide nessuna didascalia esce dalla cornice della scena (61 scene, 750 testi misurati).
+- **Guide in PDF impaginate meglio**: i passi ora riempiono il foglio (disegni grandi e leggibili, testo sotto o accanto secondo lo spazio) e nessuna guida lascia una pagina mezza vuota: «Acquisire con uno scanner da tavolo» passa da due pagine sbilanciate a due pagine piene; controllate tutte le 17 guide.
+- **Una guida per iPhone**: «Scansionare un documento con iPhone» (Note, fotocamera, PDF allegato e condivisione), collegata alla lezione sullo scanner accanto alle due guide per computer.
+- **Aggiornamento garantito**: nuova versione della cache del service worker (sito e app Allievo), così chi aveva già la 1.6.0 riceve i file nuovi al primo ricaricamento, senza perdere dati e impostazioni.
+
 ## 1.6.0 · 20 novembre 2026
 
 - **Nuovo percorso «Accessori»**: 9 lezioni, almeno due per livello (tre all'Intermedio, dove allo scanner si affiancano videochiamate e postazione), per collegare e far funzionare stampante, webcam, disco esterno, chiavetta USB, scanner, mouse, tastiera, cuffie e secondo schermo. Prima installazione della stampante passo per passo, stampa in Wi-Fi da computer e telefono, formati del disco (exFAT, NTFS, APFS), videochiamate senza eco, acquisire un documento con lo scanner fino al PDF in Documenti, diagnosi in cinque controlli e postazione condivisa con indirizzo IP fisso.
