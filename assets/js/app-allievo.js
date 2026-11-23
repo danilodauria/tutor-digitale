@@ -173,7 +173,7 @@
     const t = d.tutor || {};
     const ap = aperte(), nc = compitiAperti();
     const nuoveCorr = (d.consegne || []).filter(function (k) { return k.correzione && !k.correzioneVista; });
-    const devs = (d.allievo.dispositivi || []).length ? d.allievo.dispositivi : ["pc", "tablet", "smartphone", "tv", "rete"];
+    const devs = (d.allievo.dispositivi || []).length ? d.allievo.dispositivi : TD.PERCORSI.map(function (p) { return p.id; });
     app.innerHTML =
       '<section class="hero allievo-hero"><div class="wrap">' +
         '<p class="hero-kicker"><span class="spia" data-spia><i></i><span class="spia-testo">Online</span></span>' + (d.allievo.ente ? E(d.allievo.ente) : "Il tuo spazio per imparare") + "</p>" +
@@ -221,7 +221,7 @@
       "<h1>Benvenuto!</h1><p class=\"hero-lead\">Questa è l'app per chi segue le lezioni di Tutor Digitale. Per personalizzarla apri il <strong>link</strong> o il <strong>file</strong> che ti ha mandato il tuo tutor.</p></div></section>" +
       '<div class="wrap"><div class="grid-2">' + importatore("Attiva l'app") +
       '<section class="card"><h2>' + I("book") + "Intanto puoi</h2><div class=\"action-list\">" +
-        '<a class="action" href="#/percorsi">' + I("book") + "<span><strong>Guardare le lezioni</strong><small>40 lezioni, dai primi passi a esperto</small></span>" + I("arrow") + "</a>" +
+        '<a class="action" href="#/percorsi">' + I("book") + "<span><strong>Guardare le lezioni</strong><small>" + TD.LEZIONI.length + " lezioni, dai primi passi a esperto</small></span>" + I("arrow") + "</a>" +
         '<a class="action" href="#/palestra">' + I("mouse") + "<span><strong>Allenarti in palestra</strong><small>Mouse, tastiera, truffe, password</small></span>" + I("arrow") + "</a>" +
         '<a class="action" href="#/remoto">' + I("screen") + "<span><strong>Ricevere aiuto a distanza</strong><small>Con il codice e la password del tutor</small></span>" + I("arrow") + "</a>" +
       "</div></section></div></div>";

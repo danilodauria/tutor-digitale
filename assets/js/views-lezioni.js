@@ -66,7 +66,7 @@
           ? '<a class="note-box" href="#/impostazioni">' + I("lock") + "<div><strong>" + (TD.db.esportato ? "L'ultima copia di sicurezza è del " + E(TD.dataIt(TD.db.esportato)) : "Non hai ancora salvato una copia di sicurezza") + "</strong><br>Fai un backup cifrato con password: un minuto, e i dati dei clienti sono al sicuro anche su chiavetta o cloud.</div></a>" : "") +
 
         '<section class="tiles">' +
-          tile("#/percorsi", "book", "Lezioni", "40 lezioni in 4 livelli e 5 percorsi") +
+          tile("#/percorsi", "book", "Lezioni", TD.LEZIONI.length + " lezioni in " + TD.LIVELLI.length + " livelli e " + TD.PERCORSI.length + " percorsi") +
           tile("#/quiz", "quiz", "Quiz casuali", "Domande e risposte sempre in ordine diverso") +
           tile("#/esercizi", "target", "Esercizi", "Facile, medio, esperto per ogni lezione") +
           tile("#/allievi", "upload", "App allievi", "Compiti a distanza, correzione automatica") +
@@ -87,7 +87,7 @@
             return '<a class="level-card liv-' + l.id + '" href="#/percorsi?liv=' + l.id + '"><span class="level-step">' + (l.id + 1) + "</span><h3>" + E(l.nome) + "</h3><p>" + E(l.descr) + '</p><small>' + E(l.ore) + " per percorso</small></a>";
           }).join("") + "</div></section>" +
 
-        '<section class="block"><div class="block-head"><h2>Cinque percorsi</h2></div><div class="paths">' +
+        '<section class="block"><div class="block-head"><h2>Sei percorsi</h2></div><div class="paths">' +
           TD.PERCORSI.map(function (p) {
             return '<a class="path-card" href="#/percorso/' + p.id + '"><span class="path-ico">' + I(p.icona) + "</span><h3>" + E(p.nome) + "</h3><p>" + E(p.descr) + "</p><small>" + TD.lezioniDi(p.id).length + " lezioni</small></a>";
           }).join("") + "</div></section>" +

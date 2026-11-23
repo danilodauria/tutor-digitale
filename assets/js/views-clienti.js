@@ -7,7 +7,7 @@
 (function () {
   "use strict";
   const E = TD.esc, I = TD.icona;
-  const DISP = [["pc", "Computer"], ["tablet", "Tablet"], ["smartphone", "Smartphone"], ["tv", "Smart TV"]];
+  const DISP = TD.PERCORSI.map(function (p) { return [p.id, p.nome]; });
 
   TD.statoLiberatoria = function (c) {
     if (c.liberatoria && c.liberatoria.firmata) return '<span class="pill ok">' + I("check") + "Liberatoria firmata " + E(TD.dataIt(c.liberatoria.data)) + "</span>";
@@ -91,8 +91,6 @@
             return '<div class="dev-level"><label class="check"><input type="checkbox" name="dispositivi" data-multi="1" value="' + d[0] + '"' + (on ? " checked" : "") + "> " + TD.iconaPercorso(d[0]) + E(d[1]) + "</label>" +
               '<select name="liv_' + d[0] + '" aria-label="Livello ' + E(d[1]) + '">' + TD.LIVELLI.map(function (l) { return '<option value="' + l.id + '"' + (lv === l.id ? " selected" : "") + ">" + E(l.nome) + "</option>"; }).join("") + "</select></div>";
           }).join("") +
-          '<div class="dev-level"><label class="check"><input type="checkbox" name="dispositivi" data-multi="1" value="rete"' + ((c.dispositivi || []).indexOf("rete") >= 0 ? " checked" : "") + "> " + TD.iconaPercorso("rete") + "Internet e sicurezza</label>" +
-            '<select name="liv_rete" aria-label="Livello Internet">' + TD.LIVELLI.map(function (l) { return '<option value="' + l.id + '"' + (((c.livelli || {}).rete || 0) === l.id ? " selected" : "") + ">" + E(l.nome) + "</option>"; }).join("") + "</select></div>" +
         '</div><p class="muted text-small">Non sai il livello? Dopo il salvataggio usa il <strong>test d\'ingresso</strong> dalla scheda cliente.</p></fieldset>' +
         campo("sistemi", "Modelli e sistemi (es. Windows 11, iPhone 13, TV Samsung)", c.sistemi) +
         campo("rustdesk", "ID RustDesk del computer del cliente (per il controllo a distanza, facoltativo)", c.rustdesk) +
@@ -121,7 +119,7 @@
       ["tipo", "nome", "cognome", "nascita", "cf", "tutore", "ragione", "referente", "piva", "pec", "indirizzo", "citta", "cap", "provincia", "sdi", "rustdesk", "telefono", "email", "luogo", "forma", "sistemi", "obiettivi", "accessibilita", "note", "stato"].forEach(function (k) { c[k] = o[k] || ""; });
       c.dispositivi = o.dispositivi || [];
       c.livelli = c.livelli || {};
-      ["pc", "tablet", "smartphone", "tv", "rete"].forEach(function (d) { c.livelli[d] = Number(o["liv_" + d] || 0); });
+      TD.PERCORSI.forEach(function (p) { c.livelli[p.id] = Number(o["liv_" + p.id] || 0); });
       if (c.tipo === "ente") {
         const vecchi = c.partecipanti || [];
         c.partecipanti = (o.partecipanti || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean).map(function (nome) {
@@ -185,7 +183,7 @@
     const ore = TD.oreCliente(c);
     const media = TD.mediaQuiz(c);
     const compitiAperti = (c.compiti || []).filter(function (k) { return !k.fatto; }).length;
-    const percorsi = (c.dispositivi || []).length ? c.dispositivi : ["pc", "tablet", "smartphone", "tv", "rete"];
+    const percorsi = (c.dispositivi || []).length ? c.dispositivi : TD.PERCORSI.map(function (p) { return p.id; });
     body.innerHTML =
       (q.nuovo ? '<div class="note-box">' + I("info") + '<div><strong>Primo passo consigliato:</strong> fai firmare la liberatoria (anche su carta) e poi il test d\'ingresso per decidere da dove partire.</div></div>' : "") +
       '<section class="stats">' +

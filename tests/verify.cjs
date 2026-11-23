@@ -67,7 +67,7 @@ vm.createContext(ctx);
 const TD = ctx.TD;
 
 /* 4. programma delle lezioni */
-ok(TD.LEZIONI.length === 40, "attese 40 lezioni, trovate " + TD.LEZIONI.length);
+ok(TD.LEZIONI.length === 48, "attese 48 lezioni, trovate " + TD.LEZIONI.length);
 const ids = new Set();
 TD.LEZIONI.forEach((l) => {
   ok(!ids.has(l.id), "id lezione doppio: " + l.id); ids.add(l.id);
@@ -95,7 +95,8 @@ ok(TD.DOMANDE.length >= 80, "poche domande: " + TD.DOMANDE.length);
 TD.COMPLETA.forEach((q) => ok(q[2].includes("___") && !q[4].includes(q[3]), "frase da completare non valida: " + q[2]));
 TD.SEQUENZE.forEach((s) => ok(s[3].length >= 3 && new Set(s[3]).size === s[3].length, "sequenza non valida: " + s[2]));
 TD.TRUFFE.forEach((t) => ok(typeof t[2] === "boolean" && t[3], "messaggio truffa non valido"));
-Object.keys(TD.TEST_INGRESSO).forEach((k) => ok(TD.TEST_INGRESSO[k].length === 4, "test d'ingresso " + k + ": servono 4 frasi"));
+TD.PERCORSI.forEach((p) => ok((TD.TEST_INGRESSO[p.id] || []).length === 4, "test d'ingresso " + p.id + ": servono 4 frasi"));
+TD.PERCORSI.forEach((p) => TD.LIVELLI.forEach((lv) => ok(TD.DOMANDE.some((q) => q[1] === p.id && q[0] === lv.id), p.id + " livello " + lv.id + ": almeno una domanda")));
 
 /* 6. quiz: domande casuali, risposta giusta che cambia posto e lettera ogni volta */
 const tutteChiavi = {};
@@ -274,14 +275,15 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
     ok(TD.LEZIONI.length === prima && TD.DOMANDE.length === primaD, "editor: togliendo i contenuti propri il programma torna come prima");
   }
 
-  /* 16. schermate guida (9) */
+  /* 16. schermate guida */
   TD.GUIDE.forEach((g) => {
     ok(g.passi.length >= 2, "guida " + g.id + ": servono almeno due passi");
     g.lezioni.forEach((id) => ok(!!TD.lezione(id), "guida " + g.id + ": lezione inesistente " + id));
     g.passi.forEach((x, i) => { const svg = TD.svgPasso(x[0], x[1], i + 1); ok(svg.includes("stroke-dasharray") && svg.startsWith("<svg"), "guida " + g.id + " passo " + (i + 1) + ": manca il segno su «" + x[1] + "» in " + x[0]); });
   });
-  ok(new Set(TD.GUIDE.map((g) => g.id)).size === TD.GUIDE.length && TD.GUIDE.length >= 10, "guide: almeno 10, id unici");
-  ok(TD.GUIDE.some((g) => g.dispositivo === "iPhone") && TD.GUIDE.some((g) => g.dispositivo === "Windows") && TD.GUIDE.some((g) => g.dispositivo === "Smart TV") && TD.GUIDE.some((g) => g.dispositivo === "Android"), "guide: Android, iPhone, Windows e TV");
+  ok(TD.GUIDE.length > 0 && new Set(TD.GUIDE.map((g) => g.id)).size === TD.GUIDE.length, "guide: id unici");
+  ok(TD.GUIDE.every((g) => TD.GUIDE_DISPOSITIVI.indexOf(g.dispositivo) >= 0), "guide: ogni dispositivo ha il suo filtro");
+  TD.GUIDE_DISPOSITIVI.forEach((d) => ok(TD.GUIDE.some((g) => g.dispositivo === d), "guide: almeno una per «" + d + "»"));
 
   /* 17. fattura elettronica (11) */
   {

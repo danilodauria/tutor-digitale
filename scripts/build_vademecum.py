@@ -244,7 +244,7 @@ def costruisci(percorso, formato, d):
         Paragraph("Tutor<br/>Digitale", st["copertina"]),
         Paragraph("Guida pratica al programma del tutor e all'app per gli allievi", st["sottotitolo"]),
         Paragraph(
-            "%d lezioni dai primi passi a esperto su computer, tablet, smartphone, Smart TV e Internet; "
+            "%d lezioni dai primi passi a esperto su computer, tablet, smartphone, Smart TV, Internet e accessori; "
             "quiz sempre diversi, esercizi, compiti a distanza con correzione automatica, clienti, "
             "documenti firmati e attestati verificabili con il QR. Online e offline, senza account."
             % k["lezioni"], st["Corpo"]),
@@ -436,9 +436,11 @@ def costruisci(percorso, formato, d):
       "modalità aula, e viaggiano nel kit quando le assegni. «Esporta i contenuti» crea un file da portare su un "
       "altro dispositivo o da dare a un collega.")
     sez("Schermate guida")
-    p("Altro › <b>Schermate guida</b>: %d guide disegnate passo per passo per Android, iPhone, Windows e Smart TV, "
-      "con il cerchio arancione dove toccare (caratteri grandi, Wi-Fi, installare l'app Allievo, spegnere il "
-      "computer, telecomando, SMS truffa…). Compaiono anche dentro le lezioni collegate e si stampano in PDF." % d.get("guide", 10))
+    p("Altro › <b>Schermate guida</b>: %d guide disegnate passo per passo per Android, iPhone, Windows, Mac, Smart TV, "
+      "stampante, scanner, chiavette e cuffie, con il cerchio arancione dove toccare (caratteri grandi, Wi-Fi, "
+      "installare l'app Allievo, installare la stampante su Windows e su Mac, acquisire un documento, copiare su una "
+      "chiavetta, abbinare le cuffie Bluetooth, spegnere il computer, telecomando, SMS truffa…). Compaiono anche "
+      "dentro le lezioni collegate e si stampano in PDF." % d.get("guide", 16))
     p("Con <b>Nuova schermata</b> fotografi o catturi lo schermo del cliente e aggiungi frecce, cerchi, riquadri, "
       "numeri e scritte: la schermata annotata si può inserire nelle tue lezioni.")
 

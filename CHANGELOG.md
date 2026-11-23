@@ -1,5 +1,14 @@
 # Versioni
 
+## 1.6.0 · 20 novembre 2026
+
+- **Nuovo percorso «Accessori»**: 8 lezioni (2 per livello) per collegare e far funzionare stampante, webcam, disco esterno, chiavetta USB, mouse, tastiera, cuffie e secondo schermo. Prima installazione della stampante passo per passo, stampa in Wi-Fi da computer e telefono, formati del disco (exFAT, NTFS, APFS), videochiamate senza eco, diagnosi in cinque controlli e postazione condivisa con indirizzo IP fisso.
+- **Quiz e test d'ingresso**: 16 nuove domande a scelta multipla, 3 frasi da completare, 2 sequenze da ordinare e 5 voci di glossario per il percorso Accessori; il test d'ingresso ha le sue quattro capacità.
+- Il programma passa a **48 lezioni in 6 percorsi** e **144 esercizi**.
+- Accessori è selezionabile tra i **dispositivi del cliente** (con il suo livello), compare nell'app Allievo anche senza percorsi scelti e la pagina di verifica degli attestati ne mostra il nome; aggiunto il collegamento nel piede di pagina.
+- **Testata più stretta**: su telefoni da 320–360 px il pulsante «Menu» non esce più dallo schermo.
+- **Schermate guida**: ora sono **sedici**, sempre con il cerchio arancione sul punto da toccare: installare la stampante la prima volta, su Windows e su Mac (Impostazioni di Sistema, «Aggiungi stampante», pagina di prova); acquisire un documento con lo scanner della multifunzione e con uno scanner da tavolo; copiare i file su una chiavetta o un disco esterno (unità, barra di copia, rimozione sicura); abbinare le cuffie Bluetooth al telefono.
+
 ## 1.5.2 · 14 novembre 2026
 
 - **Libricino da pinzare**: i fogli si mettono in pila (foglio 1 sotto), si piegano insieme e si pinzano sulla piega; ogni foglio porta «Foglio n di N · fronte/retro» vicino alla piega, il foglio 1 ha le tacche per le graffette, le facciate in più diventano «Appunti» e c'è una vera quarta di copertina. Nuovi file «solo fronti» e «solo retri» per le stampanti senza fronte-retro. Il programma che crea il PDF simula la piegatura e si ferma se l'ordine delle pagine non torna.

@@ -99,7 +99,25 @@ TD.DOMANDE = [
   [3, "rete", "La rete ospiti del router serve a…", "dare Internet agli ospiti senza accesso ai dispositivi di casa", ["raddoppiare la velocità", "spegnere il router", "bloccare i siti"], "Separa i dispositivi di chi visita da quelli di casa."],
   [3, "rete", "Un assistente di intelligenza artificiale…", "può sbagliare con sicurezza: le informazioni importanti si verificano", ["dice sempre il vero", "conosce i tuoi dati bancari", "sostituisce il medico"], "Le risposte vanno controllate su fonti ufficiali."],
   [3, "rete", "In un assistente di IA non bisogna inserire…", "password, documenti d'identità e dati sensibili", ["domande sulla cucina", "richieste di traduzione", "un testo da riassumere"], "I dati inseriti possono essere conservati dal servizio."],
-  [3, "rete", "La prima credenziale da cambiare su un router nuovo è…", "la password di amministrazione", ["il colore delle luci", "il nome del produttore", "la presa elettrica"], "Le password predefinite sono note a tutti."]
+  [3, "rete", "La prima credenziale da cambiare su un router nuovo è…", "la password di amministrazione", ["il colore delle luci", "il nome del produttore", "la presa elettrica"], "Le password predefinite sono note a tutti."],
+
+  /* ---------------------------------------------------- ACCESSORI */
+  [0, "accessori", "Dove si collega il cavo USB di una stampante?", "A una porta USB del computer, senza sdoppiatori", ["Alla presa dell'antenna", "Alla porta HDMI", "Alla presa elettrica"], "La stampante ha un cavo per la corrente e uno USB per i dati: il USB va al computer."],
+  [0, "accessori", "Prima di collegare una stampante nuova conviene…", "togliere i nastri e mettere cartucce e carta", ["installare il CD in dotazione", "spegnere il router", "staccare il mouse"], "Le protezioni arancioni bloccano i movimenti: vanno tolte prima dell'accensione."],
+  [0, "accessori", "Per provare una webcam appena collegata, su Windows si usa…", "l'app Camera", ["il Blocco note", "la Calcolatrice", "il cestino"], "L'app Camera mostra subito se l'immagine arriva."],
+  [0, "accessori", "La webcam va messa…", "all'altezza degli occhi, con la luce davanti", ["dietro il monitor", "incontro alla finestra, con la luce alle spalle", "sotto la scrivania"], "Luce sul viso e obiettivo all'altezza degli occhi danno l'immagine migliore."],
+  [1, "accessori", "Un disco nuovo da usare sia su Windows sia su Mac conviene formattarlo in…", "exFAT", ["NTFS", "APFS", "FAT32 con file da 10 GB"], "exFAT si legge e si scrive da entrambi i sistemi."],
+  [1, "accessori", "Prima di staccare una chiavetta USB si usa…", "«Rimozione sicura» o «Espelli»", ["il tasto di accensione del computer", "la modalità aereo", "il cestino"], "Durante la copia i dati non sono ancora tutti scritti: la rimozione sicura li completa."],
+  [1, "accessori", "La stampante Wi-Fi di solito si configura…", "dallo schermo della stampante o dall'app del produttore", ["dal telecomando della TV", "dal pannello della caldaia", "solo con il CD"], "Serve la password del Wi-Fi di casa e spesso la rete a 2,4 GHz."],
+  [1, "accessori", "Su iPhone e iPad si stampa senza installare nulla con…", "AirPrint", ["Mopria", "un cavo HDMI", "il Bluetooth"], "AirPrint è integrato: la stampante compare nell'elenco di stampa."],
+  [2, "accessori", "In una videochiamata si sente eco: la causa più comune è…", "il microfono del computer con le casse accese", ["la webcam troppo nuova", "lo schermo troppo grande", "il cavo HDMI staccato"], "Il microfono riprende l'audio delle casse: si usano cuffie o il microfono della webcam."],
+  [2, "accessori", "Per avere due scrivanie separate sul secondo monitor, Windows offre…", "Win + P › Estendi", ["Ctrl + Alt + Canc", "Alt + F4", "Win + L"], "«Estendi» allarga la scrivania; «Duplica» mostra la stessa immagine."],
+  [2, "accessori", "Un portatile ha solo USB-C e il monitor è HDMI: serve…", "un adattatore che supporti il video", ["un cavo della stampante", "un hub non alimentato qualsiasi", "un cavo dell'antenna"], "Non tutti gli adattatori USB-C portano il segnale video: va scelto quello giusto."],
+  [2, "accessori", "Il mouse wireless «salta»: la prima cosa da provare è…", "allontanare il ricevitore dalle porte USB 3", ["formattare il computer", "cambiare il monitor", "reinstallare il sistema"], "Le porte USB 3 e i dischi esterni possono disturbare il ricevitore: una prolunga risolve."],
+  [3, "accessori", "Un accessorio non è visto da nessun computer: il controllo più utile è…", "provarlo su un altro computer", ["formattare subito il disco", "comprare un accessorio nuovo", "cancellare i driver di sistema"], "Se non funziona da nessuna parte, il guasto è nell'accessorio; se funziona altrove, è nel computer."],
+  [3, "accessori", "Un disco con dentro i vostri dati non si apre: cosa NON fare?", "Formattarlo", ["Fermarsi e farlo vedere a un tecnico", "Annotare rumori e messaggi", "Collegarlo a un altro computer con cautela"], "La formattazione cancella tutto: senza backup i dati sarebbero persi."],
+  [3, "accessori", "In ufficio, una stampante usata da più computer conviene…", "con un indirizzo IP fisso sulla rete", ["con un cavo USB che gira di scrivania in scrivania", "senza driver", "accesa solo quando serve"], "Con un indirizzo stabile ogni computer la ritrova dopo i riavvii."],
+  [3, "accessori", "Una chiavetta molto economica…", "può dichiarare una capacità che non ha davvero", ["è sempre più veloce delle altre", "non ha bisogno di rimozione sicura", "funziona solo su Linux"], "Si compra da un negozio con garanzia e si prova subito con un file grande."]
 ];
 
 /* Completa la frase: [livello, percorso, frase con ___, giusta, [sbagliate]] */
@@ -115,7 +133,10 @@ TD.COMPLETA = [
   [2, "tv", "Per trasmettere dal telefono, TV e telefono devono stare sulla stessa rete ___.", "Wi-Fi", ["elettrica", "dell'antenna", "telefonica fissa"]],
   [3, "pc", "La regola del backup è 3-2-___.", "1", ["0", "5", "3"]],
   [3, "rete", "La rete per i visitatori si chiama rete ___.", "ospiti", ["pubblica", "nascosta", "aperta"]],
-  [3, "smartphone", "Il codice *#06# mostra il codice ___ del telefono.", "IMEI", ["PIN", "PUK", "IBAN"]]
+  [3, "smartphone", "Il codice *#06# mostra il codice ___ del telefono.", "IMEI", ["PIN", "PUK", "IBAN"]],
+  [0, "accessori", "Prima di spegnere una stampante si controlla che non stia ___.", "stampando", ["scansionando", "lampeggiando", "suonando"]],
+  [1, "accessori", "Prima di staccare la chiavetta si usa la ___ sicura.", "rimozione", ["formattazione", "duplicazione", "compressione"]],
+  [1, "accessori", "Per stampare da iPhone e iPad basta ___.", "AirPrint", ["Mopria", "Bluetooth", "HDMI"]]
 ];
 
 /* Ordina i passaggi: [livello, percorso, titolo, [passi nell'ordine giusto]] */
@@ -132,7 +153,9 @@ TD.SEQUENZE = [
   [2, "pc", "Fare la somma in un foglio", ["Inserire i numeri in colonna", "Selezionare la cella vuota sotto", "Scrivere =SOMMA(…)", "Premere Invio"]],
   [3, "rete", "Mettere in sicurezza il router", ["Accedere al router", "Cambiare la password di amministrazione", "Impostare WPA2/WPA3", "Aggiornare il firmware"]],
   [3, "pc", "Recuperare un file dal backup", ["Collegare il disco del backup", "Aprire lo strumento di ripristino", "Scegliere data e file", "Ripristinare e verificare"]],
-  [3, "smartphone", "Reagire al furto del telefono", ["Localizzare il telefono da un altro dispositivo", "Bloccarlo a distanza", "Bloccare la SIM con l'operatore", "Sporgere denuncia con l'IMEI"]]
+  [3, "smartphone", "Reagire al furto del telefono", ["Localizzare il telefono da un altro dispositivo", "Bloccarlo a distanza", "Bloccare la SIM con l'operatore", "Sporgere denuncia con l'IMEI"]],
+  [0, "accessori", "Collegare e provare una stampante USB", ["Togliere i nastri e mettere cartucce e carta", "Accendere la stampante", "Collegare il cavo USB al computer", "Aggiungere la stampante e stampare la pagina di prova"]],
+  [1, "accessori", "Mettere al sicuro un disco esterno", ["Collegarlo alla porta USB 3", "Aspettare che compaia l'unità", "Copiare i file", "Usare «Rimozione sicura» e staccarlo"]]
 ];
 
 /* Glossario per gli abbinamenti: [livello, termine, definizione] */
@@ -164,7 +187,12 @@ TD.GLOSSARIO = [
   [3, "IMEI", "Codice unico che identifica il telefono"],
   [3, "Verifica in due passaggi", "Codice aggiuntivo oltre alla password"],
   [3, "Punto di ripristino", "Stato salvato del sistema a cui tornare"],
-  [3, "Rete ospiti", "Wi-Fi separato per i visitatori"]
+  [3, "Rete ospiti", "Wi-Fi separato per i visitatori"],
+  [0, "Driver", "Programma che fa funzionare un accessorio"],
+  [1, "exFAT", "Formato di disco leggibile da Windows e Mac"],
+  [1, "AirPrint", "Stampa da iPhone e iPad senza installare nulla"],
+  [2, "Hub USB", "Accessorio che moltiplica le porte USB"],
+  [3, "Indirizzo IP", "Numero che identifica un apparecchio nella rete"]
 ];
 
 /* Palestra «Truffa o no?»: [testo, mittente, è truffa?, spiegazione] */

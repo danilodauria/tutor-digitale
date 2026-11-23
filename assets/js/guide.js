@@ -32,6 +32,15 @@
     return r(x, y, 30, 30, col, { rx: 9 }) + (glifo || "") + t(x + 15, y + 42, etichetta, { size: 7, anchor: "middle" });
   }
   function riga(y, testo, o) { o = o || {}; return r(16, y, 148, 26, "#fff", { rx: 6 }) + c(30, y + 13, 6, o.col || "#8fb3e8") + t(44, y + 16, testo, { size: 9 }) + (o.dx ? t(156, y + 16, o.dx, { size: 8, fill: "#6b7385", anchor: "end" }) : t(156, y + 16, "›", { size: 11, fill: "#6b7385", anchor: "end" })); }
+  /* cornice di Windows: finestra scura con la pagina chiara dentro */
+  const CORNICE = r(0, 0, 320, 210, "#1b2333", { rx: 8 }) + r(6, 6, 308, 180, "#f4f6fb", { rx: 3 });
+  /* cornice del Mac: barra dei menu in alto e finestra chiara con i tre pallini */
+  const MAC = r(0, 0, 320, 210, "#dfe4ec", { rx: 8 }) +
+    r(0, 0, 320, 14, "#eef1f6", { rx: 0 }) + t(12, 10, "Finder", { size: 5.8, bold: true, fill: "#4a5365" }) +
+    t(44, 10, "File", { size: 5.8, fill: "#4a5365" }) + t(62, 10, "Modifica", { size: 5.8, fill: "#4a5365" }) + t(94, 10, "Vista", { size: 5.8, fill: "#4a5365" }) +
+    t(306, 10, "mar 23 nov  10:24", { size: 5.4, fill: "#4a5365", anchor: "end" }) +
+    r(8, 22, 304, 178, "#fff", { rx: 8, stroke: "#cfd6e4" }) +
+    c(18, 32, 3.2, "#e4572e") + c(28, 32, 3.2, "#c98a24") + c(38, 32, 3.2, "#3f9a63");
 
   /* ------------------------------------------------------------ scene */
   const SCENE = {
@@ -124,6 +133,217 @@
         r(6, 166, 308, 20, "#e7ebf3", { rx: 0 }) + r(110, 169, 14, 14, "#2f7fc0", { rx: 2 });
     }, punti: { nuovo: [55, 47, 0, 46, 16], cartella: [69, 62, 0, 56, 14], chiavetta: [64, 125, 0, 62, 14] } },
 
+    "stampante-pannello": { tipo: "pc", disegno: function () {
+      return r(0, 0, 320, 210, "#f4f6fb", { rx: 8 }) +
+        r(72, 44, 176, 14, "#fff", { rx: 2, stroke: "#cfd6e4" }) +
+        r(46, 58, 228, 98, "#e7ebf3", { rx: 10, stroke: "#cfd6e4" }) +
+        t(56, 74, "Stampante", { size: 8, bold: true, fill: "#6b7385" }) +
+        r(56, 82, 128, 52, "#1b2333", { rx: 5 }) +
+        ["Wi-Fi  spento", "Carta  OK", "Inchiostro  pieno"].map(function (x, i) { return t(64, 98 + i * 14, x, { size: 7, fill: "#9fb0c9" }); }).join("") +
+        c(228, 96, 14, "#3a4458") + p("M221 92 a9 9 0 0 1 14 0 M224 97 a4 4 0 0 1 8 0", { stroke: "#fff", sw: 1.5 }) + c(228, 101, 1.6, "#fff") +
+        t(228, 120, "Wi-Fi", { size: 6, anchor: "middle" }) +
+        c(258, 96, 14, "#3a4458") + c(258, 96, 6, "none", { stroke: "#fff", sw: 1.6 }) + p("M258 88 v8", { stroke: "#fff", sw: 1.6 }) +
+        t(258, 120, "On/Off", { size: 6, anchor: "middle" }) +
+        r(72, 158, 176, 16, "#fff", { rx: 3, stroke: "#cfd6e4" }) + t(160, 169, "Vassoio della carta", { size: 6.5, fill: "#6b7385", anchor: "middle" });
+    }, punti: { accensione: [258, 96, 17], wifi: [228, 96, 17] } },
+
+    "windows-stampanti": { tipo: "pc", disegno: function () {
+      return CORNICE + r(6, 6, 104, 180, "#e7ebf3", { rx: 3 }) +
+        t(16, 26, "Impostazioni", { size: 8, bold: true }) +
+        ["Sistema", "Bluetooth e dispositivi", "Rete e Internet", "App", "Account", "Windows Update"].map(function (x, i) {
+          const on = i === 1, y = 56 + i * 20;
+          return (on ? r(10, y - 12, 96, 18, "#d7e4f5", { rx: 4 }) : "") + t(16, y, x, { size: 6.6, bold: on });
+        }).join("") +
+        t(122, 44, "Stampanti e scanner", { size: 8.5, bold: true }) +
+        r(122, 52, 96, 18, "#2f7fc0", { rx: 9 }) + t(170, 64, "+ Aggiungi dispositivo", { size: 6, fill: "#fff", anchor: "middle", bold: true }) +
+        [["HP DeskJet 2700", "Wi-Fi · pronta"], ["EPSON ET-2850", "USB · pronta"], ["Microsoft Print to PDF", "stampante virtuale"]].map(function (x, i) {
+          const y = 78 + i * 32;
+          return r(122, y, 178, 28, "#fff", { rx: 5, stroke: "#cfd6e4" }) + r(130, y + 7, 14, 14, "#8fb3e8", { rx: 3 }) + t(152, y + 12, x[0], { size: 7, bold: true }) + t(152, y + 22, x[1], { size: 6, fill: "#6b7385" });
+        }).join("");
+    }, punti: { stampanti: [54, 76, 0, 96, 20] } },
+
+    "windows-aggiungi": { tipo: "pc", disegno: function () {
+      return r(0, 0, 320, 210, "#2f6f9e", { rx: 8 }) + r(46, 14, 228, 182, "#fff", { rx: 8, stroke: "#cfd6e4" }) +
+        t(58, 34, "Aggiungi stampante", { size: 9, bold: true }) + t(58, 48, "Ricerca delle stampanti disponibili…", { size: 6.5, fill: "#6b7385" }) +
+        [["HP DeskJet 2700", "Wi-Fi"], ["EPSON ET-2850", "Wi-Fi"], ["Microsoft Print to PDF", "virtuale"]].map(function (x, i) {
+          const y = 58 + i * 32, on = i === 0;
+          return r(58, y, 204, 26, on ? "#e1eef9" : "#fff", { rx: 5, stroke: on ? "#2f7fc0" : "#cfd6e4" }) +
+            r(66, y + 6, 14, 14, on ? "#2f7fc0" : "#8fb3e8", { rx: 3 }) + t(88, y + 12, x[0], { size: 7.2, bold: true }) + t(88, y + 21, x[1], { size: 6, fill: "#6b7385" });
+        }).join("") +
+        t(58, 158, "La stampante deve essere accesa e sulla stessa rete.", { size: 6.2, fill: "#6b7385" }) +
+        r(140, 166, 52, 20, "#e7ebf3", { rx: 10 }) + t(166, 179, "Annulla", { size: 6.4, anchor: "middle" }) +
+        r(198, 166, 64, 20, "#2f7fc0", { rx: 10 }) + t(230, 179, "Aggiungi", { size: 6.6, fill: "#fff", anchor: "middle", bold: true });
+    }, punti: { elenco: [117, 71, 0, 110, 26] } },
+
+    "windows-prova-stampa": { tipo: "pc", disegno: function () {
+      return CORNICE +
+        t(18, 28, "‹  Stampanti e scanner", { size: 7.5, fill: "#2f7fc0" }) +
+        r(18, 38, 284, 60, "#fff", { rx: 6, stroke: "#cfd6e4" }) + r(28, 50, 22, 22, "#2f7fc0", { rx: 5 }) +
+        t(60, 58, "HP DeskJet 2700", { size: 9, bold: true }) + t(60, 72, "Wi-Fi · pronta · predefinita", { size: 6.5, fill: "#6b7385" }) +
+        t(60, 86, "Inchiostro nero 80% · colore 65%", { size: 6.5, fill: "#6b7385" }) +
+        ["Preferenze di stampa", "Imposta come predefinita", "Stampa pagina di prova", "Apri la coda di stampa"].map(function (x, i) {
+          const y = 106 + i * 20, prova = i === 2;
+          return r(18, y, 200, 17, prova ? "#e1eef9" : "#fff", { rx: 4, stroke: prova ? "#2f7fc0" : "#cfd6e4" }) + t(26, y + 12, x, { size: 6.8, bold: prova });
+        }).join("");
+    }, punti: { prova: [118, 154, 0, 200, 17] } },
+
+    "mac-stampanti": { tipo: "pc", disegno: function () {
+      return MAC +
+        r(8, 42, 92, 158, "#f2f5fa", { rx: 6 }) +
+        ["Wi-Fi", "Bluetooth", "Rete", "Suoni", "Notifiche", "Stampanti e scanner", "Batteria"].map(function (x, i) {
+          const on = i === 5, y = 48 + i * 20;
+          return (on ? r(12, y, 84, 17, "#2f7fc0", { rx: 5 }) : "") + t(20, y + 12, x, { size: 6, bold: on, fill: on ? "#fff" : "#1b2333" });
+        }).join("") +
+        t(112, 50, "Stampanti e scanner", { size: 9, bold: true }) +
+        t(112, 64, "Le stampanti collegate al Mac compaiono qui.", { size: 6, fill: "#6b7385" }) +
+        r(112, 112, 188, 54, "#f4f6fb", { rx: 6, stroke: "#cfd6e4" }) +
+        r(122, 122, 22, 22, "#2f7fc0", { rx: 5 }) + r(127, 126, 12, 5, "#fff", { rx: 1 }) + r(125, 134, 16, 4, "#fff", { rx: 1 }) +
+        t(152, 129, "HP DeskJet 2700", { size: 7.2, bold: true }) + t(152, 140, "Pronta · Predefinita", { size: 6, fill: "#3f9a63" }) +
+        t(152, 151, "Wi-Fi · Ultima stampa: oggi", { size: 6, fill: "#6b7385" }) +
+        r(112, 174, 188, 18, "#e1eef9", { rx: 6 }) + t(206, 187, "+ Aggiungi stampante, scanner o fax…", { size: 6.4, fill: "#2f7fc0", anchor: "middle", bold: true });
+    }, punti: { stampanti: [54, 156.5, 0, 84, 17] } },
+
+    "mac-aggiungi": { tipo: "pc", disegno: function () {
+      return r(0, 0, 320, 210, "#c9d2e0", { rx: 8 }) +
+        r(40, 38, 240, 158, "#fff", { rx: 10 }) +
+        t(56, 60, "Aggiungi stampante, scanner o fax", { size: 8.2, bold: true }) +
+        t(56, 74, "Ricerca dei dispositivi sulla rete Wi-Fi…", { size: 6, fill: "#6b7385" }) +
+        t(56, 104, "Deve essere accesa e sulla stessa rete.", { size: 6, fill: "#6b7385" }) +
+        [["HP DeskJet 2700", "Wi-Fi · Bonjour", "#2f7fc0"], ["EPSON ET-2850", "Wi-Fi · Bonjour", "#8fb3e8"], ["HP LaserJet M110", "USB · collegata", "#3f9a63"]].map(function (x, i) {
+          const on = i === 0, y = 124 + i * 24;
+          return r(56, y, 208, 22, on ? "#e1eef9" : "#fff", { rx: 4, stroke: on ? "#2f7fc0" : "#cfd6e4" }) +
+            r(64, y + 5, 12, 12, x[2], { rx: 3 }) + t(82, y + 14, x[0], { size: 7, bold: true }) + t(180, y + 14, x[1], { size: 5.6, fill: "#6b7385", anchor: "end" });
+        }).join("");
+    }, punti: { elenco: [148, 135, 0, 144, 22] } },
+
+    "mac-prova-stampa": { tipo: "pc", disegno: function () {
+      return MAC +
+        t(20, 48, "‹  Stampanti e scanner", { size: 6.6, fill: "#2f7fc0" }) +
+        r(20, 56, 284, 50, "#f4f6fb", { rx: 6, stroke: "#cfd6e4" }) +
+        r(30, 66, 24, 24, "#2f7fc0", { rx: 5 }) + r(35, 71, 14, 5, "#fff", { rx: 1 }) + r(33, 80, 18, 5, "#fff", { rx: 1 }) +
+        t(64, 74, "HP DeskJet 2700", { size: 7.6, bold: true }) + t(64, 85, "Wi-Fi · Pronta · Predefinita", { size: 6, fill: "#3f9a63" }) +
+        t(64, 96, "Inchiostro nero 80% · colore 65%", { size: 6, fill: "#6b7385" }) +
+        r(20, 116, 96, 20, "#fff", { rx: 5, stroke: "#cfd6e4" }) + t(68, 129, "Stampante ▾", { size: 6.4, anchor: "middle" }) +
+        r(20, 136, 150, 60, "#fff", { rx: 6, stroke: "#cfd6e4" }) +
+        ["Preferenze di stampa…", "Stampa pagina di prova…", "Rimuovi stampante…"].map(function (x, i) {
+          const prova = i === 1, y = 140 + i * 18;
+          return (prova ? r(24, y - 2, 142, 18, "#e1eef9", { rx: 4 }) : "") + t(32, y + 10, x, { size: 6, bold: prova });
+        }).join("");
+    }, punti: { prova: [95, 164, 0, 142, 16] } },
+
+    "scanner-vetro": { tipo: "pc", disegno: function () {
+      return r(0, 0, 320, 210, "#f4f6fb", { rx: 8 }) +
+        r(48, 40, 224, 20, "#dfe6f1", { rx: 8, stroke: "#cfd6e4" }) +
+        p("M60 60 v-4 M160 60 v-4 M260 60 v-4", { stroke: "#8fb3e8", sw: 2 }) +
+        r(48, 62, 224, 108, "#e7ebf3", { rx: 12, stroke: "#cfd6e4" }) +
+        r(66, 78, 188, 78, "#cdd9e8", { rx: 5 }) +
+        r(108, 84, 100, 66, "#fff", { rx: 2, stroke: "#cfd6e4" }) +
+        [0, 1, 2, 3].map(function (i) { return r(118, 96 + i * 12, 76 - i * 8, 4, "#cfd6e4", { rx: 2 }); }).join("") +
+        p("M108 84 l16 8 l-16 8 z", { fill: "#8fb3e8", stroke: "#8fb3e8", sw: 1 }) +
+        t(160, 188, "Foglio sul vetro, testo verso il vetro", { size: 6.4, anchor: "middle", fill: "#6b7385" });
+    }, punti: { foglio: [158, 116, 0, 100, 66], vetro: [160, 116, 0, 188, 78] } },
+
+    "scanner-tavolo": { tipo: "pc", disegno: function () {
+      return r(0, 0, 320, 210, "#f4f6fb", { rx: 8 }) +
+        r(96, 34, 128, 34, "#fff", { rx: 2, stroke: "#cfd6e4" }) +
+        r(40, 66, 240, 92, "#dfe6f1", { rx: 10, stroke: "#cfd6e4" }) +
+        r(40, 66, 240, 12, "#c6cdda", { rx: 4 }) +
+        r(56, 96, 208, 6, "#c6cdda", { rx: 3 }) +
+        r(56, 132, 34, 14, "#e4572e", { rx: 3 }) + t(96, 143, "blocco del carrello", { size: 6, fill: "#6b7385" }) +
+        c(262, 138, 12, "#3a4458") + c(262, 138, 5, "none", { stroke: "#fff", sw: 1.5 }) + p("M262 131 v7", { stroke: "#fff", sw: 1.5 }) +
+        t(262, 162, "On/Off", { size: 6, anchor: "middle" }) +
+        t(160, 190, "Sblocca il carrello e infila il foglio", { size: 6.4, anchor: "middle", fill: "#6b7385" });
+    }, punti: { foglio: [160, 51, 0, 128, 34], blocco: [73, 139, 0, 34, 14], accensione: [262, 138, 14] } },
+
+    "windows-scanner": { tipo: "pc", disegno: function () {
+      return CORNICE +
+        t(18, 30, "Scanner", { size: 10, bold: true }) +
+        r(18, 40, 284, 44, "#fff", { rx: 6, stroke: "#cfd6e4" }) +
+        t(28, 56, "HP DeskJet 2700", { size: 7.5, bold: true }) + t(28, 72, "Origine: vetro · Pronta", { size: 6.2, fill: "#6b7385" }) +
+        t(18, 100, "Profilo", { size: 6.2, fill: "#6b7385" }) +
+        r(18, 104, 180, 20, "#fff", { rx: 4, stroke: "#cfd6e4" }) + t(26, 118, "Documento · PDF · 300 dpi · B/N", { size: 6.2 }) +
+        r(18, 146, 120, 26, "#2f7fc0", { rx: 6 }) + t(78, 163, "Acquisisci", { size: 8, fill: "#fff", anchor: "middle", bold: true }) +
+        t(150, 163, "oppure «Scansione»", { size: 6, fill: "#6b7385" });
+    }, punti: { profilo: [108, 114, 0, 180, 20], acquisisci: [78, 159, 0, 120, 26] } },
+
+    "windows-anteprima": { tipo: "pc", disegno: function () {
+      return CORNICE +
+        t(18, 30, "Scansione", { size: 9, bold: true }) +
+        r(18, 40, 140, 132, "#fff", { rx: 4, stroke: "#cfd6e4" }) +
+        [0, 1, 2, 3, 4, 5].map(function (i) { return r(28, 54 + i * 16, i === 5 ? 60 : 118 - i * 6, 4, "#cfd6e4", { rx: 2 }); }).join("") +
+        r(170, 40, 130, 60, "#fff", { rx: 6, stroke: "#cfd6e4" }) +
+        t(180, 58, "Salva come", { size: 7, bold: true }) + t(180, 74, "PDF", { size: 6.4 }) + t(180, 88, "Documenti", { size: 6.4, fill: "#6b7385" }) +
+        r(190, 146, 90, 26, "#2f7fc0", { rx: 6 }) + t(235, 163, "Salva", { size: 8, fill: "#fff", anchor: "middle", bold: true });
+    }, punti: { anteprima: [88, 106, 0, 140, 132], salva: [235, 159, 0, 90, 26] } },
+
+    "disco-collegamento": { tipo: "pc", disegno: function () {
+      return r(0, 0, 320, 210, "#f4f6fb", { rx: 8 }) +
+        r(16, 36, 130, 80, "#1b2333", { rx: 6 }) + r(24, 44, 114, 64, "#2f6f9e", { rx: 2 }) +
+        r(8, 116, 146, 10, "#c6cdda", { rx: 4 }) +
+        r(196, 96, 26, 14, "#3a4458", { rx: 3 }) + r(222, 99, 10, 8, "#8fb3e8", { rx: 1 }) +
+        t(209, 126, "chiavetta USB", { size: 6.2, anchor: "middle", fill: "#6b7385" }) +
+        r(230, 40, 80, 38, "#e7ebf3", { rx: 8, stroke: "#cfd6e4" }) + r(238, 50, 64, 8, "#c6cdda", { rx: 4 }) + r(238, 62, 40, 4, "#c6cdda", { rx: 2 }) +
+        p("M230 59 q-40 6 -80 41", { stroke: "#3a4458", sw: 2 }) + t(270, 92, "disco esterno", { size: 6.2, anchor: "middle", fill: "#6b7385" }) +
+        t(160, 190, "Chiavetta nella porta USB, disco esterno con il suo cavo", { size: 6, anchor: "middle", fill: "#6b7385" });
+    }, punti: { chiavetta: [209, 103, 0, 36, 20] } },
+
+    "windows-disco": { tipo: "pc", disegno: function () {
+      return CORNICE +
+        r(18, 16, 284, 148, "#fff", { rx: 6 }) + r(18, 16, 284, 18, "#e7ebf3", { rx: 6 }) + t(28, 29, "Questo PC", { size: 7.5, bold: true }) +
+        t(28, 48, "Dispositivi e unità", { size: 6.4, fill: "#6b7385" }) +
+        [["Disco locale (C:)", "Windows · 240 GB", "#8fb3e8", 56], ["Chiavetta (D:)", "32 GB · rimovibile", "#c98a24", 86], ["Disco esterno (E:)", "1 TB · rimovibile", "#3f9a63", 116]].map(function (x) {
+          return r(28, x[3], 264, 26, "#fff", { rx: 4, stroke: "#cfd6e4" }) + r(36, x[3] + 6, 14, 14, x[2], { rx: 3 }) + t(58, x[3] + 12, x[0], { size: 7, bold: true }) + t(58, x[3] + 21, x[1], { size: 6, fill: "#6b7385" });
+        }).join("") +
+        r(6, 166, 308, 20, "#e7ebf3", { rx: 0 }) + r(110, 169, 14, 14, "#2f7fc0", { rx: 2 });
+    }, punti: { unita: [110, 99, 0, 120, 26] } },
+
+    "windows-copia": { tipo: "pc", disegno: function () {
+      return CORNICE +
+        r(40, 96, 240, 74, "#fff", { rx: 8, stroke: "#cfd6e4" }) +
+        t(56, 118, "Copia di 1 elemento", { size: 8, bold: true }) + t(56, 132, "in «Documenti»", { size: 6.4, fill: "#6b7385" }) +
+        r(56, 140, 144, 10, "#e7ebf3", { rx: 5 }) + r(56, 140, 90, 10, "#2f7fc0", { rx: 5 }) +
+        t(56, 164, "Bollette 2026 · 34 MB di 120 MB", { size: 6.2, fill: "#6b7385" }) +
+        r(196, 152, 60, 18, "#e7ebf3", { rx: 9 }) + t(226, 164, "Annulla", { size: 6.4, anchor: "middle" });
+    }, punti: { barra: [128, 145, 0, 144, 12] } },
+
+    "windows-rimozione": { tipo: "pc", disegno: function () {
+      return CORNICE +
+        r(190, 40, 116, 84, "#fff", { rx: 6, stroke: "#cfd6e4" }) +
+        t(200, 56, "Rimozione sicura", { size: 6.6, bold: true }) + t(200, 70, "dell'hardware", { size: 6.2, fill: "#6b7385" }) +
+        r(196, 86, 104, 24, "#e1eef9", { rx: 4 }) + t(204, 101, "Chiavetta (D:)", { size: 6.4 }) +
+        t(204, 121, "Disco esterno (E:)", { size: 6.2, fill: "#6b7385" }) +
+        r(6, 166, 308, 20, "#e7ebf3", { rx: 0 }) + r(110, 169, 14, 14, "#2f7fc0", { rx: 2 }) +
+        r(268, 169, 12, 12, "#c6cdda", { rx: 2 }) + r(286, 169, 12, 12, "#c98a24", { rx: 2 }) + p("M289 173 h6 M292 171 v8", { stroke: "#fff", sw: 1.4 });
+    }, punti: { icona: [292, 175, 11] } },
+
+    "cuffie-abbinamento": { tipo: "pc", disegno: function () {
+      return r(0, 0, 320, 210, "#f4f6fb", { rx: 8 }) +
+        p("M96 118 a64 64 0 0 1 128 0", { stroke: "#1b2333", sw: 12 }) +
+        r(76, 108, 40, 62, "#1b2333", { rx: 14 }) + r(86, 124, 20, 30, "#3a4458", { rx: 8 }) +
+        r(204, 108, 40, 62, "#1b2333", { rx: 14 }) + r(214, 124, 20, 30, "#3a4458", { rx: 8 }) +
+        c(160, 152, 12, "#3a4458") + c(160, 152, 5, "none", { stroke: "#fff", sw: 1.5 }) + p("M160 145 v7", { stroke: "#fff", sw: 1.5 }) +
+        c(198, 152, 4, "#e4572e") +
+        t(160, 192, "Tasto premuto: la spia arancione lampeggia", { size: 6.2, anchor: "middle", fill: "#6b7385" });
+    }, punti: { pulsante: [160, 152, 16], spia: [198, 152, 8] } },
+
+    "android-bluetooth": { tipo: "telefono", disegno: function () {
+      return telefono(t(18, 58, "‹  Bluetooth", { size: 13, bold: true }) +
+        r(16, 68, 148, 26, "#fff", { rx: 6 }) + t(26, 85, "Bluetooth", { size: 9, bold: true }) + r(134, 74, 22, 14, "#2f7fc0", { rx: 7 }) + c(149, 81, 5, "#fff") +
+        t(20, 112, "DISPOSITIVI DISPONIBILI", { size: 7, fill: "#6b7385", bold: true }) +
+        riga(120, "WH-1000XM4", { col: "#7d55c0" }) + riga(150, "TV sala", { col: "#2f7fc0" }) + riga(180, "Auto Rossi", { col: "#5b6472" }) +
+        r(16, 216, 148, 22, "#e1eef9", { rx: 11 }) + t(90, 231, "+ Abbina nuovo dispositivo", { size: 6.6, fill: "#2f7fc0", anchor: "middle", bold: true }));
+    }, punti: { interruttore: [145, 81, 14], cuffie: [156, 133, 18] } },
+
+    "android-bluetooth-fatto": { tipo: "telefono", disegno: function () {
+      return telefono(t(18, 58, "‹  Bluetooth", { size: 13, bold: true }) +
+        r(16, 78, 148, 84, "#fff", { rx: 8 }) +
+        c(46, 112, 18, "#7d55c0") + c(46, 112, 9, "none", { stroke: "#fff", sw: 2 }) +
+        t(74, 106, "WH-1000XM4", { size: 8.5, bold: true }) + t(74, 120, "Connesso", { size: 7.5, fill: "#3f9a63", bold: true }) +
+        t(74, 134, "Audio del telefono", { size: 6.4, fill: "#6b7385" }) +
+        r(16, 176, 148, 26, "#fff", { rx: 6 }) + t(26, 193, "Batteria delle cuffie  80%", { size: 7 }) +
+        t(90, 230, "Alza il volume e prova la musica", { size: 6.6, anchor: "middle", fill: "#6b7385" }));
+    }, punti: { connesso: [88, 122, 0, 90, 18] } },
+
     "tv-telecomando": { tipo: "telecomando", disegno: function () {
       const tasti = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", ""];
       return r(30, 0, 100, 360, "#1b2333", { rx: 40 }) + c(56, 26, 9, "#b23a32") + p("M56 20 v6", { stroke: "#fff", sw: 1.6 }) + c(56, 27, 4.5, "none", { stroke: "#fff", sw: 1.4 }) +
@@ -156,6 +376,8 @@
   };
 
   /* ------------------------------------------------------------ le guide */
+  /* i dispositivi delle guide: sono anche i filtri della pagina guide */
+  TD.GUIDE_DISPOSITIVI = ["Android", "iPhone", "Windows", "Mac", "Smart TV", "Stampante", "Scanner"];
   TD.GUIDE = [
     { id: "g-caratteri", titolo: "Caratteri più grandi sul telefono Android", dispositivo: "Android", lezioni: ["tablet-0-2", "smartphone-0-1"], passi: [
       ["android-home", "impostazioni", "Tocca l'icona a ingranaggio «Impostazioni»."],
@@ -183,6 +405,39 @@
       ["windows-esplora", "nuovo", "In Documenti fai clic su «+ Nuovo»."],
       ["windows-esplora", "cartella", "Scegli «Cartella», scrivi il nome (es. «Bollette 2026») e premi Invio."],
       ["windows-esplora", "chiavetta", "Per una copia di sicurezza trascina la cartella sulla chiavetta, a sinistra."]] },
+    { id: "g-stampante", titolo: "Installare la stampante la prima volta", dispositivo: "Stampante", lezioni: ["accessori-0-1", "accessori-1-2"], passi: [
+      ["stampante-pannello", "accensione", "Collega la stampante alla corrente, infila il foglio nel vassoio e premi il tasto di accensione: il display si illumina."],
+      ["stampante-pannello", "wifi", "In Wi-Fi premi il tasto Wi-Fi finché la spia lampeggia, poi premi WPS sul modem (oppure segui il libretto del modello)."],
+      ["windows-stampanti", "stampanti", "Sul computer apri Impostazioni › Bluetooth e dispositivi › Stampanti e scanner."],
+      ["windows-aggiungi", "elenco", "Tocca «Aggiungi dispositivo», aspetta l'elenco e scegli il nome della stampante: col cavo è quella «USB»."],
+      ["windows-prova-stampa", "prova", "Apri la stampante e scegli «Stampa pagina di prova»: se esce il foglio è installata; se no, riaccendila e ripeti."]] },
+    { id: "g-stampante-mac", titolo: "Installare la stampante la prima volta su Mac", dispositivo: "Mac", lezioni: ["accessori-0-1", "accessori-1-2"], passi: [
+      ["stampante-pannello", "accensione", "Collega la stampante alla corrente, infila il foglio nel vassoio e premi il tasto di accensione: il display si illumina."],
+      ["stampante-pannello", "wifi", "In Wi-Fi premi il tasto Wi-Fi finché la spia lampeggia, poi premi WPS sul modem (oppure segui il libretto del modello)."],
+      ["mac-stampanti", "stampanti", "Dal Mac apri il menu mela in alto a sinistra › Impostazioni di Sistema e scegli «Stampanti e scanner»."],
+      ["mac-aggiungi", "elenco", "Fai clic su «Aggiungi stampante, scanner o fax…», aspetta l'elenco e scegli il nome della stampante: col cavo è quella «USB»."],
+      ["mac-prova-stampa", "prova", "Scegli «Stampa pagina di prova…»: se esce il foglio è installata; se no, riaccendila e ripeti."]] },
+    { id: "g-scanner-multifunzione", titolo: "Acquisire un documento con la stampante multifunzione", dispositivo: "Scanner", lezioni: ["accessori-0-1", "accessori-3-1"], passi: [
+      ["scanner-vetro", "foglio", "Alza il coperchio e appoggia il foglio sul vetro, con il testo rivolto verso il vetro e l'angolo in alto a sinistra."],
+      ["windows-scanner", "profilo", "Sul computer apri «Scanner» (o «Scanner e fotocamera») e scegli il profilo «Documento»: PDF, 300 dpi, bianco e nero."],
+      ["windows-scanner", "acquisisci", "Premi «Acquisisci» e aspetta: il carrello scorre sotto il vetro — non guardare la luce."],
+      ["windows-anteprima", "anteprima", "Guarda l'anteprima: testo dritto e leggibile, nessuna pagina tagliata. Se è storta, rimetti il foglio e ripeti."],
+      ["windows-anteprima", "salva", "Premi «Salva» e scegli Documenti: il PDF si chiama con la data e si può allegare a un'email o stampare."]] },
+    { id: "g-scanner-tavolo", titolo: "Acquisire con uno scanner da tavolo", dispositivo: "Scanner", lezioni: ["accessori-3-1"], passi: [
+      ["scanner-tavolo", "blocco", "Togli il blocco arancione del carrello (serve solo per il trasporto) e accendi lo scanner."],
+      ["scanner-tavolo", "foglio", "Infila il foglio nell'alimentatore con il lato stampato verso il basso, come mostra la freccia sul coperchio."],
+      ["windows-scanner", "acquisisci", "Sul computer apri «Scanner», controlla che sia scelto lo scanner giusto e premi «Acquisisci»."],
+      ["windows-anteprima", "salva", "Controlla l'anteprima e premi «Salva»: il PDF finisce in Documenti, pronto da inviare."]] },
+    { id: "g-disco-esterno", titolo: "Copiare i file su una chiavetta o un disco esterno", dispositivo: "Windows", lezioni: ["accessori-1-1", "accessori-3-1"], passi: [
+      ["disco-collegamento", "chiavetta", "Infila la chiavetta in una porta USB (o collega il disco esterno con il suo cavo) e aspetta qualche secondo: la spia si accende."],
+      ["windows-disco", "unita", "Apri Esplora file › Questo PC e cerca l'unità nuova: «Chiavetta (D:)» o «Disco esterno (E:)»."],
+      ["windows-copia", "barra", "Trascina la cartella da copiare in Documenti (o dall'altra parte) e aspetta che la barra arrivi in fondo."],
+      ["windows-rimozione", "icona", "Prima di staccare, clicca l'icona della chiavetta vicino all'orologio e scegli «Rimozione sicura dell'hardware»."]] },
+    { id: "g-cuffie-bluetooth", titolo: "Abbinare le cuffie Bluetooth al telefono", dispositivo: "Android", lezioni: ["accessori-2-2", "accessori-3-1"], passi: [
+      ["android-bluetooth", "interruttore", "Apri Impostazioni › Bluetooth e accendi l'interruttore se è spento: il telefono cerca i dispositivi vicini."],
+      ["cuffie-abbinamento", "pulsante", "Tieni premuto il tasto delle cuffie finché la spia lampeggia: stanno cercando il telefono."],
+      ["android-bluetooth", "cuffie", "Tocca il nome delle cuffie nell'elenco, per esempio «WH-1000XM4»."],
+      ["android-bluetooth-fatto", "connesso", "Quando leggi «Connesso», alza il volume e prova la musica: il suono esce dalle cuffie."]] },
     { id: "g-telecomando", titolo: "I tasti del telecomando che servono davvero", dispositivo: "Smart TV", lezioni: ["tv-0-1", "tv-0-2"], passi: [
       ["tv-telecomando", "accensione", "Il tasto rosso accende e spegne la TV."],
       ["tv-telecomando", "frecce", "Le frecce spostano la selezione; OK conferma."],
@@ -217,7 +472,11 @@
       const raggio = h[2] || Math.max(h[3], h[4]) / 2;
       const destra = cx < wh[0] / 2;
       const bx = Math.max(14, Math.min(wh[0] - 14, cx + (destra ? 1 : -1) * (raggio + 26))), by = Math.max(16, cy - raggio - 18);
-      segno = forma + '<line x1="' + bx + '" y1="' + by + '" x2="' + (cx + (destra ? 1 : -1) * raggio * 0.72) + '" y2="' + (cy - raggio * 0.72) + '" stroke="' + SEGNO + '" stroke-width="2.4" stroke-linecap="round"/>' +
+      /* il cerchio punta al bordo del tondo, il riquadro al bordo della casella:
+         altrimenti la linea si ferma nel vuoto sopra il riquadro largo */
+      const fx = h[2] ? cx + (destra ? 1 : -1) * raggio * 0.72 : Math.max(cx - h[3] / 2, Math.min(cx + h[3] / 2, bx));
+      const fy = h[2] ? cy - raggio * 0.72 : cy - h[4] / 2;
+      segno = forma + '<line x1="' + bx + '" y1="' + by + '" x2="' + fx + '" y2="' + fy + '" stroke="' + SEGNO + '" stroke-width="2.4" stroke-linecap="round"/>' +
         '<circle cx="' + bx + '" cy="' + by + '" r="11" fill="' + SEGNO + '" stroke="#fff" stroke-width="2"/><text x="' + bx + '" y="' + (by + 4) + '" font-size="11" font-weight="700" fill="#fff" text-anchor="middle" font-family="system-ui,Arial,sans-serif">' + (numero || "") + "</text>";
     }
     return '<svg class="guida-svg" viewBox="-6 -6 ' + (wh[0] + 12) + " " + (wh[1] + 12) + '" role="img" aria-label="' + E(opz.etichetta || "Schermata guida") + '" xmlns="http://www.w3.org/2000/svg">' + sc.disegno() + segno + "</svg>";
@@ -246,7 +505,9 @@
       const x = g.passi[i];
       const svg = TD.svgPasso(x[0], x[1], i + 1);
       const im = await immagineSvg(svg);
-      const larg = scena(x[0]).tipo === "pc" ? 640 : 300, alt = im ? larg * im.height / im.width : 0;
+      /* i disegni di computer e stampanti vanno larghi quanto la pagina: a 640
+         le scritte interne finivano a 2-3 punti e sul foglio non si leggevano */
+      const larg = scena(x[0]).tipo === "pc" ? Math.min(d.W - d.m * 2, 900) : 300, alt = im ? larg * im.height / im.width : 0;
       d.spazio(alt + 40);
       if (im) d.x.drawImage(im, d.m, d.y, larg, alt);
       const salva = d.y;
@@ -263,7 +524,7 @@
     const elenco = TD.GUIDE.filter(function (g) { return !disp || g.dispositivo === disp; });
     const mie = TD.MODO === "allievo" ? [] : (TD.db.schermate || []);
     app.innerHTML = TD.intest("Schermate guida", "Disegni passo per passo, con il cerchio dove toccare: da mostrare a lezione, proiettare sulla TV o stampare per casa.",
-      '<nav class="chips">' + ["", "Android", "iPhone", "Windows", "Smart TV"].map(function (x) { return '<a class="chip' + (x === disp ? " on" : "") + '" href="#/guide' + (x ? "?d=" + encodeURIComponent(x) : "") + '">' + (x || "Tutte") + "</a>"; }).join("") + "</nav>") +
+      '<nav class="chips">' + [""].concat(TD.GUIDE_DISPOSITIVI).map(function (x) { return '<a class="chip' + (x === disp ? " on" : "") + '" href="#/guide' + (x ? "?d=" + encodeURIComponent(x) : "") + '">' + (x || "Tutte") + "</a>"; }).join("") + "</nav>") +
       '<div class="wrap"><div class="guide-grid">' + elenco.map(function (g) {
         return '<a class="card guida-card" href="#/guida/' + g.id + '">' + TD.svgPasso(g.passi[0][0], g.passi[0][1], 1) + "<h3>" + E(g.titolo) + '</h3><p class="muted text-small">' + E(g.dispositivo) + " · " + g.passi.length + " passi</p></a>";
       }).join("") + "</div>" +

@@ -18,11 +18,11 @@ Chi insegna tecnologia a domicilio o nelle associazioni ha bisogno di tre cose i
 
 | Sezione | Contenuto |
 |---|---|
-| **Lezioni** | 40 lezioni in 4 livelli (Primi passi, Principiante, Intermedio, Esperto) e 5 percorsi (Computer, Tablet, Smartphone, Smart TV, Internet e sicurezza). Ognuna con obiettivi, spiegazione, passi numerati, tre esercizi (facile, medio, esperto), compito a casa, aree DigComp 2.2, lettura ad alta voce e scheda PDF. |
+| **Lezioni** | 48 lezioni in 4 livelli (Primi passi, Principiante, Intermedio, Esperto) e 6 percorsi (Computer, Tablet, Smartphone, Smart TV, Internet e sicurezza, Accessori). Il percorso Accessori spiega passo per passo come collegare e far funzionare stampante, webcam, disco esterno, chiavette, mouse, cuffie e secondo schermo. Ognuna con obiettivi, spiegazione, passi numerati, tre esercizi (facile, medio, esperto), compito a casa, aree DigComp 2.2, lettura ad alta voce e scheda PDF. |
 | **Modalità lavagna** | La lezione a tutto schermo, un passo alla volta, con caratteri grandi: per la Smart TV o il proiettore nei gruppi. Frecce della tastiera per avanzare. |
 | **Quiz** | Cinque tipi: scelta multipla, vero o falso, completa la frase, metti in ordine, abbina. Domande scelte a caso privilegiando quelle uscite da più tempo; la risposta giusta **cambia posizione** e le risposte **cambiano lettera o numero** (A-B-C, 1-2-3, a-b-c, I-II-III) a ogni partita. Correzione subito o alla fine; risultato salvato nella scheda cliente. |
 | **Verifiche su carta** | Ogni verifica stampata ha un codice di versione e domande, ordine e lettere diversi; la chiave di correzione è un PDF separato per il docente. |
-| **Esercizi** | 120 esercizi pratici filtrabili per percorso, livello e difficoltà, assegnabili come compito o stampabili. |
+| **Esercizi** | 144 esercizi pratici filtrabili per percorso, livello e difficoltà, assegnabili come compito o stampabili. |
 | **Palestra** | Mouse (clic, doppio clic, clic destro), trascina e rilascia, tastiera con precisione e velocità, «Truffa o no?» con messaggi veri e falsi, laboratorio password con generatore di frasi-password. |
 | **Clienti** | Persone, enti, aziende e gruppi con partecipanti. Scheda con dati, dispositivi e livelli, test d'ingresso, registro delle lezioni con presenze e incassi, percorso svolto, compiti con esito, risultati dei quiz, esportazione CSV. |
 | **Liberatoria** | Modulo di iscrizione con informativa privacy (art. 13 GDPR), liberatoria sull'uso dei dispositivi personali e consensi facoltativi. Si firma con il dito o con il mouse, si scarica in PDF, si stampa; c'è anche il **modulo vuoto** da compilare a penna e il **foglio firme** per i gruppi. |
@@ -32,7 +32,7 @@ Chi insegna tecnologia a domicilio o nelle associazioni ha bisogno di tre cose i
 | **Statistiche** | Ore e incassi per mese, da incassare, clienti per luogo e città, argomenti più richiesti, progressi e andamento dei quiz di ogni allievo; tabella per Excel e riepilogo PDF. |
 | **Percorsi su misura** | Percorsi incontro per incontro, sei modelli pronti, programma in PDF, assegnazione con agenda e compiti, «Il mio percorso» nell'app Allievo. |
 | **Editor** | Lezioni, domande e schermate annotate (frecce, cerchi, numeri, scritte) proprie, con esportazione e importazione. |
-| **Schermate guida** | Dieci guide disegnate per Android, iPhone, Windows e Smart TV con il punto da toccare, stampabili. |
+| **Schermate guida** | Sedici guide disegnate per Android, iPhone, Windows, Mac, Smart TV, stampante, scanner, chiavette e dischi esterni, cuffie Bluetooth, con il punto da toccare a ogni passo, stampabili. |
 | **Modalità aula** | Domanda sulla Smart TV, risposte dai telefoni con un QR, classifica; canale cifrato end-to-end, oppure alzata di mano senza Internet. |
 | **Fattura elettronica** | File XML FatturaPA (FPR12) per forfettari, minimi e regime ordinario, con PDF di cortesia, da caricare nel portale dell'Agenzia delle Entrate. |
 | **Accessibilità** | Contrasto elevato, pulsanti grandi, niente animazioni, «un pulsante alla volta» per chi ha difficoltà motorie; controllo axe WCAG 2 AA. |
@@ -110,7 +110,7 @@ node tests/verify.cjs            # verifiche automatiche
 node scripts/sicurezza.cjs       # controllo di sicurezza (--aggiorna rigenera la CSP)
 ```
 
-Le verifiche controllano sintassi, file in cache delle due app, coerenza delle versioni, completezza delle 40 lezioni e della banca delle domande, che in 40 partite consecutive la risposta giusta cambi sempre posizione e stile di numerazione, che il kit non contenga soluzioni, che la correzione automatica sia esatta, che un pacchetto alterato o una password sbagliata vengano rifiutati, che il backup cifrato non contenga dati in chiaro, che firma dei kit e QR degli attestati rilevino ogni modifica, che statistiche e registro presenze facciano i conti giusti.
+Le verifiche controllano sintassi, file in cache delle due app, coerenza delle versioni, completezza delle 48 lezioni e della banca delle domande, che in 40 partite consecutive la risposta giusta cambi sempre posizione e stile di numerazione, che il kit non contenga soluzioni, che la correzione automatica sia esatta, che un pacchetto alterato o una password sbagliata vengano rifiutati, che il backup cifrato non contenga dati in chiaro, che firma dei kit e QR degli attestati rilevino ogni modifica, che statistiche e registro presenze facciano i conti giusti.
 
 ## Licenze
 

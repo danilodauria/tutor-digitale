@@ -93,6 +93,17 @@ html[data-theme="dark"] .main-nav a.active { background: var(--accent); color: v
 .nav-more-menu a { padding: .55rem .8rem; border-radius: 8px; text-decoration: none; color: var(--text); }
 .nav-more-menu a:hover { background: var(--surface-2); }
 .header-actions { display: flex; align-items: center; gap: .4rem; }
+@media (max-width: 380px) {
+  .wrap { width: min(1180px, 100% - 1.4rem); }
+  .header-inner { gap: .5rem; flex-wrap: wrap; row-gap: .1rem; padding-block: .35rem; }
+  .header-actions { gap: .25rem; }
+  .brand img { width: 36px; height: 36px; }
+  .brand-text strong { font-size: 1.05rem; }
+  .icon-btn { width: 36px; height: 36px; }
+  .aa { font-size: .95rem; }
+  .menu-btn { padding: .45rem .6rem; }
+  .menu-label { display: none; }
+}
 .icon-btn { width: 40px; height: 40px; display: inline-grid; place-items: center; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; }
 .icon-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .icon-btn:hover { background: var(--surface-2); }

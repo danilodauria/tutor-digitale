@@ -5,7 +5,7 @@
 
 Sono contenuti, e quindi coperti da questa licenza:
 
-- le 40 lezioni (obiettivi, spiegazioni, passi, esercizi e compiti) dei quattro livelli e cinque percorsi;
+- le 48 lezioni (obiettivi, spiegazioni, passi, esercizi e compiti) dei quattro livelli e sei percorsi;
 - le domande dei quiz, le frasi da completare, le sequenze, il glossario, i messaggi di «Truffa o no?»;
 - il test d'ingresso, il kit del tutor, le idee per il lavoro e il metodo in cinque tempi;
 - i testi della liberatoria, dell'attestato, del registro, dei preventivi e delle ricevute;

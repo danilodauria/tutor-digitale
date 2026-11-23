@@ -64,7 +64,8 @@ TD.TEST_INGRESSO = {
   tablet: ["Sblocco il tablet e apro le app con i gesti", "Installo app e faccio videochiamate", "Uso account, cloud e leggo giornali o libri digitali", "Scansiono e firmo documenti, configuro controlli e accessibilità"],
   smartphone: ["Chiamo, rispondo e salvo un contatto", "Uso WhatsApp, vocali e fotocamera", "Uso SPID/CIE, app IO, mappe e pagamenti", "Gestisco backup, localizzazione, automazioni e notifiche"],
   tv: ["Uso il telecomando, la guida e i sottotitoli", "Collego la TV al Wi-Fi e uso le app", "Trasmetto dal telefono e regolo audio e immagine", "Risintonizzo, aggiorno e gestisco la casa connessa"],
-  rete: ["Navigo e invio un'email", "Creo password forti e riconosco le truffe", "Gestisco privacy, cookie, permessi e cloud", "Metto in sicurezza il router e uso l'IA con giudizio"]
+  rete: ["Navigo e invio un'email", "Creo password forti e riconosco le truffe", "Gestisco privacy, cookie, permessi e cloud", "Metto in sicurezza il router e uso l'IA con giudizio"],
+  accessori: ["Collego la stampante e stampo un documento", "Uso webcam e disco esterno senza aiuto", "Configuro stampante Wi-Fi e secondo schermo", "Metto in rete una stampante condivisa e diagnostico i guasti"]
 };
 
 TD.KIT = [

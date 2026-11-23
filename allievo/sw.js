@@ -3,37 +3,37 @@
    Codice: © 2026 Danilo D'Auria · licenza MIT (vedi ../LICENSE)
    ========================================================================== */
 
-const VERSION = "tda-v1.5.2";
+const VERSION = "tda-v1.6.0";
 
 const ASSETS = [
   "./",
   "index.html",
   "manifest.webmanifest",
-  "../assets/css/styles.css?v=1.5.2",
+  "../assets/css/styles.css?v=1.6.0",
   "../assets/img/icon-allievo.svg",
   "../assets/img/icon-allievo-192.png",
   "../assets/img/icon-allievo-512.png",
   "../assets/img/icon-512.png",
-  "../assets/js/data-lezioni.js?v=1.5.2",
-  "../assets/js/data-quiz.js?v=1.5.2",
-  "../assets/js/data-documenti.js?v=1.5.2",
-  "../assets/js/core.js?v=1.5.2",
-  "../assets/js/pdf.js?v=1.5.2",
-  "../assets/js/scambio.js?v=1.5.2",
-  "../assets/js/qr.js?v=1.5.2",
-  "../assets/js/relay.js?v=1.5.2",
-  "../assets/js/guide.js?v=1.5.2",
-  "../assets/js/aula.js?v=1.5.2",
-  "../assets/js/accessibilita.js?v=1.5.2",
-  "../assets/js/casella.js?v=1.5.2",
-  "../assets/js/assistente.js?v=1.5.2",
-  "../assets/js/marchio.js?v=1.5.2",
-  "../assets/js/app-allievo.js?v=1.5.2",
-  "../assets/js/views-lezioni.js?v=1.5.2",
-  "../assets/js/views-quiz.js?v=1.5.2",
-  "../assets/js/views-palestra.js?v=1.5.2",
-  "../assets/js/remoto.js?v=1.5.2",
-  "../assets/js/init.js?v=1.5.2"
+  "../assets/js/data-lezioni.js?v=1.6.0",
+  "../assets/js/data-quiz.js?v=1.6.0",
+  "../assets/js/data-documenti.js?v=1.6.0",
+  "../assets/js/core.js?v=1.6.0",
+  "../assets/js/pdf.js?v=1.6.0",
+  "../assets/js/scambio.js?v=1.6.0",
+  "../assets/js/qr.js?v=1.6.0",
+  "../assets/js/relay.js?v=1.6.0",
+  "../assets/js/guide.js?v=1.6.0",
+  "../assets/js/aula.js?v=1.6.0",
+  "../assets/js/accessibilita.js?v=1.6.0",
+  "../assets/js/casella.js?v=1.6.0",
+  "../assets/js/assistente.js?v=1.6.0",
+  "../assets/js/marchio.js?v=1.6.0",
+  "../assets/js/app-allievo.js?v=1.6.0",
+  "../assets/js/views-lezioni.js?v=1.6.0",
+  "../assets/js/views-quiz.js?v=1.6.0",
+  "../assets/js/views-palestra.js?v=1.6.0",
+  "../assets/js/remoto.js?v=1.6.0",
+  "../assets/js/init.js?v=1.6.0"
 ];
 
 self.addEventListener("install", (e) => {

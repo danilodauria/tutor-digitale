@@ -10,7 +10,7 @@
   if (window.top !== window.self) { try { window.top.location.replace(window.self.location.href); } catch (e) { document.documentElement.innerHTML = ""; return; } }
   function E(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function dataIt(iso) { const p = String(iso || "").split("-"); return p.length === 3 ? p[2] + "/" + p[1] + "/" + p[0] : iso; }
-  const PERCORSI = { pc: "Computer", tablet: "Tablet", smartphone: "Smartphone", tv: "Smart TV", rete: "Internet e sicurezza" };
+  const PERCORSI = { pc: "Computer", tablet: "Tablet", smartphone: "Smartphone", tv: "Smart TV", rete: "Internet e sicurezza", accessori: "Accessori" };
   function json(url) { return fetch(url, { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
 
   async function controlla(testo) {
