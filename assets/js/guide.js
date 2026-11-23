@@ -522,17 +522,35 @@
   /* ------------------------------------------------------------ pagine */
   TD.rotta("/guide", function (app, par, q) {
     const disp = q.d || "";
-    const elenco = TD.GUIDE.filter(function (g) { return !disp || g.dispositivo === disp; });
+    const lez = q.l ? TD.lezione(q.l) : null;
+    const elenco = TD.GUIDE.filter(function (g) {
+      return (!disp || g.dispositivo === disp) && (!lez || g.lezioni.indexOf(lez.id) >= 0);
+    });
+    /* il filtro per lezione elenca solo le lezioni che hanno almeno una guida */
+    const conGuide = TD.LEZIONI.filter(function (l) { return TD.GUIDE.some(function (g) { return g.lezioni.indexOf(l.id) >= 0; }); });
+    const link = function (d, l) {
+      const p = [];
+      if (d) p.push("d=" + encodeURIComponent(d));
+      if (l) p.push("l=" + encodeURIComponent(l));
+      return "#/guide" + (p.length ? "?" + p.join("&") : "");
+    };
     const mie = TD.MODO === "allievo" ? [] : (TD.db.schermate || []);
-    app.innerHTML = TD.intest("Schermate guida", "Disegni passo per passo, con il cerchio dove toccare: da mostrare a lezione, proiettare sulla TV o stampare per casa.",
-      '<nav class="chips">' + [""].concat(TD.GUIDE_DISPOSITIVI).map(function (x) { return '<a class="chip' + (x === disp ? " on" : "") + '" href="#/guide' + (x ? "?d=" + encodeURIComponent(x) : "") + '">' + (x || "Tutte") + "</a>"; }).join("") + "</nav>") +
-      '<div class="wrap"><div class="guide-grid">' + elenco.map(function (g) {
+    app.innerHTML = TD.intest("Schermate guida",
+      "Disegni passo per passo, con il cerchio dove toccare: da mostrare a lezione, proiettare sulla TV o stampare per casa." +
+        (lez ? ' Solo le guide collegate a <a href="' + E("#/lezione/" + lez.id) + '">' + E(lez.titolo) + "</a>." : ""),
+      '<nav class="chips">' + [""].concat(TD.GUIDE_DISPOSITIVI).map(function (x) { return '<a class="chip' + (x === disp ? " on" : "") + '" href="' + E(link(x, lez && lez.id)) + '">' + E(x || "Tutte") + "</a>"; }).join("") + "</nav>" +
+      '<label class="field" style="max-width:26rem"><span>Filtra per lezione</span><select id="gLez"><option value="">Tutte le lezioni</option>' +
+      conGuide.map(function (l) { return '<option value="' + E(l.id) + '"' + (lez && lez.id === l.id ? " selected" : "") + ">" + E(TD.percorso(l.dev).nome + " · " + l.titolo) + "</option>"; }).join("") +
+      "</select></label>") +
+      '<div class="wrap">' + (elenco.length ? "" : '<p class="muted">Nessuna guida con questo filtro.</p>') + '<div class="guide-grid">' + elenco.map(function (g) {
         return '<a class="card guida-card" href="#/guida/' + g.id + '">' + TD.svgPasso(g.passi[0][0], g.passi[0][1], 1) + "<h3>" + E(g.titolo) + '</h3><p class="muted text-small">' + E(g.dispositivo) + " · " + g.passi.length + " passi</p></a>";
       }).join("") + "</div>" +
       (TD.MODO === "allievo" ? "" : '<section class="card"><h2>' + I("pen") + 'Le tue schermate annotate</h2><p>Fotografa o cattura lo schermo del dispositivo del cliente, poi aggiungi frecce, cerchi e numeri. Le schermate si possono inserire nelle lezioni create con l\'editor.</p>' +
         '<div class="actions"><label class="btn btn-primary">' + I("upload") + 'Nuova schermata<input type="file" id="gNuova" accept="image/*" hidden></label><a class="btn" href="#/editor">' + I("book") + "Editor delle lezioni</a></div>" +
         (mie.length ? '<div class="guide-grid">' + mie.map(function (s) { return '<figure class="card schermata"><img src="' + E(s.src) + '" alt="' + E(s.titolo) + '"><figcaption>' + E(s.titolo) + ' <button class="icon-btn" data-via="' + s.id + '" aria-label="Elimina la schermata">' + I("trash") + "</button></figcaption></figure>"; }).join("") + "</div>" : "") + "</section>") +
       "</div>";
+    const scelta = document.getElementById("gLez");
+    if (scelta) scelta.onchange = function () { TD.vai(link(disp, this.value)); };
     const n = document.getElementById("gNuova");
     if (n) n.onchange = function () {
       const f = this.files[0]; if (!f) return;

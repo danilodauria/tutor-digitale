@@ -7,7 +7,7 @@
 - Il programma passa a **49 lezioni in 6 percorsi** e **147 esercizi**.
 - Accessori è selezionabile tra i **dispositivi del cliente** (con il suo livello), compare nell'app Allievo anche senza percorsi scelti e la pagina di verifica degli attestati ne mostra il nome; aggiunto il collegamento nel piede di pagina.
 - **Testata più stretta**: su telefoni da 320–360 px il pulsante «Menu» non esce più dallo schermo.
-- **Schermate guida**: ora sono **sedici**, sempre con il cerchio arancione sul punto da toccare: installare la stampante la prima volta, su Windows e su Mac (Impostazioni di Sistema, «Aggiungi stampante», pagina di prova); acquisire un documento con lo scanner della multifunzione e con uno scanner da tavolo; copiare i file su una chiavetta o un disco esterno (unità, barra di copia, rimozione sicura); abbinare le cuffie Bluetooth al telefono.
+- **Schermate guida**: ora sono **sedici**, sempre con il cerchio arancione sul punto da toccare: installare la stampante la prima volta, su Windows e su Mac (Impostazioni di Sistema, «Aggiungi stampante», pagina di prova); acquisire un documento con lo scanner della multifunzione e con uno scanner da tavolo; copiare i file su una chiavetta o un disco esterno (unità, barra di copia, rimozione sicura); abbinare le cuffie Bluetooth al telefono. Si filtrano per dispositivo e per lezione: dentro ogni lezione il pulsante «Tutte le guide di questa lezione» apre l'elenco già filtrato.
 
 ## 1.5.2 · 14 novembre 2026
 

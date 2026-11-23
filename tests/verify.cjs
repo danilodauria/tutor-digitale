@@ -286,6 +286,12 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
   ok(TD.GUIDE.length > 0 && new Set(TD.GUIDE.map((g) => g.id)).size === TD.GUIDE.length, "guide: id unici");
   ok(TD.GUIDE.every((g) => TD.GUIDE_DISPOSITIVI.indexOf(g.dispositivo) >= 0), "guide: ogni dispositivo ha il suo filtro");
   TD.GUIDE_DISPOSITIVI.forEach((d) => ok(TD.GUIDE.some((g) => g.dispositivo === d), "guide: almeno una per «" + d + "»"));
+  /* filtro per lezione: l'elenco si ricava dalle guide, non da un numero fisso */
+  const lezioniConGuide = TD.LEZIONI.filter((l) => TD.guidePer(l).length > 0);
+  ok(lezioniConGuide.length >= 5, "guide: poche lezioni con guide collegate: " + lezioniConGuide.length);
+  ok(lezioniConGuide.every((l) => TD.guidePer(l).every((g) => g.lezioni.indexOf(l.id) >= 0)), "guide: il filtro per lezione pesca guide non collegate");
+  ok(lezioniConGuide.every((l) => TD.guidePer(l).length === TD.GUIDE.filter((g) => g.lezioni.indexOf(l.id) >= 0).length), "guide: filtro per lezione incompleto");
+  ok(lezioniConGuide.every((l) => TD.guidePer(l).length < TD.GUIDE.length), "guide: una lezione le mostra tutte");
 
   /* 17. fattura elettronica (11) */
   {
