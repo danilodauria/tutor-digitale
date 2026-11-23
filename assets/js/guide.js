@@ -34,6 +34,8 @@
   function riga(y, testo, o) { o = o || {}; return r(16, y, 148, 26, "#fff", { rx: 6 }) + c(30, y + 13, 6, o.col || "#8fb3e8") + t(44, y + 16, testo, { size: 9 }) + (o.dx ? t(156, y + 16, o.dx, { size: 8, fill: "#6b7385", anchor: "end" }) : t(156, y + 16, "›", { size: 11, fill: "#6b7385", anchor: "end" })); }
   /* cornice di Windows: finestra scura con la pagina chiara dentro */
   const CORNICE = r(0, 0, 320, 210, "#1b2333", { rx: 8 }) + r(6, 6, 308, 180, "#f4f6fb", { rx: 3 });
+  /* finestra di Windows: la cornice più il titolo dell'app */
+  function finestra(titolo) { return CORNICE + t(18, 30, titolo, { size: 9, bold: true }); }
   /* cornice del Mac: barra dei menu in alto e finestra chiara con i tre pallini */
   const MAC = r(0, 0, 320, 210, "#dfe4ec", { rx: 8 }) +
     r(0, 0, 320, 14, "#eef1f6", { rx: 0 }) + t(12, 10, "Finder", { size: 5.8, bold: true, fill: "#4a5365" }) +
@@ -234,41 +236,37 @@
     "scanner-vetro": { tipo: "pc", disegno: function () {
       return r(0, 0, 320, 210, "#f4f6fb", { rx: 8 }) +
         r(48, 40, 224, 20, "#dfe6f1", { rx: 8, stroke: "#cfd6e4" }) +
-        p("M60 60 v-4 M160 60 v-4 M260 60 v-4", { stroke: "#8fb3e8", sw: 2 }) +
         r(48, 62, 224, 108, "#e7ebf3", { rx: 12, stroke: "#cfd6e4" }) +
         r(66, 78, 188, 78, "#cdd9e8", { rx: 5 }) +
         r(108, 84, 100, 66, "#fff", { rx: 2, stroke: "#cfd6e4" }) +
         [0, 1, 2, 3].map(function (i) { return r(118, 96 + i * 12, 76 - i * 8, 4, "#cfd6e4", { rx: 2 }); }).join("") +
-        p("M108 84 l16 8 l-16 8 z", { fill: "#8fb3e8", stroke: "#8fb3e8", sw: 1 }) +
         t(160, 188, "Foglio sul vetro, testo verso il vetro", { size: 6.4, anchor: "middle", fill: "#6b7385" });
-    }, punti: { foglio: [158, 116, 0, 100, 66], vetro: [160, 116, 0, 188, 78] } },
+    }, punti: { foglio: [158, 116, 0, 100, 66] } },
 
     "scanner-tavolo": { tipo: "pc", disegno: function () {
       return r(0, 0, 320, 210, "#f4f6fb", { rx: 8 }) +
         r(96, 34, 128, 34, "#fff", { rx: 2, stroke: "#cfd6e4" }) +
         r(40, 66, 240, 92, "#dfe6f1", { rx: 10, stroke: "#cfd6e4" }) +
         r(40, 66, 240, 12, "#c6cdda", { rx: 4 }) +
+        p("M160 71 v17", { stroke: "#2f7fc0", sw: 2.4 }) + p("M153 80 l7 9 l7 -9", { stroke: "#2f7fc0", sw: 2.4 }) +
         r(56, 96, 208, 6, "#c6cdda", { rx: 3 }) +
         r(56, 132, 34, 14, "#e4572e", { rx: 3 }) + t(96, 143, "blocco del carrello", { size: 6, fill: "#6b7385" }) +
         c(262, 138, 12, "#3a4458") + c(262, 138, 5, "none", { stroke: "#fff", sw: 1.5 }) + p("M262 131 v7", { stroke: "#fff", sw: 1.5 }) +
         t(262, 162, "On/Off", { size: 6, anchor: "middle" }) +
-        t(160, 190, "Sblocca il carrello e infila il foglio", { size: 6.4, anchor: "middle", fill: "#6b7385" });
-    }, punti: { foglio: [160, 51, 0, 128, 34], blocco: [73, 139, 0, 34, 14], accensione: [262, 138, 14] } },
+        t(160, 190, "Freccia sul coperchio: foglio col lato stampato in giù", { size: 6.4, anchor: "middle", fill: "#6b7385" });
+    }, punti: { foglio: [160, 51, 0, 128, 34], blocco: [73, 139, 0, 34, 14] } },
 
     "windows-scanner": { tipo: "pc", disegno: function () {
-      return CORNICE +
-        t(18, 30, "Scanner", { size: 10, bold: true }) +
+      return finestra("Scanner") +
         r(18, 40, 284, 44, "#fff", { rx: 6, stroke: "#cfd6e4" }) +
         t(28, 56, "HP DeskJet 2700", { size: 7.5, bold: true }) + t(28, 72, "Origine: vetro · Pronta", { size: 6.2, fill: "#6b7385" }) +
         t(18, 100, "Profilo", { size: 6.2, fill: "#6b7385" }) +
         r(18, 104, 180, 20, "#fff", { rx: 4, stroke: "#cfd6e4" }) + t(26, 118, "Documento · PDF · 300 dpi · B/N", { size: 6.2 }) +
-        r(18, 146, 120, 26, "#2f7fc0", { rx: 6 }) + t(78, 163, "Acquisisci", { size: 8, fill: "#fff", anchor: "middle", bold: true }) +
-        t(150, 163, "oppure «Scansione»", { size: 6, fill: "#6b7385" });
+        r(18, 146, 120, 26, "#2f7fc0", { rx: 6 }) + t(78, 163, "Acquisisci", { size: 8, fill: "#fff", anchor: "middle", bold: true });
     }, punti: { profilo: [108, 114, 0, 180, 20], acquisisci: [78, 159, 0, 120, 26] } },
 
     "windows-anteprima": { tipo: "pc", disegno: function () {
-      return CORNICE +
-        t(18, 30, "Scansione", { size: 9, bold: true }) +
+      return finestra("Scansione") +
         r(18, 40, 140, 132, "#fff", { rx: 4, stroke: "#cfd6e4" }) +
         [0, 1, 2, 3, 4, 5].map(function (i) { return r(28, 54 + i * 16, i === 5 ? 60 : 118 - i * 6, 4, "#cfd6e4", { rx: 2 }); }).join("") +
         r(170, 40, 130, 60, "#fff", { rx: 6, stroke: "#cfd6e4" }) +
