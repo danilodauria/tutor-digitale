@@ -248,12 +248,12 @@
         r(96, 34, 128, 34, "#fff", { rx: 2, stroke: "#cfd6e4" }) +
         r(40, 66, 240, 92, "#dfe6f1", { rx: 10, stroke: "#cfd6e4" }) +
         r(40, 66, 240, 12, "#c6cdda", { rx: 4 }) +
-        p("M160 71 v17", { stroke: "#2f7fc0", sw: 2.4 }) + p("M153 80 l7 9 l7 -9", { stroke: "#2f7fc0", sw: 2.4 }) +
+        p("M160 71 v19", { stroke: "#2f7fc0", sw: 3 }) + p("M152 80 l8 10 l8 -10", { stroke: "#2f7fc0", sw: 3 }) +
         r(56, 96, 208, 6, "#c6cdda", { rx: 3 }) +
         r(56, 132, 34, 14, "#e4572e", { rx: 3 }) + t(96, 143, "blocco del carrello", { size: 6, fill: "#6b7385" }) +
         c(262, 138, 12, "#3a4458") + c(262, 138, 5, "none", { stroke: "#fff", sw: 1.5 }) + p("M262 131 v7", { stroke: "#fff", sw: 1.5 }) +
         t(262, 162, "On/Off", { size: 6, anchor: "middle" }) +
-        t(160, 190, "Freccia sul coperchio: foglio col lato stampato in giù", { size: 6.4, anchor: "middle", fill: "#6b7385" });
+        t(160, 193, "Freccia sul coperchio: lato stampato in giù", { size: 7.4, anchor: "middle", fill: "#3a4458" });
     }, punti: { foglio: [160, 51, 0, 128, 34], blocco: [73, 139, 0, 34, 14] } },
 
     "windows-scanner": { tipo: "pc", disegno: function () {
