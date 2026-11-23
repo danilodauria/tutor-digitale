@@ -260,6 +260,28 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
     ok(cl.compiti.length === r.compiti, "percorso: assegnare due volte non duplica i compiti aperti");
   }
 
+  /* 14b. percorso di partenza dal test d'ingresso e riepilogo lezione (1.7.0) */
+  {
+    const pm = TD.percorsoDalTest({ pc: 0, smartphone: 2 }, { id: "x", nome: "Anna", cognome: "Rossi" });
+    ok(pm && pm.incontri.length === 2 && pm.origine === "test" && pm.clienteId === "x", "percorso dal test: due percorsi e origine test");
+    const ids = pm.incontri.reduce((a, inc) => a.concat(inc.lezioni), []);
+    ok(new Set(ids).size === ids.length, "percorso dal test: nessuna lezione ripetuta");
+    ok(pm.incontri.every((inc) => inc.lezioni.length >= 2 && inc.lezioni.every((id) => !!TD.lezione(id))), "percorso dal test: lezioni esistenti");
+    ok(pm.incontri[0].lezioni.every((id) => TD.lezione(id).dev === "pc"), "percorso dal test: le lezioni restano nel percorso giusto");
+    ok(TD.percorsoDalTest({}, null) === null, "percorso dal test: senza livelli non si crea nulla");
+    ok(TD.db.impostazioni.essenziale === false, "modalità essenziale: spenta di default");
+
+    const l0 = TD.LEZIONI[0];
+    const cR = { id: "r", nome: "Anna", cognome: "Rossi", compiti: [{ id: "k1", testo: "Esercizio", lezione: l0.id, fatto: false }], registro: [
+      { id: "r1", data: "2026-11-20", ora: "10:00", stato: "svolta", argomenti: [l0.id], note: "Bene" },
+      { id: "r2", data: "2026-11-27", ora: "10:00", stato: "pianificata", argomenti: [] }
+    ] };
+    const rp = TD.riepilogoLezione(cR, cR.registro[0]);
+    ok(rp.lezioni.length === 1 && rp.passi.length >= 2 && rp.compiti.length >= 1 && rp.prossimo.id === "r2", "riepilogo: lezioni, passi, compiti e prossimo incontro");
+    const txt = TD.testoRiepilogo(cR, cR.registro[0]);
+    ok(txt.includes("Prossimo incontro") && txt.includes("Esercizio") && txt.includes(l0.titolo), "riepilogo: testo pronto per WhatsApp");
+  }
+
   /* 15. editor: lezioni e domande proprie (8) */
   {
     const prima = TD.LEZIONI.length, primaD = TD.DOMANDE.length;
@@ -291,6 +313,28 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
   ok(lezioniConGuide.length >= 5, "guide: poche lezioni con guide collegate: " + lezioniConGuide.length);
   ok(lezioniConGuide.every((l) => TD.guidePer(l).every((g) => g.lezioni.indexOf(l.id) >= 0)), "guide: il filtro per lezione pesca guide non collegate");
   ok(lezioniConGuide.every((l) => TD.guidePer(l).length < TD.GUIDE.length), "guide: una lezione le mostra tutte");
+  {
+    const g = TD.GUIDE[0];
+    ok(TD.linkPasso(g.id, 2) === "#/guida/" + g.id + "/2", "guide: link al singolo passo");
+    ok(TD.linkGuida("Smart TV", g.lezioni[0], "stampa").includes("cerca=stampa"), "guide: la ricerca resta nel link");
+    const solo = TD.guidaHtml(g, false, { passo: 2 });
+    ok(solo.includes("guida-solo") && solo.includes(g.passi[1][2].slice(0, 12)) && !solo.includes(TD.linkPasso(g.id, 1)), "guide: pagina del singolo passo");
+    ok(TD.guidaHtml(g, false).includes(TD.linkPasso(g.id, 1)), "guide: ogni passo ha il suo link");
+  }
+
+  /* 13b. cruscotto del tutor (1.7.0) */
+  {
+    const dbP = { attestati: [], clienti: [
+      { id: "p1", nome: "Anna", cognome: "Bianchi", stato: "attivo", completate: ["x"], compiti: [{ testo: "Foto", fatto: false, scadenza: "2026-11-01" }], quiz: [{ data: "2026-11-10", perc: 40 }],
+        registro: [{ data: "2026-10-01", stato: "svolta", importo: 30, pagato: false, durata: 60 }, { data: "2026-12-01", stato: "pianificata", durata: 60 }] },
+      { id: "p2", nome: "Bruno", cognome: "Neri", stato: "concluso", compiti: [{ testo: "Vecchio", fatto: false, scadenza: "2026-01-01" }] }
+    ] };
+    const pp = TD.prioritaTutor(dbP, "2026-11-23");
+    ok(pp.length === 1 && pp[0].cliente.id === "p1" && pp[0].scaduti === 1 && pp[0].daIncassare === 30, "cruscotto: solo clienti attivi con priorità");
+    ok(pp[0].flags.some((f) => f.tipo === "compiti") && pp[0].flags.some((f) => f.tipo === "fermo") && pp[0].flags.some((f) => f.tipo === "quiz") && pp[0].flags.some((f) => f.tipo === "incasso"), "cruscotto: compiti, fermo, quiz e incasso");
+    ok(pp[0].prossimo && pp[0].prossimo.data === "2026-12-01", "cruscotto: prossimo incontro");
+    ok(pp[0].peso >= 10, "cruscotto: priorità pesata");
+  }
 
   /* 17. fattura elettronica (11) */
   {

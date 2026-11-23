@@ -24,7 +24,8 @@ Chi insegna tecnologia a domicilio o nelle associazioni ha bisogno di tre cose i
 | **Verifiche su carta** | Ogni verifica stampata ha un codice di versione e domande, ordine e lettere diversi; la chiave di correzione è un PDF separato per il docente. |
 | **Esercizi** | 147 esercizi pratici filtrabili per percorso, livello e difficoltà, assegnabili come compito o stampabili. |
 | **Palestra** | Mouse (clic, doppio clic, clic destro), trascina e rilascia, tastiera con precisione e velocità, «Truffa o no?» con messaggi veri e falsi, laboratorio password con generatore di frasi-password. |
-| **Clienti** | Persone, enti, aziende e gruppi con partecipanti. Scheda con dati, dispositivi e livelli, test d'ingresso, registro delle lezioni con presenze e incassi, percorso svolto, compiti con esito, risultati dei quiz, esportazione CSV. |
+| **Clienti** | Persone, enti, aziende e gruppi con partecipanti. Scheda con dati, dispositivi e livelli, test d'ingresso, registro delle lezioni con presenze e incassi, percorso svolto, compiti con esito, risultati dei quiz, riepilogo della lezione in PDF o per WhatsApp, esportazione CSV. |
+| **Cruscotto** | Chi ha bisogno di cosa oggi: compiti scaduti, quiz sotto soglia, allievi fermi, incassi arretrati e attestati da valutare, con totali e scorciatoie. |
 | **Liberatoria** | Modulo di iscrizione con informativa privacy (art. 13 GDPR), liberatoria sull'uso dei dispositivi personali e consensi facoltativi. Si firma con il dito o con il mouse, si scarica in PDF, si stampa; c'è anche il **modulo vuoto** da compilare a penna e il **foglio firme** per i gruppi. |
 | **Attestato** | Attestato finale A4 orizzontale con intestatario, ore, periodo, livello raggiunto, competenze acquisite, esito delle verifiche, firma del docente e **codice verificabile** (con cifra di controllo) registrato nell'archivio, più un **QR di verifica** firmato digitalmente: chi lo inquadra apre la pagina [verifica](https://danilodauria.github.io/tutor-digitale/verifica/) e vede codice, intestatario, data e livello. Registro pubblico facoltativo, solo con consenso. |
 | **Preventivi e ricevute** | Dal listino modificabile, numerati per anno; ricevuta per prestazione occasionale con nota sulla marca da bollo e ritenuta d'acconto facoltativa, oppure riepilogo per chi ha partita IVA. |
@@ -32,7 +33,7 @@ Chi insegna tecnologia a domicilio o nelle associazioni ha bisogno di tre cose i
 | **Statistiche** | Ore e incassi per mese, da incassare, clienti per luogo e città, argomenti più richiesti, progressi e andamento dei quiz di ogni allievo; tabella per Excel e riepilogo PDF. |
 | **Percorsi su misura** | Percorsi incontro per incontro, sei modelli pronti, programma in PDF, assegnazione con agenda e compiti, «Il mio percorso» nell'app Allievo. |
 | **Editor** | Lezioni, domande e schermate annotate (frecce, cerchi, numeri, scritte) proprie, con esportazione e importazione. |
-| **Schermate guida** | Diciassette guide disegnate per Android, iPhone, Windows, Mac, Smart TV, stampante, scanner, chiavette e dischi esterni, cuffie Bluetooth, con il punto da toccare a ogni passo, stampabili e filtrabili per dispositivo e per lezione. |
+| **Schermate guida** | Diciassette guide disegnate per Android, iPhone, Windows, Mac, Smart TV, stampante, scanner, chiavette e dischi esterni, cuffie Bluetooth, con il punto da toccare a ogni passo, stampabili, filtrabili per dispositivo e per lezione e con la ricerca per parola. Ogni passo ha il suo link e la sua pagina, con la lettura ad alta voce. |
 | **Modalità aula** | Domanda sulla Smart TV, risposte dai telefoni con un QR, classifica; canale cifrato end-to-end, oppure alzata di mano senza Internet. |
 | **Fattura elettronica** | File XML FatturaPA (FPR12) per forfettari, minimi e regime ordinario, con PDF di cortesia, da caricare nel portale dell'Agenzia delle Entrate. |
 | **Accessibilità** | Contrasto elevato, pulsanti grandi, niente animazioni, «un pulsante alla volta» per chi ha difficoltà motorie; controllo axe WCAG 2 AA. |
@@ -61,7 +62,7 @@ Le due app si installano allo stesso modo e funzionano offline, ognuna con il pr
 3. Il tutor apre il file in **Scambio con gli allievi**: il programma verifica la firma, **corregge il quiz da solo**, segna i compiti fatti nella scheda e registra il risultato.
 4. Il tutor approva o fa rifare i compiti pratici e le foto, aggiunge un commento e **rimanda la correzione**, che l'allievo vede domanda per domanda con le spiegazioni.
 
-A lezione basta un **QR code**: l'allievo inquadra con la fotocamera il kit, la correzione o la sessione di assistenza e l'app si apre già pronta. Le **scadenze** compaiono nella sua home, finiscono nel calendario del telefono con un avviso il giorno prima e, dove il sistema lo permette, arrivano come notifica.
+A lezione basta un **QR code**: l'allievo inquadra con la fotocamera il kit, la correzione o la sessione di assistenza e l'app si apre già pronta. Le **scadenze** compaiono nella sua home, finiscono nel calendario del telefono con un avviso il giorno prima e, dove il sistema lo permette, arrivano come notifica. La **modalità essenziale** riduce la home a quattro azioni grandi, per chi si confonde tra troppi pulsanti.
 
 ### Assistenza a distanza
 

@@ -84,14 +84,33 @@
         ris[pc.id] = liv;
       });
       const cl = TD.cliente(o.cliente);
-      document.getElementById("esitoTest").innerHTML = '<section class="card"><h2>Da dove partire</h2><ul class="list">' + Object.keys(ris).map(function (k) { return "<li><span>" + TD.iconaPercorso(k) + E(TD.percorso(k).nome) + "</span>" + TD.badgeLiv(ris[k]) + ' <a href="#/percorso/' + E(k) + '">Apri il percorso</a></li>'; }).join("") + "</ul>" +
-        (cl ? '<button class="btn btn-primary" type="button" id="salvaTest">' + I("check") + "Salva nella scheda di " + E(TD.nomeCliente(cl)) + "</button>" : '<p class="muted">Scegli un cliente per salvare i livelli.</p>') + "</section>";
-      const st = document.getElementById("salvaTest");
-      if (st) st.onclick = function () {
+      const consigliato = TD.percorsoDalTest ? TD.percorsoDalTest(ris, cl) : null;
+      function salvaLivelli() {
+        if (!cl) return false;
         cl.livelli = Object.assign(cl.livelli || {}, ris);
         cl.dispositivi = Object.keys(ris);
         cl.testIngresso = { data: TD.oggi(), livelli: ris };
-        TD.salva(); TD.toast("Livelli salvati."); TD.vai("#/cliente/" + cl.id);
+        TD.salva();
+        return true;
+      }
+      document.getElementById("esitoTest").innerHTML = '<section class="card"><h2>Da dove partire</h2><ul class="list">' + Object.keys(ris).map(function (k) { return "<li><span>" + TD.iconaPercorso(k) + E(TD.percorso(k).nome) + "</span>" + TD.badgeLiv(ris[k]) + ' <a href="#/percorso/' + E(k) + '">Apri il percorso</a></li>'; }).join("") + "</ul>" +
+        (consigliato ? '<h3>Percorso di partenza</h3><p class="muted">Un incontro per percorso, con le prime lezioni dal livello emerso. Potrai cambiare tutto nell\'editor prima di assegnarlo.</p><ol class="pm-incontri compatto">' +
+          consigliato.incontri.map(function (inc) { return '<li><strong>' + E(inc.titolo) + '</strong><br><small>' + inc.lezioni.map(function (id) { const l = TD.lezione(id); return E(l ? l.titolo : id); }).join(" · ") + "</small></li>"; }).join("") + "</ol>" : "") +
+        '<div class="actions">' +
+        (cl ? '<button class="btn btn-primary" type="button" id="salvaTest">' + I("check") + "Salva i livelli nella scheda di " + E(TD.nomeCliente(cl)) + "</button>" : '<p class="muted">Scegli un cliente per salvare i livelli e creare il percorso.</p>') +
+        (consigliato && cl ? '<button class="btn" type="button" id="creaPercorso">' + I("layers") + "Crea il percorso e aprilo</button>" : "") + "</div></section>";
+      const st = document.getElementById("salvaTest");
+      if (st) st.onclick = function () {
+        if (!salvaLivelli()) return;
+        TD.toast("Livelli salvati."); TD.vai("#/cliente/" + cl.id);
+      };
+      const cp = document.getElementById("creaPercorso");
+      if (cp) cp.onclick = function () {
+        if (!salvaLivelli()) return;
+        const pm = TD.creaPercorsoDalTest(cl, ris);
+        if (!pm) { TD.toast("Nessun percorso da creare: scegli almeno un dispositivo."); return; }
+        TD.salva(); TD.toast("Percorso di partenza creato: controlla e assegna.");
+        TD.vai("#/percorso-misura/" + pm.id + "?cliente=" + cl.id);
       };
       document.getElementById("esitoTest").scrollIntoView({ behavior: "smooth" });
     };

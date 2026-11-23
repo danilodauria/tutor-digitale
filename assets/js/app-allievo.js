@@ -9,6 +9,7 @@
   "use strict";
   const E = TD.esc, I = TD.icona;
   const db = function () { return TD.db; };
+  function essenziale() { return !!(db().impostazioni || {}).essenziale; }
 
   function consegna(id) { return (db().consegne || []).find(function (k) { return k.id === id; }); }
   function aperte() { return (db().consegne || []).filter(function (k) { return !k.inviata; }); }
@@ -174,6 +175,7 @@
     const ap = aperte(), nc = compitiAperti();
     const nuoveCorr = (d.consegne || []).filter(function (k) { return k.correzione && !k.correzioneVista; });
     const devs = (d.allievo.dispositivi || []).length ? d.allievo.dispositivi : TD.PERCORSI.map(function (p) { return p.id; });
+    if (essenziale()) { homeEssenziale(app, d, t, ap, nc, nuoveCorr); return; }
     app.innerHTML =
       '<section class="hero allievo-hero"><div class="wrap">' +
         '<p class="hero-kicker"><span class="spia" data-spia><i></i><span class="spia-testo">Online</span></span>' + (d.allievo.ente ? E(d.allievo.ente) : "Il tuo spazio per imparare") + "</p>" +
@@ -206,12 +208,41 @@
         '<section class="card tutor-card"><h2>' + I("user") + "Il tuo tutor</h2><p><strong>" + E(t.nome || "") + "</strong>" + (t.qualifica ? " · " + E(t.qualifica) : "") + "</p><p>" +
           (t.telefono ? '<a class="btn" href="tel:' + E(t.telefono) + '">' + I("phone") + E(t.telefono) + "</a> " : "") +
           (t.email ? '<a class="btn" href="mailto:' + E(t.email) + '">' + I("doc") + E(t.email) + "</a>" : "") + "</p></section>" +
+        '<div class="actions"><button class="btn btn-ghost" id="attEssenziale">' + I("eye") + "Modalità essenziale: mostra solo l'essenziale</button></div>" +
       "</div>";
     dopoHome();
   });
+  function homeEssenziale(app, d, t, ap, nc, nuoveCorr) {
+    const sc = TD.scadenze().slice(0, 3);
+    app.innerHTML =
+      '<section class="hero allievo-hero"><div class="wrap">' +
+        '<p class="hero-kicker"><span class="spia" data-spia><i></i><span class="spia-testo">Online</span></span>' + (d.allievo.ente ? E(d.allievo.ente) : "Il tuo spazio per imparare") + "</p>" +
+        "<h1>Ciao, " + E(nomeBreve()) + "!</h1>" +
+        '<p class="hero-lead">' + (nc ? "Hai <strong>" + nc + " compit" + (nc === 1 ? "o" : "i") + "</strong> da fare." : (sc.length ? "Il prossimo impegno: <strong>" + E(sc[0].testo) + "</strong> · " + quando(sc[0].g) + "." : "Niente compiti in sospeso: scegli cosa vuoi fare.")) + "</p>" +
+        '<div class="hero-actions"><a class="btn btn-primary btn-lg" href="#/compiti">' + I("pen") + "I miei compiti</a>" + (ap.length ? '<a class="btn btn-lg" href="#/invia">' + I("upload") + "Invia al tutor</a>" : "") + "</div>" +
+      "</div></section>" +
+      '<div class="wrap">' +
+        (nuoveCorr.length ? '<a class="note-box ok-box" href="#/correzione/' + E(nuoveCorr[0].id) + '">' + I("award") + "<div><strong>È arrivata la correzione dei compiti del " + E(TD.dataIt(nuoveCorr[0].data)) + "</strong><br>Tocca per vedere com'è andata.</div></a>" : "") +
+        '<section class="tiles tiles-essenziali">' +
+          tile("#/compiti", "pen", "Compiti", nc ? nc + " da fare" : "Tutto fatto") +
+          tile("#/percorsi", "book", "Lezioni", "Ripassa quando vuoi") +
+          tile("#/remoto", "screen", "Aiuto", "Codice e password") +
+          tile("#/info", "user", "Il mio profilo", "Dati e impostazioni") +
+        "</section>" +
+        (sc.length ? '<section class="card"><h2>' + I("clock") + "Prossime scadenze</h2>" + listaScadenze(sc) + '<div class="actions"><a class="btn btn-sm" href="#/compiti">Tutti i compiti</a></div></section>' : "") +
+        '<section class="card tutor-card"><h2>' + I("user") + "Il tuo tutor</h2><p><strong>" + E(t.nome || "") + "</strong>" + (t.qualifica ? " · " + E(t.qualifica) : "") + "</p>" +
+          ((t.telefono || t.email) ? '<div class="actions">' + (t.telefono ? '<a class="btn btn-primary" href="tel:' + E(t.telefono) + '">' + I("phone") + "Chiama</a>" : "") + (t.email ? '<a class="btn" href="mailto:' + E(t.email) + '">' + I("doc") + "Scrivi</a>" : "") + "</div>" : '<p class="muted">Chiedi al tutor i suoi contatti.</p>') + "</section>" +
+        '<div class="actions"><button class="btn btn-ghost" id="mostraTutto">' + I("layers") + "Mostra tutte le funzioni</button></div>" +
+      "</div>";
+    dopoHome();
+  }
   function dopoHome() {
     const b = document.getElementById("attAvvisi");
     if (b) b.onclick = function () { attivaAvvisi().then(function (ok) { if (ok) TD.render(); }); };
+    const ae = document.getElementById("attEssenziale");
+    if (ae) ae.onclick = function () { db().impostazioni.essenziale = true; TD.salva(); TD.render(); };
+    const mt = document.getElementById("mostraTutto");
+    if (mt) mt.onclick = function () { db().impostazioni.essenziale = false; TD.salva(); TD.render(); };
     TD.controllaAvvisi();
   }
   function tile(h, ic, t, d) { return '<a class="tile" href="' + h + '"><span class="tile-ico">' + I(ic) + "</span><strong>" + E(t) + "</strong><small>" + E(d) + "</small></a>"; }
@@ -449,11 +480,13 @@
         '<section class="card"><h2>' + I("alert") + 'Promemoria</h2><p>' + ((d.impostazioni || {}).avvisi ? "Gli avvisi delle scadenze sono attivi." : "Ricevi un avviso il giorno prima della scadenza dei compiti.") + '</p><div class="actions">' + ((d.impostazioni || {}).avvisi ? '<button class="btn" id="disAvvisi">Disattiva gli avvisi</button>' : '<button class="btn btn-primary" id="attAvvisi2">' + I("alert") + "Attiva gli avvisi</button>") + '</div><p class="muted text-small">Sui telefoni dove le notifiche non arrivano ad app chiusa, usa «Promemoria nel calendario» nei compiti: il calendario avvisa sempre.</p></section>' +
         TD.cardAccessibilita() +
         '<section class="card"><h2>' + I("eye") + 'Lettura comoda</h2><p>Usa il pulsante <strong>Aa</strong> in alto per ingrandire i caratteri e il sole/luna per il tema scuro. Nelle lezioni c\'è «Leggi ad alta voce».</p></section>' +
+        '<section class="card"><h2>' + I("layers") + 'Modalità essenziale</h2><p>' + ((d.impostazioni || {}).essenziale ? "È attiva: la home mostra solo compiti, lezioni, aiuto e profilo, con azioni grandi." : "Una home con quattro azioni grandi, per chi si confonde tra troppi pulsanti.") + '</p><div class="actions"><button class="btn" id="toggleEss">' + ((d.impostazioni || {}).essenziale ? "Mostra tutte le funzioni" : "Attiva la modalità essenziale") + "</button></div></section>" +
         '<section class="card"><h2>' + I("info") + 'Informazioni</h2><p>Tutor Digitale · Allievo, versione ' + TD.VERSIONE + '. Ideato e sviluppato da Danilo D\'Auria. Codice MIT, contenuti CC BY-NC-SA 4.0.</p><p><a href="../#/licenze">Licenze</a> · <a href="../#/installa">Come si installa</a></p></section>' +
       "</div></div>";
     TD.collegaAccessibilita();
     const a2 = document.getElementById("attAvvisi2"); if (a2) a2.onclick = function () { attivaAvvisi().then(function () { TD.render(); }); };
     const d2 = document.getElementById("disAvvisi"); if (d2) d2.onclick = function () { d.impostazioni.avvisi = false; TD.salva(); TD.controllaAvvisi(); TD.render(); };
+    const te = document.getElementById("toggleEss"); if (te) te.onclick = function () { d.impostazioni.essenziale = !d.impostazioni.essenziale; TD.salva(); TD.render(); };
     document.getElementById("exp").onclick = function () { TD.scarica(new Blob([JSON.stringify(TD.db)], { type: "application/json" }), "tutor-digitale-allievo-copia_" + TD.oggi() + ".json"); };
     document.getElementById("imp").onchange = function () {
       const r = new FileReader(); r.onload = function () { try { const o = TD.jsonSicuro(r.result); if (!("consegne" in o)) throw 0; TD.db = o; TD.salva(); TD.toast("Copia ripristinata."); TD.vai("#/"); } catch (e) { TD.toast("Non è una copia valida."); } }; r.readAsText(this.files[0]);

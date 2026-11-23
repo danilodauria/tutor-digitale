@@ -21,6 +21,65 @@
   function presente(r, x) { return x.id === "_" ? true : (r.presenti || []).indexOf(x.id) >= 0; }
   function argomenti(r) { return (r.argomenti || []).map(function (id) { const l = TD.lezione(id); return l ? l.titolo : id; }).join("; "); }
 
+  /* ======================================================= (7) cruscotto del tutor */
+  TD.prioritaTutor = function (db, oggi) {
+    oggi = oggi || TD.oggi();
+    const giorniDa = function (data) {
+      if (!data) return null;
+      return Math.round((new Date(oggi + "T12:00:00") - new Date(data + "T12:00:00")) / 86400000);
+    };
+    const out = [];
+    (db.clienti || []).forEach(function (c) {
+      if (c.stato === "concluso") return;
+      const reg = (c.registro || []).filter(function (r) { return r.stato !== "pianificata" && r.data; });
+      const compiti = (c.compiti || []).filter(function (k) { return !k.fatto; });
+      const scaduti = compiti.filter(function (k) { return k.scadenza && k.scadenza < oggi; });
+      const quiz = (c.quiz || []).slice().sort(function (a, b) { return String(a.data).localeCompare(String(b.data)); });
+      const ultimoQuiz = quiz[quiz.length - 1];
+      const media = TD.mediaQuiz(c);
+      const quizBasso = ultimoQuiz ? Number(ultimoQuiz.perc) < 60 : (media != null && media < 60);
+      const ultima = reg.slice().sort(function (a, b) { return String(a.data).localeCompare(String(b.data)); }).pop();
+      const fermo = ultima ? giorniDa(ultima.data) : (c.creato ? giorniDa(c.creato) : null);
+      const daIncassare = reg.filter(function (r) { return Number(r.importo) > 0 && !r.pagato && r.data < oggi; }).reduce(function (s, r) { return s + Number(r.importo); }, 0);
+      const prossimo = (c.registro || []).filter(function (r) { return r.stato === "pianificata" && r.data >= oggi; }).sort(function (a, b) { return (a.data + (a.ora || "")).localeCompare(b.data + (b.ora || "")); })[0] || null;
+      const attestato = (c.completate || []).length >= 8 && (media == null || media >= 60) && !(db.attestati || []).some(function (a) { return a.cliente === c.id; });
+      const flags = [];
+      if (compiti.length) flags.push({ tipo: "compiti", icona: "alert", testo: scaduti.length ? scaduti.length + (scaduti.length === 1 ? " compito scaduto" : " compiti scaduti") : compiti.length + (compiti.length === 1 ? " compito aperto" : " compiti aperti"), peso: scaduti.length ? 4 : 2, href: "#/cliente/" + c.id + "?tab=compiti" });
+      if (fermo != null && fermo >= 21) flags.push({ tipo: "fermo", icona: "clock", testo: "Fermo da " + fermo + " giorni", peso: 3, href: "#/cliente/" + c.id + "?tab=registro" });
+      if (quizBasso) flags.push({ tipo: "quiz", icona: "quiz", testo: "Quiz " + (ultimoQuiz ? ultimoQuiz.perc + "%" : "media " + media + "%"), peso: 2, href: "#/cliente/" + c.id + "?tab=quiz" });
+      if (daIncassare > 0) flags.push({ tipo: "incasso", icona: "euro", testo: TD.euro(daIncassare) + " da incassare", peso: 1, href: "#/cliente/" + c.id + "?tab=registro" });
+      if (attestato) flags.push({ tipo: "attestato", icona: "award", testo: "Attestato da valutare", peso: 1, href: "#/cliente/" + c.id + "?tab=percorso" });
+      if (!flags.length) return;
+      out.push({ cliente: c, flags: flags, peso: flags.reduce(function (s, f) { return s + f.peso; }, 0), scaduti: scaduti.length, daIncassare: daIncassare, fermo: fermo, prossimo: prossimo });
+    });
+    return out.sort(function (a, b) { return b.peso - a.peso || TD.nomeCliente(a.cliente).localeCompare(TD.nomeCliente(b.cliente)); });
+  };
+
+  TD.rotta("/cruscotto", function (app) {
+    const lista = TD.prioritaTutor(TD.db, TD.oggi());
+    const scaduti = lista.reduce(function (s, x) { return s + x.scaduti; }, 0);
+    const daIncassare = lista.reduce(function (s, x) { return s + x.daIncassare; }, 0);
+    const fermi = lista.filter(function (x) { return x.flags.some(function (f) { return f.tipo === "fermo"; }); }).length;
+    app.innerHTML = TD.intest("Cruscotto del tutor", "Chi ha bisogno di cosa, oggi: compiti scaduti, quiz sotto soglia, allievi fermi, incassi e attestati da valutare. Le priorità vengono dal registro, dai compiti e dai quiz.",
+      '<div class="actions"><a class="btn" href="#/agenda">' + I("calendar") + 'Agenda</a><a class="btn" href="#/clienti">' + I("users") + "Tutti i clienti</a></div>") +
+      '<div class="wrap">' +
+        '<div class="stats">' +
+          '<a class="stat" href="#/clienti">' + I("users") + "<strong>" + lista.length + "</strong><span>clienti da seguire</span></a>" +
+          '<a class="stat" href="#/clienti">' + I("alert") + "<strong>" + scaduti + "</strong><span>compiti scaduti</span></a>" +
+          '<a class="stat" href="#/statistiche">' + I("euro") + "<strong>" + TD.euro(daIncassare) + "</strong><span>da incassare</span></a>" +
+          '<a class="stat" href="#/clienti">' + I("clock") + "<strong>" + fermi + "</strong><span>allievi fermi</span></a>" +
+        "</div>" +
+        (lista.length ? '<div class="grid-2">' + lista.map(function (x) {
+          const c = x.cliente;
+          return '<article class="card"><div class="block-head"><h3><a href="#/cliente/' + c.id + '">' + E(TD.nomeCliente(c)) + '</a></h3><span class="pill">' + x.peso + " priorità</span></div>" +
+            '<ul class="list">' + x.flags.map(function (f) { return '<li>' + I(f.icona) + ' <a href="' + E(f.href) + '">' + E(f.testo) + "</a></li>"; }).join("") + "</ul>" +
+            (x.prossimo ? '<p class="muted text-small">Prossimo incontro: ' + E(TD.dataIt(x.prossimo.data)) + (x.prossimo.ora ? " · " + E(x.prossimo.ora) : "") + "</p>" : '<p class="muted text-small">Nessun prossimo incontro in agenda.</p>') +
+            '<div class="actions"><a class="btn btn-sm" href="#/cliente/' + c.id + '">Apri la scheda</a><a class="btn btn-sm btn-ghost" href="#/agenda">Agenda</a></div></article>';
+        }).join("") + "</div>" : '<div class="card empty"><p>Nessuna priorità: compiti in ordine, quiz sopra la soglia, nessun incasso arretrato. Buon lavoro.</p><a class="btn" href="#/agenda">Guarda l\'agenda</a></div>') +
+        '<section class="card"><h2>Scorciatoie</h2><div class="actions"><a class="btn btn-primary" href="#/agenda">' + I("calendar") + 'Agenda</a><a class="btn" href="#/statistiche">' + I("layers") + 'Statistiche</a><a class="btn" href="#/strumenti/test">' + I("target") + 'Test d\'ingresso</a><a class="btn" href="#/documenti">' + I("doc") + "Documenti</a></div></section>" +
+      "</div>";
+  });
+
   /* ======================================================= (6) registro presenze */
   TD.incontriDelMese = function (c, ym, conPianificati) {
     return (c.registro || []).filter(function (r) { return String(r.data).slice(0, 7) === ym && (conPianificati || r.stato !== "pianificata"); })

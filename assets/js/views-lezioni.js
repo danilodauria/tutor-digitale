@@ -71,6 +71,7 @@
           tile("#/esercizi", "target", "Esercizi", "Facile, medio, esperto per ogni lezione") +
           tile("#/allievi", "upload", "App allievi", "Compiti a distanza, correzione automatica") +
           tile("#/clienti", "users", "Clienti", "Schede, registro, compiti, progressi") +
+          tile("#/cruscotto", "target", "Cruscotto", "Chi ha bisogno di cosa, oggi") +
           tile("#/documenti", "doc", "Documenti", "Liberatoria, attestati, preventivi, ricevute") +
           tile("#/agenda", "calendar", "Agenda", "Appuntamenti ed esportazione calendario") +
           tile("#/remoto", "screen", "Assistenza a distanza", "Codice e password che si rigenera") +

@@ -8,7 +8,7 @@ window.TD = window.TD || {};
 (function () {
   "use strict";
 
-  TD.VERSIONE = "1.6.1";
+  TD.VERSIONE = "1.7.0";
   TD.MODO = TD.MODO || "tutor";
   const KEY = TD.MODO === "allievo" ? "tutor-digitale-allievo:v1:db" : "tutor-digitale:v1:db";
   TD.CHIAVE = KEY;
@@ -23,7 +23,7 @@ window.TD = window.TD || {};
       attestati: [],
       memo: {},
       allievo: null, tutor: null, segreto: "", consegne: [], allenamenti: [], ripassate: [],
-      impostazioni: { tema: "", caratteri: "normale", correzione: "subito" },
+      impostazioni: { tema: "", caratteri: "normale", correzione: "subito", essenziale: false },
       creato: new Date().toISOString()
     };
   }

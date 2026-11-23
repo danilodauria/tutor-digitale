@@ -1,5 +1,14 @@
 # Versioni
 
+## 1.7.0 · 23 novembre 2026
+
+- **Percorso di partenza dal test d'ingresso**: dopo il test il tutor vede subito il percorso consigliato (un incontro per percorso, con le prime lezioni dal livello emerso) e con un pulsante lo crea e apre nell'editor, pronto da controllare e assegnare.
+- **Riepilogo della lezione per l'allievo**: dalla scheda cliente, una lezione svolta diventa un PDF da lasciare e un messaggio da copiare in WhatsApp con argomenti, passi da ricordare, compiti e prossimo incontro.
+- **Guide centrate sul singolo passo**: `#/guida/<id>/<passo>` apre solo il passo richiesto, con disegno, lettura ad alta voce e link da copiare; ogni passo della guida completa ha il suo collegamento. Nella pagina guide si cerca per parola e il filtro per lezione resta insieme alla ricerca.
+- **Modalità essenziale dell'app Allievo**: una home con quattro azioni grandi (compiti, lezioni, aiuto, profilo) e i contatti del tutor; si attiva dalla home o dal profilo e si disattiva con un pulsante.
+- **Cruscotto del tutor**: una pagina che mette in fila chi ha bisogno di cosa oggi — compiti scaduti, quiz sotto soglia, allievi fermi da tre settimane, incassi arretrati e attestati da valutare — con totali e collegamenti alla scheda e all'agenda.
+- **Aggiornamento garantito**: nuova versione della cache del service worker (sito e app Allievo), così chi aveva già la 1.6.1 riceve i file nuovi al primo ricaricamento, senza perdere dati e impostazioni.
+
 ## 1.6.1 · 23 novembre 2026
 
 - **Schermate guida ripulite**: la cornice di Windows, lo sfondo e la barra delle applicazioni ora si disegnano una volta sola e le condividono tutte le scene; tolti i dettagli decorativi che non servono al passo (orologio, campo «Cerca», icone sulla scrivania, tasti colorati del telecomando, barra della TV). Nessun passo è cambiato.

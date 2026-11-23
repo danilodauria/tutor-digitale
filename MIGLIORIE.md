@@ -33,13 +33,13 @@ Elenco ragionato, dal più utile e semplice al più ambizioso. ★ = impatto, �
 
 ## Dopo la 1.6.0
 
-Idee emerse lavorando al percorso Accessori e alle schermate guida. Sono proposte, non programmate: nessuna è ancora fatta, quindi nessuna porta la spunta.
+Idee emerse lavorando al percorso Accessori e alle schermate guida. La 1.7.0 ha realizzato il percorso di partenza dal test d'ingresso, il riepilogo della lezione per l'allievo, le guide sul singolo passo (21), la modalità essenziale dell'app Allievo e il cruscotto del tutor.
 
-21. **Link al singolo passo** ★ ⏱ — `#/guida/g-stampante-mac/4` apre la guida già sul passo 4, da mandare all'allievo quando è bloccato proprio lì, invece del link alla guida intera.
+21. ✅ *fatto in 1.7.0* — **Link al singolo passo** ★ ⏱ — `#/guida/g-stampante-mac/4` apre la guida già sul passo 4, da mandare all'allievo quando è bloccato proprio lì, invece del link alla guida intera.
 22. **Lettura ad alta voce passo per passo** ★ ⏱ — «Leggi ad alta voce» evidenzia il passo in corso e si ferma a fine passo; chi ha bisogno riascolta solo quello, senza far ripartire tutta la guida.
 23. **Tutte le guide in un solo PDF** ★★ ⏱ — un pulsante «Stampa tutte le guide» con indice e una guida dopo l'altra, da lasciare all'allievo come fascicolo: oggi si scarica un PDF alla volta.
 24. **Guide leggibili in bianco e nero** ★★ ⏱ — variante per chi stampa senza colore: il cerchio arancione diventa un tratteggio con il numero in nero e gli sfondi azzurri spariscono, senza perdere il punto da toccare.
-25. **Ricerca e filtro per lezione nella pagina guide** ★★ ⏱ — oltre al filtro per dispositivo, cercare per parola («stampante», «Wi-Fi») e trovare «le guide di questa lezione» dentro ogni lezione, senza girare per l'elenco.
+25. ✅ *fatto in 1.7.0* — **Ricerca e filtro per lezione nella pagina guide** ★★ ⏱ — oltre al filtro per dispositivo, cercare per parola («stampante», «Wi-Fi») e trovare «le guide di questa lezione» dentro ogni lezione, senza girare per l'elenco.
 26. **Nuove guide per gli accessori senza disegno** ★★ ⏱⏱ — webcam in videochiamata, secondo schermo, mouse e tastiera Bluetooth: le lezioni `accessori-2-1` e `accessori-2-2` oggi spiegano a parole ciò che le altre mostrano passo per passo.
 27. **Varianti per modello** ★★ ⏱⏱ — Samsung e Xiaomi per Android, HP ed Epson per le stampanti, macOS Ventura e precedenti (dove si chiama ancora «Preferenze di Sistema»): la guida mostra la variante giusta invece di avvisare che «le scritte possono cambiare».
 28. **Controllo automatico dei disegni** ★★ ⏱⏱ — screenshot di riferimento delle scene e confronto a ogni modifica, per accorgersi da soli di un numero che copre un testo o di un riquadro fuori bersaglio: nella 1.6.0 i due casi sono stati trovati guardando le pagine a mano.

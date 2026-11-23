@@ -542,15 +542,25 @@
   /* indirizzo della pagina guide con i due filtri insieme; encodeURIComponent
      e non URLSearchParams: il router decodifica con decodeURIComponent e
      scriverebbe «+» al posto dello spazio di «Smart TV» */
-  TD.linkGuida = function (dispositivo, lezione) {
+  TD.linkGuida = function (dispositivo, lezione, cerca) {
     const p = [];
     if (dispositivo) p.push("d=" + encodeURIComponent(dispositivo));
     if (lezione) p.push("l=" + encodeURIComponent(lezione));
+    if (cerca) p.push("cerca=" + encodeURIComponent(cerca));
     return "#/guide" + (p.length ? "?" + p.join("&") : "");
   };
-  TD.guidaHtml = function (g, compatta) {
-    return '<div class="guida' + (compatta ? " compatta" : "") + '"><h3>' + (compatta ? '<a href="#/guida/' + g.id + '">' + E(g.titolo) + "</a>" : E(g.titolo)) + ' <span class="pill">' + E(g.dispositivo) + '</span></h3><ol class="guida-passi">' +
-      g.passi.map(function (x, i) { return "<li>" + TD.svgPasso(x[0], x[1], i + 1, { etichetta: "Passo " + (i + 1) + ": " + x[2] }) + "<p><strong>" + (i + 1) + ".</strong> " + E(x[2]) + "</p></li>"; }).join("") + "</ol></div>";
+  TD.linkPasso = function (id, passo) { return "#/guida/" + encodeURIComponent(id) + "/" + Number(passo); };
+  TD.guidaHtml = function (g, compatta, opz) {
+    opz = opz || {};
+    const solo = Number(opz.passo) || 0;
+    const passi = solo ? [g.passi[solo - 1]] : g.passi;
+    if (!passi[0]) return "";
+    return '<div class="guida' + (compatta ? " compatta" : "") + (solo ? " guida-solo" : "") + '"><h3>' + (compatta ? '<a href="#/guida/' + g.id + '">' + E(g.titolo) + "</a>" : E(g.titolo)) + ' <span class="pill">' + E(g.dispositivo) + '</span></h3><ol class="guida-passi">' +
+      passi.map(function (x, i) {
+        const n = solo || i + 1;
+        return "<li>" + TD.svgPasso(x[0], x[1], n, { etichetta: "Passo " + n + ": " + x[2] }) + "<p><strong>" + n + ".</strong> " + E(x[2]) + "</p>" +
+          (!compatta && !solo ? '<a class="btn btn-sm btn-ghost passo-link" href="' + E(TD.linkPasso(g.id, n)) + '">' + I("eye") + "Solo questo passo</a>" : "") + "</li>";
+      }).join("") + "</ol></div>";
   };
 
   /* PDF della guida: i disegni SVG diventano immagini sul foglio */
@@ -654,20 +664,24 @@
   };
 
   /* ------------------------------------------------------------ pagine */
-  TD.rotta("/guide", function (app, q) {
+  TD.rotta("/guide", function (app, p, q) {
     const disp = q.d || "";
     const lez = TD.lezione(q.l);
     const lezId = lez ? lez.id : "";
+    const cerca = (q.cerca || "").trim();
+    const cercaM = cerca.toLowerCase();
+    const testoGuida = function (g) { return [g.titolo, g.dispositivo].concat(g.passi.map(function (x) { return x[2]; })).join(" ").toLowerCase(); };
     const elenco = (lez ? TD.guidePer(lez) : TD.GUIDE).filter(function (g) {
-      return !disp || g.dispositivo === disp;
+      return (!disp || g.dispositivo === disp) && (!cercaM || testoGuida(g).indexOf(cercaM) >= 0);
     });
     const chips = [""].concat(TD.GUIDE_DISPOSITIVI).map(function (x) {
-      return '<a class="chip' + (x === disp ? " on" : "") + '" href="' + E(TD.linkGuida(x, lezId)) + '">' + E(x || "Tutte") + "</a>";
+      return '<a class="chip' + (x === disp ? " on" : "") + '" href="' + E(TD.linkGuida(x, lezId, cerca)) + '">' + E(x || "Tutte") + "</a>";
     }).join("");
     const mie = TD.MODO === "allievo" ? [] : (TD.db.schermate || []);
     app.innerHTML = TD.intest("Schermate guida",
       "Disegni passo per passo, con il cerchio dove toccare: da mostrare a lezione, proiettare sulla TV o stampare per casa." +
         (lez ? ' Solo le guide collegate a <a href="' + E("#/lezione/" + lez.id) + '">' + E(lez.titolo) + "</a>." : ""),
+      '<div class="toolbar"><form class="search" id="gCerca" role="search"><input type="search" name="cerca" value="' + E(cerca) + '" placeholder="Cerca: Wi-Fi, foto, stampa..." aria-label="Cerca nelle guide"><button class="btn btn-sm" type="submit">Cerca</button></form></div>' +
       '<nav class="chips">' + chips + "</nav>" +
       '<label class="field" style="max-width:26rem"><span>Filtra per lezione</span><select id="gLez"><option value="">Tutte le lezioni</option>' +
       TD.PERCORSI.map(function (pc) {
@@ -677,14 +691,16 @@
         }).join("") + "</optgroup>" : "";
       }).join("") +
       "</select></label>") +
-      '<div class="wrap">' + (elenco.length ? "" : '<p class="muted">Nessuna guida con questo filtro.</p>') + '<div class="guide-grid">' + elenco.map(function (g) {
+      '<div class="wrap">' + (elenco.length ? "" : '<p class="muted">' + (cerca ? "Nessuna guida per «" + E(cerca) + "»." : "Nessuna guida con questo filtro.") + "</p>") + '<div class="guide-grid">' + elenco.map(function (g) {
         return '<a class="card guida-card" href="#/guida/' + g.id + '">' + TD.svgPasso(g.passi[0][0], g.passi[0][1], 1) + "<h3>" + E(g.titolo) + '</h3><p class="muted text-small">' + E(g.dispositivo) + " · " + g.passi.length + " passi</p></a>";
       }).join("") + "</div>" +
       (TD.MODO === "allievo" ? "" : '<section class="card"><h2>' + I("pen") + 'Le tue schermate annotate</h2><p>Fotografa o cattura lo schermo del dispositivo del cliente, poi aggiungi frecce, cerchi e numeri. Le schermate si possono inserire nelle lezioni create con l\'editor.</p>' +
         '<div class="actions"><label class="btn btn-primary">' + I("upload") + 'Nuova schermata<input type="file" id="gNuova" accept="image/*" hidden></label><a class="btn" href="#/editor">' + I("book") + "Editor delle lezioni</a></div>" +
         (mie.length ? '<div class="guide-grid">' + mie.map(function (s) { return '<figure class="card schermata"><img src="' + E(s.src) + '" alt="' + E(s.titolo) + '"><figcaption>' + E(s.titolo) + ' <button class="icon-btn" data-via="' + s.id + '" aria-label="Elimina la schermata">' + I("trash") + "</button></figcaption></figure>"; }).join("") + "</div>" : "") + "</section>") +
       "</div>";
-    document.getElementById("gLez").onchange = function () { TD.vai(TD.linkGuida(disp, this.value)); };
+    document.getElementById("gLez").onchange = function () { TD.vai(TD.linkGuida(disp, this.value, cerca)); };
+    const gc = document.getElementById("gCerca");
+    if (gc) gc.onsubmit = function (e) { e.preventDefault(); TD.vai(TD.linkGuida(disp, lezId, this.cerca.value.trim())); };
     const n = document.getElementById("gNuova");
     if (n) n.onchange = function () {
       const f = this.files[0]; if (!f) return;
@@ -706,5 +722,25 @@
       (g.lezioni.length ? '<p class="muted">Lezioni collegate: ' + g.lezioni.map(function (id) { const l = TD.lezione(id); return l ? '<a href="#/lezione/' + id + '">' + E(l.titolo) + "</a>" : ""; }).filter(Boolean).join(" · ") + "</p>" : "") + "</div>";
     document.getElementById("gPdf").onclick = function () { TD.pdfGuida(g).then(function (pg) { TD.scaricaPdf(pg, "guida-" + g.id.replace(/^g-/, "") + ".pdf", { titolo: g.titolo }); }); };
     document.getElementById("gLeggi").onclick = function () { TD.leggi(g.titolo + ". " + g.passi.map(function (x, i) { return "Passo " + (i + 1) + ". " + x[2]; }).join(" ")); };
+  });
+
+  TD.rotta("/guida/:id/:passo", function (app, par) {
+    const g = TD.guida(par.id); if (!g) { TD.vai("#/guide"); return; }
+    const n = Number(par.passo);
+    if (!(n >= 1 && n <= g.passi.length)) { TD.vai("#/guida/" + g.id); return; }
+    const x = g.passi[n - 1];
+    app.innerHTML = TD.intest(E(g.titolo), "Passo " + n + " di " + g.passi.length + " · " + E(g.dispositivo) + ". Leggi solo questo passaggio, con il disegno e il cerchio dove toccare.",
+      '<div class="actions"><a class="btn btn-ghost" href="#/guida/' + g.id + '">' + I("back") + 'Tutta la guida</a><button class="btn" id="gCopia">' + I("copy") + 'Copia link</button></div>') +
+      '<div class="wrap">' + TD.guidaHtml(g, false, { passo: n }) +
+      '<div class="actions">' +
+        (n > 1 ? '<a class="btn" href="' + E(TD.linkPasso(g.id, n - 1)) + '">' + I("back") + "Passo " + (n - 1) + "</a>" : "") +
+        '<button class="btn btn-primary" type="button" id="gLeggiUno">' + I("speaker") + "Leggi questo passo</button>" +
+        (n < g.passi.length ? '<a class="btn" href="' + E(TD.linkPasso(g.id, n + 1)) + '">Passo ' + (n + 1) + I("arrow") + "</a>" : "") +
+      "</div>" +
+      '<p class="muted">Sei nella guida completa: <a href="#/guida/' + g.id + '">' + E(g.titolo) + "</a>.</p></div>";
+    document.getElementById("gCopia").onclick = function () {
+      TD.scambio.copia(location.href.split("#")[0] + TD.linkPasso(g.id, n)).then(function (ok) { TD.toast(ok ? "Link del passo copiato." : "Copia non riuscita."); });
+    };
+    document.getElementById("gLeggiUno").onclick = function () { TD.leggi("Passo " + n + ". " + x[2]); };
   });
 })();

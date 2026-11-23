@@ -22,6 +22,62 @@
     return Math.round(q.reduce(function (s, x) { return s + x.perc; }, 0) / q.length);
   };
 
+  /* ------------------------------------------------------------ riepilogo lezione
+     Un foglio (PDF) e un messaggio da incollare in WhatsApp con ciò che si è
+     fatto, i passi da ricordare, i compiti e il prossimo incontro. */
+  TD.riepilogoLezione = function (c, r) {
+    const ids = (r && r.argomenti) || [];
+    const lezioni = ids.map(function (id) { return TD.lezione(id); }).filter(Boolean);
+    const compiti = (c.compiti || []).filter(function (k) { return !k.fatto && ids.indexOf(k.lezione) >= 0; });
+    const visti = {};
+    compiti.forEach(function (k) { visti[k.testo] = 1; });
+    lezioni.forEach(function (l) {
+      if (l.compito && !visti[l.compito]) { compiti.push({ testo: l.compito, lezione: l.id }); visti[l.compito] = 1; }
+    });
+    const passi = [];
+    lezioni.forEach(function (l) { (l.passi || []).forEach(function (p) { passi.push({ testo: p, lezione: l.titolo }); }); });
+    const prossimi = (c.registro || []).filter(function (x) {
+      return x.stato === "pianificata" && x.data && (!r || (x.data + (x.ora || "")) > (r.data + (r.ora || "")));
+    }).sort(function (a, b) { return (a.data + (a.ora || "")).localeCompare(b.data + (b.ora || "")); });
+    return { lezioni: lezioni, compiti: compiti, passi: passi, prossimo: prossimi[0] || null };
+  };
+  TD.testoRiepilogo = function (c, r) {
+    const d = TD.riepilogoLezione(c, r);
+    let t = "Riepilogo della lezione del " + TD.dataIt(r.data) + (r.ora ? " alle " + r.ora : "") + "\n";
+    t += "Allievo: " + TD.nomeCliente(c) + "\n\nCosa abbiamo fatto:\n";
+    t += d.lezioni.length ? d.lezioni.map(function (l) { return "- " + l.titolo; }).join("\n") : "- " + (r.note || "Lezione svolta");
+    if (d.passi.length) t += "\n\nPassi da ricordare:\n" + d.passi.slice(0, 12).map(function (p, i) { return (i + 1) + ". " + p.testo; }).join("\n");
+    if (r.note) t += "\n\nNote: " + r.note;
+    t += "\n\nCompiti per casa:\n" + (d.compiti.length ? d.compiti.map(function (k) { return "- " + k.testo + (k.scadenza ? " (entro il " + TD.dataIt(k.scadenza) + ")" : ""); }).join("\n") : "- Nessun compito: ripassa i passi.");
+    t += "\n\nProssimo incontro: " + (d.prossimo ? TD.dataLunga(d.prossimo.data) + (d.prossimo.ora ? " alle " + d.prossimo.ora : "") : "da definire");
+    t += "\n\nA presto,\n" + ((TD.db.profilo && TD.db.profilo.nome) || "il tuo tutor");
+    return t;
+  };
+  TD.pdfRiepilogoLezione = function (c, r) {
+    const dati = TD.riepilogoLezione(c, r);
+    const d = new TD.Documento({ titolo: "Riepilogo lezione · " + TD.nomeCliente(c), piede: "Tutor Digitale · riepilogo della lezione" });
+    d.intestazione(TD.db.profilo, "Riepilogo della lezione");
+    d.h1("Riepilogo della lezione");
+    d.campi([["Allievo", TD.nomeCliente(c)], ["Data", TD.dataLunga(r.data) + (r.ora ? " · ore " + r.ora : "")], ["Durata", (Number(r.durata) || 60) + " minuti"], ["Docente", (TD.db.profilo && TD.db.profilo.nome) || ""]]);
+    d.h2("Cosa abbiamo fatto");
+    if (dati.lezioni.length) dati.lezioni.forEach(function (l) {
+      d.p(l.titolo, { size: 28, peso: 700, dopo: 4 });
+      if (l.obiettivi && l.obiettivi.length) d.piccolo("Obiettivi: " + l.obiettivi.join("; "), { dopo: 8 });
+    });
+    else d.p(r.note || "Lezione svolta.");
+    if (r.note) { d.h2("Note della lezione"); d.p(r.note); }
+    d.h2("Passi da ricordare");
+    if (dati.passi.length) dati.passi.forEach(function (p, i) { d.p((i + 1) + ". " + p.testo, { size: 27, dopo: 5 }); });
+    else d.p("Ripassa gli argomenti con il tutor.");
+    d.h2("Compiti per casa");
+    if (dati.compiti.length) dati.compiti.forEach(function (k) { d.casella(k.testo + (k.scadenza ? " (entro il " + TD.dataIt(k.scadenza) + ")" : ""), false); });
+    else d.p("Nessun compito: ripassa i passi.");
+    d.h2("Prossimo incontro");
+    d.p(dati.prossimo ? TD.dataLunga(dati.prossimo.data) + (dati.prossimo.ora ? " alle " + dati.prossimo.ora : "") : "Da definire.");
+    d.piccolo("Porta questo foglio alla prossima lezione. I passi sono anche nell'app Tutor Digitale · Allievo.", { dopo: 0 });
+    return d.chiudi();
+  };
+
   /* --------------------------------------------------------------- elenco */
   TD.rotta("/clienti", function (app, p, q) {
     const cerca = (q.q || "").toLowerCase(), stato = q.stato || "attivi";
@@ -225,6 +281,8 @@
     const r = mod || { id: TD.uid("r"), data: TD.oggi(), ora: "10:00", durata: 60, luogo: c.luogo, argomenti: [], note: "", importo: "", pagato: false, stato: "svolta", presenti: (c.partecipanti || []).map(function (x) { return x.id; }) };
     const totDovuto = c.registro.reduce(function (s, x) { return s + (Number(x.importo) || 0); }, 0);
     const totPagato = c.registro.filter(function (x) { return x.pagato; }).reduce(function (s, x) { return s + (Number(x.importo) || 0); }, 0);
+    const svolte = lista.filter(function (x) { return x.stato !== "pianificata"; });
+    const sceltaR = mod && mod.stato !== "pianificata" ? mod.id : (svolte[0] ? svolte[0].id : "");
     body.innerHTML =
       '<div class="grid-2 reg">' +
       '<form class="card form" id="fr"><h2>' + (mod ? "Modifica incontro" : "Nuovo incontro") + "</h2>" +
@@ -245,6 +303,14 @@
             (x.stato === "pianificata" ? '<em class="pill">pianificata</em> ' : "") + E((x.argomenti || []).map(function (id) { const l = TD.lezione(id); return l ? l.titolo : id; }).join(" · ") || x.note || "—") +
             (x.importo ? '<small>' + TD.euro(x.importo) + (x.pagato ? " · pagato" : " · da incassare") + "</small>" : "") + "</span></a></li>";
         }).join("") + "</ul>" : '<p class="muted">Nessun incontro registrato.</p>') +
+      "</section>" +
+      '<section class="card"><h2>' + I("doc") + "Riepilogo per l'allievo</h2>" +
+        (svolte.length ? '<p class="muted">Un foglio e un messaggio pronti da consegnare: cosa avete fatto, i passi da ricordare, i compiti e il prossimo incontro.</p><div class="grid-2"><label class="field"><span>Lezione svolta</span><select id="riepS">' +
+          svolte.map(function (x) {
+            const titolo = (x.argomenti || []).map(function (id) { const l = TD.lezione(id); return l ? l.titolo : id; }).join(" · ") || x.note || "Lezione";
+            return '<option value="' + x.id + '"' + (x.id === sceltaR ? " selected" : "") + ">" + E(TD.dataIt(x.data)) + " · " + E(titolo) + "</option>";
+          }).join("") +
+          '</select></label><div class="actions"><button class="btn btn-primary" type="button" id="riepPdf">' + I("download") + 'PDF</button><button class="btn" type="button" id="riepTxt">' + I("copy") + "Copia per WhatsApp</button></div></div>" : '<p class="muted">Registra una lezione svolta per creare il riepilogo da lasciare all\'allievo.</p>') +
       "</section></div>";
 
     const f = document.getElementById("fr");
@@ -263,6 +329,17 @@
     document.getElementById("pdfReg").onclick = function () {
       TD.immagine(TD.db.profilo.firma).then(function (firmaDoc) { pdfRegistro(firmaDoc); });
     };
+    const rs = document.getElementById("riepS");
+    if (rs) {
+      function lezioneRiepilogo() { return c.registro.find(function (x) { return x.id === rs.value; }) || svolte[0]; }
+      document.getElementById("riepPdf").onclick = function () {
+        const rr = lezioneRiepilogo();
+        TD.scaricaPdf(TD.pdfRiepilogoLezione(c, rr), "riepilogo-" + TD.nomeFile(TD.nomeCliente(c)) + "-" + rr.data + ".pdf", { titolo: "Riepilogo lezione" });
+      };
+      document.getElementById("riepTxt").onclick = function () {
+        TD.scambio.copia(TD.testoRiepilogo(c, lezioneRiepilogo())).then(function (ok) { TD.toast(ok ? "Messaggio copiato: puoi incollarlo in WhatsApp." : "Copia non riuscita."); });
+      };
+    }
     function pdfRegistro(firmaDoc) {
       const d = new TD.Documento({ titolo: "Registro lezioni · " + TD.nomeCliente(c), piede: "Tutor Digitale · registro lezioni" });
       d.intestazione(TD.db.profilo, "Registro delle lezioni");

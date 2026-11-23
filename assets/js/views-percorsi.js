@@ -35,6 +35,42 @@
   };
   TD.durataPercorso = function (p) { return (p.incontri || []).reduce(function (s, inc) { return s + (Number(inc.minuti) || 0); }, 0) || (p.incontri || []).length * 60; };
 
+  /* ------------------------------------------------------------ percorso dal test d'ingresso
+     Il test calcola un livello per ogni percorso; qui si trasformano quei livelli
+     in un percorso pronto (un incontro per percorso, le prime lezioni dal livello
+     emerso). Il tutor lo apre nell'editor, lo controlla e lo assegna. */
+  TD.percorsoDalTest = function (ris, c) {
+    const attivi = TD.PERCORSI.filter(function (p) { return ris && ris[p.id] != null; });
+    if (!attivi.length) return null;
+    const incontri = attivi.map(function (p) {
+      const liv = Math.max(0, Math.min(3, Number(ris[p.id]) || 0));
+      const scelte = [];
+      function aggiungi(l) { if (l && scelte.indexOf(l.id) < 0) scelte.push(l.id); }
+      TD.lezioniDi(p.id, liv).slice(0, 2).forEach(aggiungi);
+      if (liv < 3) TD.lezioniDi(p.id, liv + 1).slice(0, 1).forEach(aggiungi);
+      TD.lezioniDi(p.id).filter(function (l) { return l.liv > liv; }).forEach(function (l) { if (scelte.length < 3) aggiungi(l); });
+      return { titolo: p.nome + " · " + TD.livello(liv).breve, lezioni: scelte, minuti: Math.max(60, scelte.length * 30) };
+    }).filter(function (x) { return x.lezioni.length; });
+    if (!incontri.length) return null;
+    const livelli = attivi.map(function (p) { return Number(ris[p.id]) || 0; });
+    return {
+      id: TD.uid("pm"),
+      nome: c ? "Percorso di partenza di " + TD.nomeCliente(c) : "Percorso di partenza",
+      descr: "Generato dal test d'ingresso del " + TD.dataIt(TD.oggi()) + ": si parte dal livello in cui serve aiuto e si fanno due passi avanti, con un incontro per percorso.",
+      livello: Math.min.apply(null, livelli), incontri: incontri,
+      origine: "test", testData: TD.oggi(), clienteId: c ? c.id : ""
+    };
+  };
+  TD.creaPercorsoDalTest = function (c, ris) {
+    const pm = TD.percorsoDalTest(ris, c);
+    if (!pm) return null;
+    TD.db.percorsiMisura = TD.db.percorsiMisura || [];
+    const vecchio = TD.db.percorsiMisura.findIndex(function (x) { return x.origine === "test" && x.clienteId === c.id; });
+    if (vecchio >= 0) TD.db.percorsiMisura.splice(vecchio, 1);
+    TD.db.percorsiMisura.push(pm);
+    return pm;
+  };
+
   /* assegna: compiti dalle lezioni, appuntamenti in agenda, percorso nella scheda */
   TD.assegnaPercorso = function (c, p, opz) {
     opz = opz || {};
