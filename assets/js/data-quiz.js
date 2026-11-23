@@ -114,6 +114,9 @@ TD.DOMANDE = [
   [2, "accessori", "Per avere due scrivanie separate sul secondo monitor, Windows offre…", "Win + P › Estendi", ["Ctrl + Alt + Canc", "Alt + F4", "Win + L"], "«Estendi» allarga la scrivania; «Duplica» mostra la stessa immagine."],
   [2, "accessori", "Un portatile ha solo USB-C e il monitor è HDMI: serve…", "un adattatore che supporti il video", ["un cavo della stampante", "un hub non alimentato qualsiasi", "un cavo dell'antenna"], "Non tutti gli adattatori USB-C portano il segnale video: va scelto quello giusto."],
   [2, "accessori", "Il mouse wireless «salta»: la prima cosa da provare è…", "allontanare il ricevitore dalle porte USB 3", ["formattare il computer", "cambiare il monitor", "reinstallare il sistema"], "Le porte USB 3 e i dischi esterni possono disturbare il ricevitore: una prolunga risolve."],
+  [2, "accessori", "Per archiviare una bolletta occupando poco spazio, il profilo migliore è…", "PDF in bianco e nero a 300 dpi", ["foto a colori da 10 megapixel", "PDF a 1200 dpi a colori", "un file di testo"], "Bianco e nero a 300 dpi basta per leggere e archiviare: colori e alte risoluzioni servono solo alle foto."],
+  [2, "accessori", "Il foglio va appoggiato sul vetro…", "con il testo rivolto verso il vetro", ["con il testo verso l'alto", "piegato in due per farlo stare", "sopra il coperchio chiuso"], "Il sensore legge ciò che tocca il vetro: se il testo guarda in su, la scansione esce bianca."],
+  [2, "accessori", "Una riga nera attraversa tutte le scansioni: la causa più probabile è…", "un granello o un segno sul vetro", ["la carta troppo bianca", "il cavo USB troppo corto", "la stampante senza inchiostro"], "Il granello resta fermo mentre il carrello scorre: diventa una riga su ogni pagina e si toglie pulendo il vetro."],
   [3, "accessori", "Un accessorio non è visto da nessun computer: il controllo più utile è…", "provarlo su un altro computer", ["formattare subito il disco", "comprare un accessorio nuovo", "cancellare i driver di sistema"], "Se non funziona da nessuna parte, il guasto è nell'accessorio; se funziona altrove, è nel computer."],
   [3, "accessori", "Un disco con dentro i vostri dati non si apre: cosa NON fare?", "Formattarlo", ["Fermarsi e farlo vedere a un tecnico", "Annotare rumori e messaggi", "Collegarlo a un altro computer con cautela"], "La formattazione cancella tutto: senza backup i dati sarebbero persi."],
   [3, "accessori", "In ufficio, una stampante usata da più computer conviene…", "con un indirizzo IP fisso sulla rete", ["con un cavo USB che gira di scrivania in scrivania", "senza driver", "accesa solo quando serve"], "Con un indirizzo stabile ogni computer la ritrova dopo i riavvii."],
@@ -136,7 +139,8 @@ TD.COMPLETA = [
   [3, "smartphone", "Il codice *#06# mostra il codice ___ del telefono.", "IMEI", ["PIN", "PUK", "IBAN"]],
   [0, "accessori", "Prima di spegnere una stampante si controlla che non stia ___.", "stampando", ["scansionando", "lampeggiando", "suonando"]],
   [1, "accessori", "Prima di staccare la chiavetta si usa la ___ sicura.", "rimozione", ["formattazione", "duplicazione", "compressione"]],
-  [1, "accessori", "Per stampare da iPhone e iPad basta ___.", "AirPrint", ["Mopria", "Bluetooth", "HDMI"]]
+  [1, "accessori", "Per stampare da iPhone e iPad basta ___.", "AirPrint", ["Mopria", "Bluetooth", "HDMI"]],
+  [2, "accessori", "Le righe nere sulle scansioni si evitano pulendo il ___.", "vetro", ["vassoio", "monitor", "cavo"]]
 ];
 
 /* Ordina i passaggi: [livello, percorso, titolo, [passi nell'ordine giusto]] */
@@ -155,7 +159,8 @@ TD.SEQUENZE = [
   [3, "pc", "Recuperare un file dal backup", ["Collegare il disco del backup", "Aprire lo strumento di ripristino", "Scegliere data e file", "Ripristinare e verificare"]],
   [3, "smartphone", "Reagire al furto del telefono", ["Localizzare il telefono da un altro dispositivo", "Bloccarlo a distanza", "Bloccare la SIM con l'operatore", "Sporgere denuncia con l'IMEI"]],
   [0, "accessori", "Collegare e provare una stampante USB", ["Togliere i nastri e mettere cartucce e carta", "Accendere la stampante", "Collegare il cavo USB al computer", "Aggiungere la stampante e stampare la pagina di prova"]],
-  [1, "accessori", "Mettere al sicuro un disco esterno", ["Collegarlo alla porta USB 3", "Aspettare che compaia l'unità", "Copiare i file", "Usare «Rimozione sicura» e staccarlo"]]
+  [1, "accessori", "Mettere al sicuro un disco esterno", ["Collegarlo alla porta USB 3", "Aspettare che compaia l'unità", "Copiare i file", "Usare «Rimozione sicura» e staccarlo"]],
+  [2, "accessori", "Scansionare una bolletta", ["Appoggiare il foglio sul vetro, testo verso il vetro", "Scegliere il profilo PDF in bianco e nero", "Premere «Acquisisci» e controllare l'anteprima", "Salvare in Documenti con un nome chiaro"]]
 ];
 
 /* Glossario per gli abbinamenti: [livello, termine, definizione] */
@@ -192,6 +197,7 @@ TD.GLOSSARIO = [
   [1, "exFAT", "Formato di disco leggibile da Windows e Mac"],
   [1, "AirPrint", "Stampa da iPhone e iPad senza installare nulla"],
   [2, "Hub USB", "Accessorio che moltiplica le porte USB"],
+  [2, "Scanner", "Apparecchio che trasforma un foglio di carta in un file, per esempio PDF"],
   [3, "Indirizzo IP", "Numero che identifica un apparecchio nella rete"]
 ];
 

@@ -415,13 +415,13 @@
       ["mac-stampanti", "stampanti", "Dal Mac apri il menu mela in alto a sinistra › Impostazioni di Sistema e scegli «Stampanti e scanner»."],
       ["mac-aggiungi", "elenco", "Fai clic su «Aggiungi stampante, scanner o fax…», aspetta l'elenco e scegli il nome della stampante: col cavo è quella «USB»."],
       ["mac-prova-stampa", "prova", "Scegli «Stampa pagina di prova…»: se esce il foglio è installata; se no, riaccendila e ripeti."]] },
-    { id: "g-scanner-multifunzione", titolo: "Acquisire un documento con la stampante multifunzione", dispositivo: "Scanner", lezioni: ["accessori-0-1", "accessori-3-1"], passi: [
+    { id: "g-scanner-multifunzione", titolo: "Acquisire un documento con la stampante multifunzione", dispositivo: "Scanner", lezioni: ["accessori-0-1", "accessori-2-3", "accessori-3-1"], passi: [
       ["scanner-vetro", "foglio", "Alza il coperchio e appoggia il foglio sul vetro, con il testo rivolto verso il vetro e l'angolo in alto a sinistra."],
       ["windows-scanner", "profilo", "Sul computer apri «Scanner» (o «Scanner e fotocamera») e scegli il profilo «Documento»: PDF, 300 dpi, bianco e nero."],
       ["windows-scanner", "acquisisci", "Premi «Acquisisci» e aspetta: il carrello scorre sotto il vetro — non guardare la luce."],
       ["windows-anteprima", "anteprima", "Guarda l'anteprima: testo dritto e leggibile, nessuna pagina tagliata. Se è storta, rimetti il foglio e ripeti."],
       ["windows-anteprima", "salva", "Premi «Salva» e scegli Documenti: il PDF si chiama con la data e si può allegare a un'email o stampare."]] },
-    { id: "g-scanner-tavolo", titolo: "Acquisire con uno scanner da tavolo", dispositivo: "Scanner", lezioni: ["accessori-3-1"], passi: [
+    { id: "g-scanner-tavolo", titolo: "Acquisire con uno scanner da tavolo", dispositivo: "Scanner", lezioni: ["accessori-2-3", "accessori-3-1"], passi: [
       ["scanner-tavolo", "blocco", "Togli il blocco arancione del carrello (serve solo per il trasporto) e accendi lo scanner."],
       ["scanner-tavolo", "foglio", "Infila il foglio nell'alimentatore con il lato stampato verso il basso, come mostra la freccia sul coperchio."],
       ["windows-scanner", "acquisisci", "Sul computer apri «Scanner», controlla che sia scelto lo scanner giusto e premi «Acquisisci»."],

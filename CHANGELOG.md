@@ -2,9 +2,9 @@
 
 ## 1.6.0 · 20 novembre 2026
 
-- **Nuovo percorso «Accessori»**: 8 lezioni (2 per livello) per collegare e far funzionare stampante, webcam, disco esterno, chiavetta USB, mouse, tastiera, cuffie e secondo schermo. Prima installazione della stampante passo per passo, stampa in Wi-Fi da computer e telefono, formati del disco (exFAT, NTFS, APFS), videochiamate senza eco, diagnosi in cinque controlli e postazione condivisa con indirizzo IP fisso.
-- **Quiz e test d'ingresso**: 16 nuove domande a scelta multipla, 3 frasi da completare, 2 sequenze da ordinare e 5 voci di glossario per il percorso Accessori; il test d'ingresso ha le sue quattro capacità.
-- Il programma passa a **48 lezioni in 6 percorsi** e **144 esercizi**.
+- **Nuovo percorso «Accessori»**: 9 lezioni, almeno due per livello (tre all'Intermedio, dove allo scanner si affiancano videochiamate e postazione), per collegare e far funzionare stampante, webcam, disco esterno, chiavetta USB, scanner, mouse, tastiera, cuffie e secondo schermo. Prima installazione della stampante passo per passo, stampa in Wi-Fi da computer e telefono, formati del disco (exFAT, NTFS, APFS), videochiamate senza eco, acquisire un documento con lo scanner fino al PDF in Documenti, diagnosi in cinque controlli e postazione condivisa con indirizzo IP fisso.
+- **Quiz e test d'ingresso**: 19 nuove domande a scelta multipla, 4 frasi da completare, 3 sequenze da ordinare e 6 voci di glossario per il percorso Accessori; il test d'ingresso ha le sue quattro capacità.
+- Il programma passa a **49 lezioni in 6 percorsi** e **147 esercizi**.
 - Accessori è selezionabile tra i **dispositivi del cliente** (con il suo livello), compare nell'app Allievo anche senza percorsi scelti e la pagina di verifica degli attestati ne mostra il nome; aggiunto il collegamento nel piede di pagina.
 - **Testata più stretta**: su telefoni da 320–360 px il pulsante «Menu» non esce più dallo schermo.
 - **Schermate guida**: ora sono **sedici**, sempre con il cerchio arancione sul punto da toccare: installare la stampante la prima volta, su Windows e su Mac (Impostazioni di Sistema, «Aggiungi stampante», pagina di prova); acquisire un documento con lo scanner della multifunzione e con uno scanner da tavolo; copiare i file su una chiavetta o un disco esterno (unità, barra di copia, rimozione sicura); abbinare le cuffie Bluetooth al telefono.

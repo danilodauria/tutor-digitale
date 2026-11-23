@@ -67,7 +67,7 @@ vm.createContext(ctx);
 const TD = ctx.TD;
 
 /* 4. programma delle lezioni */
-ok(TD.LEZIONI.length === 48, "attese 48 lezioni, trovate " + TD.LEZIONI.length);
+ok(TD.LEZIONI.length === 49, "attese 49 lezioni, trovate " + TD.LEZIONI.length);
 const ids = new Set();
 TD.LEZIONI.forEach((l) => {
   ok(!ids.has(l.id), "id lezione doppio: " + l.id); ids.add(l.id);
@@ -77,7 +77,9 @@ TD.LEZIONI.forEach((l) => {
   ok(l.compito && l.compito.length > 10, l.id + ": manca il compito");
   ok(l.digcomp.every((a) => TD.DIGCOMP[a]), l.id + ": area DigComp sconosciuta");
 });
-TD.PERCORSI.forEach((p) => TD.LIVELLI.forEach((lv) => ok(TD.lezioniDi(p.id, lv.id).length === 2, p.id + " livello " + lv.id + ": attese 2 lezioni")));
+/* almeno due lezioni per livello: un livello può averne una in più (Accessori,
+   con lo scanner accanto a videochiamate e postazione) */
+TD.PERCORSI.forEach((p) => TD.LIVELLI.forEach((lv) => ok(TD.lezioniDi(p.id, lv.id).length >= 2, p.id + " livello " + lv.id + ": servono almeno 2 lezioni")));
 
 /* 5. banca delle domande */
 const devs = TD.PERCORSI.map((p) => p.id);

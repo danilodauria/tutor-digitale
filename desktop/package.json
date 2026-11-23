@@ -82,7 +82,7 @@
       "category": "Education",
       "maintainer": "Danilo D'Auria <danilodauria.site@gmail.com>",
       "synopsis": "Lezioni di tecnologia su misura, anche offline",
-      "description": "Tutor Digitale: 48 lezioni dai primi passi a esperto su computer, tablet, smartphone, Smart TV, Internet e accessori; quiz, esercizi, clienti, liberatoria, attestati con QR, fattura elettronica, modalità aula e app Allievo. Funziona senza Internet.",
+      "description": "Tutor Digitale: 49 lezioni dai primi passi a esperto su computer, tablet, smartphone, Smart TV, Internet e accessori; quiz, esercizi, clienti, liberatoria, attestati con QR, fattura elettronica, modalità aula e app Allievo. Funziona senza Internet.",
       "target": [
         "deb",
         "AppImage"
