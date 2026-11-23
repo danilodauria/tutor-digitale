@@ -52,13 +52,13 @@
         icona(22, 120, "#3f9a63", "Telefono", p("M31 128 q2 8 10 12 l3 -3 l-3 -3 l-2 1 q-3 -2 -4 -5 l1 -2 l-3 -3 z", { fill: "#fff", stroke: "#fff", sw: 1 })) +
         icona(75, 120, "#2f7fc0", "Messaggi", r(81, 128, 18, 12, "#fff", { rx: 3 })) +
         icona(128, 120, "#7d55c0", "Fotocamera", c(143, 135, 6, "none", { stroke: "#fff", sw: 2 })) +
-        icona(22, 180, "#5b6472", "Impostazioni", c(37, 195, 6, "none", { stroke: "#fff", sw: 3 })) +
-        icona(75, 180, "#c98a24", "Negozio app", p("M83 189 h14 l-2 12 h-10 z", { fill: "#fff", stroke: "#fff", sw: 1 })) +
+        icona(22, 180, "#5b6472", "Impostazioni", c(37, 195, 7, "none", { stroke: "#fff", sw: 2.2 }) + p("M37 185 v3 M37 202 v3 M27 195 h3 M44 195 h3", { stroke: "#fff", sw: 2 })) +
+        icona(75, 180, "#1d3557", "Tutor", r(81, 191, 5, 8, "#8fb3e8", { rx: 1 }) + r(88, 186, 5, 13, "#e4572e", { rx: 1 }) + r(95, 192, 5, 7, "#3f9a63", { rx: 1 })) +
         icona(128, 180, "#2b7a4b", "Chat", c(143, 195, 7, "#fff")) +
         icona(22, 240, "#b23a32", "Browser", c(37, 255, 7, "none", { stroke: "#fff", sw: 2 })) +
         icona(75, 240, "#4f6b8f", "Galleria", p("M81 262 l6 -8 l5 5 l3 -3 l6 6 z", { fill: "#fff", stroke: "#fff", sw: 1 })) +
         icona(128, 240, "#1d3557", "Email", r(134, 249, 18, 12, "none", { stroke: "#fff", sw: 1.5, rx: 2 })));
-    }, punti: { impostazioni: [37, 195, 22], negozio: [90, 195, 22], browser: [37, 255, 22], fotocamera: [143, 135, 22], home: [90, 335, 12], indietro: [52, 335, 12] } },
+    }, punti: { impostazioni: [37, 195, 22], tutor: [90, 195, 22], browser: [37, 255, 22], fotocamera: [143, 135, 22], indietro: [52, 335, 12] } },
 
     "android-impostazioni": { tipo: "telefono", disegno: function () {
       return telefono(t(18, 58, "Impostazioni", { size: 14, bold: true }) + r(16, 66, 148, 20, "#e7ebf3", { rx: 10 }) + t(28, 79, "Cerca nelle impostazioni", { size: 8, fill: "#6b7385" }) +
@@ -99,17 +99,20 @@
     }, punti: { condividi: [90, 308, 16] } },
 
     "iphone-condividi": { tipo: "telefono", iphone: true, disegno: function () {
-      return telefono(r(8, 40, 164, 290, "#c6cdda", { rx: 0 }) + r(8, 120, 164, 214, "#f4f6fb", { rx: 14 }) + t(90, 140, "Tutor Digitale · Allievo", { size: 9, anchor: "middle", bold: true }) +
-        [["Copia", 162], ["Aggiungi a Elenco lettura", 192], ["Aggiungi ai Preferiti", 222], ["Aggiungi alla schermata Home", 252], ["Trova nella pagina", 282]].map(function (x) { return r(16, x[1] - 14, 148, 26, "#fff", { rx: 6 }) + t(26, x[1] + 2, x[0], { size: 8.5 }); }).join("") +
-        r(140, 242, 14, 14, "none", { stroke: "#4a5365", sw: 1.4, rx: 3 }) + p("M147 245 v8 M143 249 h8", { stroke: "#4a5365", sw: 1.4 }), { iphone: true });
-    }, punti: { home: [90, 251, 0, 152, 30] } },
+      return telefono(r(8, 40, 164, 290, "#c6cdda", { rx: 0 }) + r(8, 104, 164, 230, "#f4f6fb", { rx: 14 }) +
+        t(20, 128, "Annulla", { size: 7.5, fill: "#2f7fc0" }) + t(160, 128, "Aggiungi", { size: 7.5, fill: "#2f7fc0", anchor: "end", bold: true }) +
+        t(90, 150, "Tutor Digitale · Allievo", { size: 9, anchor: "middle", bold: true }) +
+        [["Copia", 172], ["Aggiungi a Elenco lettura", 202], ["Aggiungi ai Preferiti", 232], ["Aggiungi alla schermata Home", 262], ["Trova nella pagina", 292]].map(function (x) { return r(16, x[1] - 14, 148, 26, "#fff", { rx: 6 }) + t(26, x[1] + 2, x[0], { size: 8.5 }); }).join("") +
+        r(140, 252, 14, 14, "none", { stroke: "#4a5365", sw: 1.4, rx: 3 }) + p("M147 255 v8 M143 259 h8", { stroke: "#4a5365", sw: 1.4 }), { iphone: true });
+    }, punti: { home: [85, 262, 0, 138, 26] } },
 
     "windows-desktop": { tipo: "pc", disegno: function () {
       return r(0, 0, 320, 210, "#1b2333", { rx: 8 }) + r(6, 6, 308, 180, "#2f6f9e", { rx: 3 }) +
         icona(16, 16, "#c98a24", "Documenti", r(22, 25, 18, 13, "#fff", { rx: 2 })).replace(/fill="#1b2333"/g, 'fill="#fff"') +
         icona(16, 66, "#8fb3e8", "Cestino", p("M25 74 h12 l-2 16 h-8 z", { fill: "#fff", stroke: "#fff", sw: 1 })).replace(/fill="#1b2333"/g, 'fill="#fff"') +
         r(6, 166, 308, 20, "#e7ebf3", { rx: 0 }) + r(110, 169, 14, 14, "#2f7fc0", { rx: 2 }) + p("M113 172 h3 v3 h-3z M118 172 h3 v3 h-3z M113 177 h3 v3 h-3z M118 177 h3 v3 h-3z", { fill: "#fff", stroke: "#fff", sw: 0.5 }) +
-        r(130, 170, 60, 12, "#fff", { rx: 6 }) + t(138, 179, "Cerca", { size: 7, fill: "#6b7385" }) + r(196, 170, 12, 12, "#c98a24", { rx: 2 }) + r(212, 170, 12, 12, "#3f9a63", { rx: 2 }) +
+        r(130, 170, 60, 12, "#fff", { rx: 6 }) + t(138, 179, "Cerca", { size: 7, fill: "#6b7385" }) +
+        r(196, 172, 12, 9, "#c98a24", { rx: 1.5 }) + r(196, 170, 6, 3, "#c98a24", { rx: 1 }) + r(212, 170, 12, 12, "#3f9a63", { rx: 2 }) +
         t(300, 180, "10:24", { size: 7, anchor: "end" }) + r(130, 190, 60, 12, "#3a4458", { rx: 2 });
     }, punti: { start: [117, 176, 12], cerca: [160, 176, 0, 66, 18], cartella: [204, 176, 11] } },
 
@@ -390,7 +393,7 @@
     { id: "g-installa-android", titolo: "Installare l'app Allievo su Android", dispositivo: "Android", lezioni: ["tablet-1-1", "smartphone-0-2"], passi: [
       ["android-chrome", "menu", "Apri il link del tutor con Chrome e tocca i tre puntini in alto a destra."],
       ["android-chrome", "installa", "Scegli «Installa app» (o «Aggiungi a schermata Home») e conferma."],
-      ["android-home", "home", "L'icona compare nella schermata Home: da adesso si apre come le altre app, anche senza Internet."]] },
+      ["android-home", "tutor", "L'icona «Tutor» compare tra le altre nella schermata Home: da adesso si apre come le altre app, anche senza Internet."]] },
     { id: "g-installa-iphone", titolo: "Installare l'app Allievo su iPhone e iPad", dispositivo: "iPhone", lezioni: ["tablet-1-1", "smartphone-0-2"], passi: [
       ["iphone-safari", "condividi", "Apri il link con Safari e tocca il tasto Condividi: il quadrato con la freccia in su."],
       ["iphone-condividi", "home", "Scorri e scegli «Aggiungi alla schermata Home», poi «Aggiungi» in alto a destra."]] },
@@ -405,15 +408,15 @@
       ["windows-esplora", "chiavetta", "Per una copia di sicurezza trascina la cartella sulla chiavetta, a sinistra."]] },
     { id: "g-stampante", titolo: "Installare la stampante la prima volta", dispositivo: "Stampante", lezioni: ["accessori-0-1", "accessori-1-2"], passi: [
       ["stampante-pannello", "accensione", "Collega la stampante alla corrente, infila il foglio nel vassoio e premi il tasto di accensione: il display si illumina."],
-      ["stampante-pannello", "wifi", "In Wi-Fi premi il tasto Wi-Fi finché la spia lampeggia, poi premi WPS sul modem (oppure segui il libretto del modello)."],
-      ["windows-stampanti", "stampanti", "Sul computer apri Impostazioni › Bluetooth e dispositivi › Stampanti e scanner."],
-      ["windows-aggiungi", "elenco", "Tocca «Aggiungi dispositivo», aspetta l'elenco e scegli il nome della stampante: col cavo è quella «USB»."],
+      ["stampante-pannello", "wifi", "In Wi-Fi premi il tasto Wi-Fi e guarda il display: da «Wi-Fi spento» passa a «Wi-Fi in ricerca», poi premi WPS sul modem (oppure segui il libretto del modello)."],
+      ["windows-stampanti", "stampanti", "Sul computer apri Impostazioni › Bluetooth e dispositivi › Stampanti e scanner, poi tocca «+ Aggiungi dispositivo»."],
+      ["windows-aggiungi", "elenco", "Aspetta che l'elenco si riempia nella finestra «Aggiungi stampante» e scegli il nome: col cavo è quella «USB»."],
       ["windows-prova-stampa", "prova", "Apri la stampante e scegli «Stampa pagina di prova»: se esce il foglio è installata; se no, riaccendila e ripeti."]] },
     { id: "g-stampante-mac", titolo: "Installare la stampante la prima volta su Mac", dispositivo: "Mac", lezioni: ["accessori-0-1", "accessori-1-2"], passi: [
       ["stampante-pannello", "accensione", "Collega la stampante alla corrente, infila il foglio nel vassoio e premi il tasto di accensione: il display si illumina."],
-      ["stampante-pannello", "wifi", "In Wi-Fi premi il tasto Wi-Fi finché la spia lampeggia, poi premi WPS sul modem (oppure segui il libretto del modello)."],
-      ["mac-stampanti", "stampanti", "Dal Mac apri il menu mela in alto a sinistra › Impostazioni di Sistema e scegli «Stampanti e scanner»."],
-      ["mac-aggiungi", "elenco", "Fai clic su «Aggiungi stampante, scanner o fax…», aspetta l'elenco e scegli il nome della stampante: col cavo è quella «USB»."],
+      ["stampante-pannello", "wifi", "In Wi-Fi premi il tasto Wi-Fi e guarda il display: da «Wi-Fi spento» passa a «Wi-Fi in ricerca», poi premi WPS sul modem (oppure segui il libretto del modello)."],
+      ["mac-stampanti", "stampanti", "Dal Mac apri «Impostazioni di Sistema» dal menu in alto a sinistra (accanto a «Finder») › «Stampanti e scanner», poi «+ Aggiungi stampante, scanner o fax…»."],
+      ["mac-aggiungi", "elenco", "Nella finestra «Aggiungi stampante, scanner o fax» aspetta che l'elenco si riempia e scegli il nome: col cavo è quella «USB»."],
       ["mac-prova-stampa", "prova", "Scegli «Stampa pagina di prova…»: se esce il foglio è installata; se no, riaccendila e ripeti."]] },
     { id: "g-scanner-multifunzione", titolo: "Acquisire un documento con la stampante multifunzione", dispositivo: "Scanner", lezioni: ["accessori-0-1", "accessori-2-3", "accessori-3-1"], passi: [
       ["scanner-vetro", "foglio", "Alza il coperchio e appoggia il foglio sul vetro, con il testo rivolto verso il vetro e l'angolo in alto a sinistra."],
@@ -427,7 +430,7 @@
       ["windows-scanner", "acquisisci", "Sul computer apri «Scanner», controlla che sia scelto lo scanner giusto e premi «Acquisisci»."],
       ["windows-anteprima", "salva", "Controlla l'anteprima e premi «Salva»: il PDF finisce in Documenti, pronto da inviare."]] },
     { id: "g-disco-esterno", titolo: "Copiare i file su una chiavetta o un disco esterno", dispositivo: "Windows", lezioni: ["accessori-1-1", "accessori-3-1"], passi: [
-      ["disco-collegamento", "chiavetta", "Infila la chiavetta in una porta USB (o collega il disco esterno con il suo cavo) e aspetta qualche secondo: la spia si accende."],
+      ["disco-collegamento", "chiavetta", "Infila la chiavetta in una porta USB (o collega il disco esterno con il suo cavo) e aspetta qualche secondo senza toccarla."],
       ["windows-disco", "unita", "Apri Esplora file › Questo PC e cerca l'unità nuova: «Chiavetta (D:)» o «Disco esterno (E:)»."],
       ["windows-copia", "barra", "Trascina la cartella da copiare in Documenti (o dall'altra parte) e aspetta che la barra arrivi in fondo."],
       ["windows-rimozione", "icona", "Prima di staccare, clicca l'icona della chiavetta vicino all'orologio e scegli «Rimozione sicura dell'hardware»."]] },
