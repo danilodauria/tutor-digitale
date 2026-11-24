@@ -32,6 +32,60 @@
       btn.setAttribute("aria-expanded", open ? "true" : "false");
     });
     nav.addEventListener("click", function (e) { if (e.target.closest("a")) { nav.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); } });
+    /* «Altro»: menu a tendina scorrevole, con frecce, Inizio/Fine ed Esc come nei programmi */
+    const more = nav.querySelector(".nav-more");
+    const moreMenu = more && more.querySelector(".nav-more-menu");
+    const moreSummary = more && more.querySelector("summary");
+    const moreLinks = moreMenu ? Array.from(moreMenu.querySelectorAll("a")) : [];
+    function chiudiAltro(torna) {
+      if (!more || !more.open) return;
+      more.open = false;
+      if (torna && moreSummary) moreSummary.focus();
+    }
+    function evidenzia(el) {
+      if (!el) return;
+      el.focus();
+      try { el.scrollIntoView({ block: "nearest" }); } catch (e) {}
+    }
+    if (more && moreSummary && moreMenu && moreLinks.length) {
+      more.addEventListener("toggle", function () { if (more.open) moreMenu.scrollTop = 0; });
+      moreSummary.addEventListener("keydown", function (e) {
+        if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+        e.preventDefault();
+        more.open = true;
+        moreMenu.scrollTop = 0;
+        evidenzia(e.key === "ArrowDown" ? moreLinks[0] : moreLinks[moreLinks.length - 1]);
+      });
+      moreMenu.addEventListener("keydown", function (e) {
+        const i = moreLinks.indexOf(document.activeElement);
+        if (i < 0) return;
+        const n = moreLinks.length;
+        if (e.key === "ArrowDown") { e.preventDefault(); evidenzia(moreLinks[(i + 1) % n]); }
+        else if (e.key === "ArrowUp") { e.preventDefault(); evidenzia(moreLinks[(i - 1 + n) % n]); }
+        else if (e.key === "Home") { e.preventDefault(); evidenzia(moreLinks[0]); }
+        else if (e.key === "End") { e.preventDefault(); evidenzia(moreLinks[n - 1]); }
+      });
+      more.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && more.open) { e.preventDefault(); e.stopPropagation(); chiudiAltro(true); }
+      });
+      more.addEventListener("focusout", function (e) { if (!more.contains(e.relatedTarget)) chiudiAltro(false); });
+      document.addEventListener("pointerdown", function (e) { if (more.open && !more.contains(e.target)) chiudiAltro(false); });
+      moreMenu.addEventListener("click", function (e) {
+        if (!e.target.closest("a")) return;
+        chiudiAltro(false);
+        nav.classList.remove("open");
+        btn.setAttribute("aria-expanded", "false");
+      });
+    }
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Escape" || !nav.classList.contains("open")) return;
+      if (more && more.open) return;
+      nav.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); btn.focus();
+    });
+    document.addEventListener("pointerdown", function (e) {
+      if (!nav.classList.contains("open") || nav.contains(e.target) || btn.contains(e.target)) return;
+      nav.classList.remove("open"); btn.setAttribute("aria-expanded", "false");
+    });
     const th = document.getElementById("themeBtn"), fb = document.getElementById("fontBtn");
     if (th) th.addEventListener("click", function () {
       const ora = document.documentElement.getAttribute("data-theme");

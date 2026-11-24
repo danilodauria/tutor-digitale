@@ -1,5 +1,9 @@
 # Versioni
 
+## 1.10.2 · 24 novembre 2026
+
+- **Menu «Altro» completo e scorrevole**: il tendina ora sta dentro lo schermo e scorre fino all'ultima voce, che prima restava tagliata; le frecce su/giù, Inizio e Fine spostano l'evidenziazione e il menu scorre con lei, Esc chiude e riporta il cursore su «Altro», un clic fuori chiude. Anche il menu a cassetto degli schermi piccoli scorre tutto. Cache aggiornata alla 1.10.2.
+
 ## 1.10.1 · 24 novembre 2026
 
 - **Risultati di gruppo leggibili nella scheda**: nella scheda del cliente la tabella dei quiz ha la colonna «Chi» con il nome del partecipante, così i risultati di un quiz dal telefono a più persone non sono più righe identiche senza nome. Cache aggiornata alla 1.10.1.
