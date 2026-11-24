@@ -28,13 +28,13 @@ const problemi = [];
 const segnala = (f, msg) => problemi.push(f + ": " + msg);
 
 /* ---------------------------------------------------------------- 1. CSP */
-const PAGINE = ["index.html", "allievo/index.html", "verifica/index.html"];
+const PAGINE = ["index.html", "allievo/index.html", "verifica/index.html", "schermo/index.html"];
 const CANALI = ["wss://broker.hivemq.com:8884", "wss://broker.emqx.io:8084", "wss://test.mosquitto.org:8081"];
 function politica(html) {
   const hash = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => "'sha256-" + crypto.createHash("sha256").update(m[1], "utf8").digest("base64") + "'");
   return [
     "default-src 'self'",
-    "script-src 'self' " + hash.join(" "),
+    ("script-src 'self' " + hash.join(" ")).trim(),
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "media-src 'self' data: blob:",

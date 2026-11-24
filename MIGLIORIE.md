@@ -43,3 +43,15 @@ Idee emerse lavorando al percorso Accessori e alle schermate guida. La 1.7.0 ha 
 26. **Nuove guide per gli accessori senza disegno** ★★ ⏱⏱ — webcam in videochiamata, secondo schermo, mouse e tastiera Bluetooth: le lezioni `accessori-2-1` e `accessori-2-2` oggi spiegano a parole ciò che le altre mostrano passo per passo.
 27. **Varianti per modello** ★★ ⏱⏱ — Samsung e Xiaomi per Android, HP ed Epson per le stampanti, macOS Ventura e precedenti (dove si chiama ancora «Preferenze di Sistema»): la guida mostra la variante giusta invece di avvisare che «le scritte possono cambiare».
 28. **Controllo automatico dei disegni** ★★ ⏱⏱ — screenshot di riferimento delle scene e confronto a ogni modifica, per accorgersi da soli di un numero che copre un testo o di un riquadro fuori bersaglio: nella 1.6.0 i due casi sono stati trovati guardando le pagine a mano.
+
+## Dopo la 1.7.0
+
+29. ✅ *fatto in 1.8.0* — **Quiz dal telefono per una persona sola** ★★★ ⏱ — la modalità aula senza gruppo e senza televisore: le domande restano sul monitor del computer, l'allievo risponde dal telefono col QR, correzione e punteggio subito sullo schermo e risultato salvato nella scheda del cliente.
+30. ✅ *fatto in 1.8.0* — **Trasmetti allo schermo** ★★★ ⏱⏱ — un pulsante in vista manda le domande a un Chromecast in Wi-Fi, oppure apre lo schermo grande in una finestra per cavo HDMI, Fire TV o secondo monitor; la pagina dello schermo mostra domanda, colori, tempo, barre e classifica, con il tutto schermo.
+31. **Trasmissione come app Cast registrata** ★★ ⏱⏱⏱ — per comparire nell'elenco dei dispositivi anche senza il selettore di Chrome, con un ricevitore Cast dedicato e il suo identificativo, senza cambiare la pagina dello schermo.
+
+## Dopo la 1.8.0
+
+32. ✅ *fatto in 1.9.0* — **Segni e voce** ★★★ ⏱⏱ — comunicatore a frasi intere che legge ad alta voce (per chi non parla, anche al telefono e allo sportello) e video in lingua dei segni registrati con la webcam, salvati sul dispositivo, collegati alle lezioni e condivisibili (per chi non sente).
+33. **Dizionario LIS condiviso** ★★ ⏱⏱ — esportare i video in un pacchetto cifrato da dare all'allievo (o da ricevere da un collega), così i segni registrati una volta viaggiano senza WhatsApp e restano ordinati per parola e lezione.
+34. **Riconoscimento dei segni sul dispositivo** ★★★ ⏱⏱⏱ — tradurre in testo i segni ripresi dalla webcam: oggi servono modelli grandi e non è realistico dentro una PWA offline; si può provare con un modello ridotto solo per un alfabeto di poche lettere, dichiarando i limiti.

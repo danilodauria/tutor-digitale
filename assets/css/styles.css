@@ -715,3 +715,57 @@ html.print-land .print-page { page: orizzontale; }
   html:not(.printing-doc) body { background: #fff; }
   html:not(.printing-doc) .card { box-shadow: none; break-inside: avoid; }
 }
+
+/* ----------------------------------------------------------- 1.8: quiz dal telefono e schermo grande */
+.aula-cast { display: grid; grid-template-columns: auto 1fr auto; gap: .9rem; align-items: center; background: var(--surface, #fff); border: 1px solid var(--line, #d8dee9); border-left: 6px solid var(--notte-2, #1d3557); border-radius: var(--radius, 14px); padding: .9rem 1.1rem; margin: 0 0 1.2rem; }
+.aula-cast .ico { width: 30px; height: 30px; }
+.aula-cast strong { display: block; }
+.aula-cast small { display: block; opacity: .75; }
+.aula-cast-bottoni { display: flex; flex-wrap: wrap; gap: .5rem; }
+.aula-cast.attiva { border-left-color: var(--ok, #3f9a63); }
+.aula-cast.attiva .ico { color: var(--ok, #3f9a63); }
+.aula-altra { margin: 1.6rem 0 0; }
+
+/* lo schermo grande: identico sul televisore, sul Chromecast o sul secondo monitor */
+.schermo-page { margin: 0; min-height: 100vh; background: #0f1f36; color: #fff; font-family: var(--sans, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif); }
+.schermo-app { min-height: 100vh; display: flex; flex-direction: column; gap: 1.2rem; padding: clamp(1.2rem, 3vw, 3rem); justify-content: center; box-sizing: border-box; }
+.sch-live { position: fixed; top: 1rem; right: 1rem; font-size: .8rem; opacity: .55; letter-spacing: .06em; }
+.sch-top { display: flex; justify-content: space-between; align-items: center; font-size: clamp(1rem, 2vw, 1.5rem); opacity: .85; }
+.sch-tempo { font-size: clamp(2rem, 6vw, 4rem); font-weight: 800; }
+.sch-domanda { font-size: clamp(1.6rem, 4.6vw, 3.4rem); line-height: 1.15; margin: 0; }
+.sch-domanda em { opacity: .85; }
+.sch-opzioni { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.sch-opz { display: flex; gap: 1rem; align-items: center; background: var(--c); border-radius: 16px; padding: 1rem 1.3rem; font-size: clamp(1rem, 2.4vw, 1.9rem); font-weight: 600; }
+.sch-opz.spenta { opacity: .3; } .sch-opz.giusta { outline: 6px solid #fff; }
+.sch-forma { font-weight: 800; white-space: nowrap; }
+.sch-distr { display: flex; gap: 1rem; align-items: flex-end; height: 22vh; }
+.sch-col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; gap: .4rem; }
+.sch-col i { width: 100%; min-height: 4px; border-radius: 8px 8px 0 0; display: block; }
+.sch-col b { font-size: 1.5rem; } .sch-col span { opacity: .8; }
+.sch-spiega { font-size: clamp(1rem, 2vw, 1.5rem); opacity: .9; margin: 0; }
+.sch-center { text-align: center; margin: auto; }
+.sch-center h1 { font-size: clamp(2rem, 6vw, 4.4rem); margin: 0 0 1rem; }
+.sch-big { font-size: clamp(1.3rem, 3vw, 2.4rem); }
+.sch-nota { opacity: .7; font-size: clamp(1rem, 1.8vw, 1.4rem); }
+.sch-punteggio { font-size: clamp(1.2rem, 2.6vw, 2rem); }
+.sch-classifica { list-style: none; padding: 0; display: grid; gap: .5rem; max-width: 900px; margin: 1rem auto; width: 100%; }
+.sch-classifica li { display: grid; grid-template-columns: 2.4rem 1fr auto; gap: 1rem; background: rgba(255, 255, 255, .08); border-radius: 12px; padding: .6rem 1rem; font-size: clamp(1rem, 2vw, 1.5rem); text-align: left; }
+.sch-classifica em { font-style: normal; opacity: .8; }
+.sch-pieno { position: fixed; bottom: 1rem; right: 1rem; background: rgba(255, 255, 255, .12); color: #fff; border: 1px solid rgba(255, 255, 255, .3); border-radius: 999px; padding: .5rem .9rem; font-size: .9rem; cursor: pointer; }
+@media (max-width: 760px) { .aula-cast { grid-template-columns: auto 1fr; } .aula-cast-bottoni { grid-column: 1 / -1; } .sch-opzioni { grid-template-columns: 1fr; } }
+
+/* ----------------------------------------------------------- 1.9: segni e voce */
+.segni-cat { display: flex; flex-wrap: wrap; gap: .5rem; margin: .4rem 0 1rem; }
+.segni-griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .7rem; }
+.segni-voce { display: flex; align-items: center; gap: .7rem; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: .8rem .9rem; min-height: 76px; font: inherit; color: inherit; cursor: pointer; }
+.segni-voce:hover, .segni-voce:focus-visible { border-color: var(--notte-2); }
+.segni-emo { font-size: 1.8rem; line-height: 1; }
+.segni-testo { font-weight: 600; }
+.segni-frase { min-height: 3.4rem; border: 2px dashed var(--line-2); border-radius: var(--radius-sm); padding: .9rem 1rem; margin: 1rem 0; font-size: clamp(1.1rem, 2vw, 1.5rem); }
+.segni-rapide { display: flex; flex-wrap: wrap; gap: .5rem; margin: .5rem 0 .2rem; }
+.segni-rapide .btn { min-height: 52px; }
+.segni-live { width: min(520px, 100%); aspect-ratio: 4 / 3; background: #000; border-radius: var(--radius-sm); }
+.segni-video-lista { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); margin-top: 1rem; }
+.segni-video h3 { margin: 0 0 .5rem; font-size: 1.05rem; }
+.segni-video video { width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; background: #000; }
+.segni-ricerca { max-width: 420px; margin-top: 1rem; }

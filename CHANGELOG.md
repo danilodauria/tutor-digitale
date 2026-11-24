@@ -1,5 +1,26 @@
 # Versioni
 
+## 1.10.0 · 24 novembre 2026
+
+- **Quiz dal telefono anche in piccolo gruppo**: nella modalità `#/quiz-telefono` si sceglie «1 persona» o «Fino a 4 persone». Le domande restano sul monitor, ognuno risponde dal proprio telefono col QR; con più di una persona la correzione mostra le risposte e una classifica essenziale, il telefono dice la propria posizione e alla fine i risultati si salvano nella scheda del gruppo (con una persona resta il riepilogo individuale nella scheda del cliente). Un quinto telefono riceve un avviso di quiz completo; l'aula di gruppo resta com'era.
+- **Trasmetti allo schermo più affidabile**: la finestra si apre subito dentro il clic (niente popup bloccati), il selettore Chromecast è un'azione separata, lo schermo si riaggancia da solo se la connessione cade e si ferma quando l'aula chiude.
+- **Schermo e telefono sempre allineati**: la pagina dello schermo richiede lo stato se non arriva, il conto alla rovescia non torna più al valore pieno a ogni aggiornamento e nelle stanze piccole il telefono recupera da solo un messaggio perso.
+- **Meno rami duplicati**: form e schermata d'attesa del tutor condivisi tra singolo e piccolo gruppo, tolti campi di stato che nessuno leggeva.
+- **Aggiornamento garantito**: nuova versione della cache del service worker (sito e app Allievo), così chi aveva già la 1.9.0 riceve i file nuovi al primo ricaricamento, senza perdere dati e impostazioni.
+
+## 1.9.0 · 24 novembre 2026
+
+- **Segni e voce**: una pagina nuova per rendere il programma utilizzabile anche da chi non sente e da chi non parla, senza servizi esterni. Il **comunicatore a frasi** mette in fila frasi intere scelte con due tocchi (presentarsi, bisogni, lezione, emergenza, cortesia, emozioni, più le risposte rapide sì/no) e le legge ad alta voce con la voce del dispositivo.
+- **Video in lingua dei segni (LIS)**: la webcam registra un saluto, una spiegazione o il segno di una parola, con titolo e collegamento alla lezione; il video resta nel browser (IndexedDB), si rivede nella pagina, si scarica, si condivide con WhatsApp o email e si elimina. Massimo 90 secondi per video; la webcam si accende solo premendo il pulsante e si spegne da sola uscendo dalla pagina.
+- **Collegamento alle lezioni**: nella testata di ogni lezione c'è «Video in LIS», che apre la registrazione già intitolata con il nome della lezione; la pagina compare anche nella home e nel menu delle due app.
+- **Aggiornamento garantito**: nuova versione della cache del service worker (sito e app Allievo), così chi aveva già la 1.8.0 riceve i file nuovi al primo ricaricamento, senza perdere dati e impostazioni.
+
+## 1.8.0 · 24 novembre 2026
+
+- **Quiz dal telefono per una persona sola**: una modalità separata dall'aula di gruppo (`#/quiz-telefono`) pensata per chi è da solo davanti al computer. Le domande restano sul monitor, senza bisogno di un televisore: la persona inquadra il QR col telefono, scrive il nome e risponde; la correzione e il punteggio compaiono subito sullo schermo e alla fine il risultato si salva nella scheda del cliente. Un solo telefono per volta; l'aula di gruppo resta com'era.
+- **Trasmetti allo schermo**: un pulsante sempre in vista sopra il quiz manda le domande a un Chromecast in Wi-Fi (con il selettore dei dispositivi del browser) o apre una finestra da portare sul televisore con il cavo HDMI; per il Fire TV si usa il rispecchiamento dello schermo del sistema. La nuova pagina `schermo/` riceve le domande dallo stesso canale cifrato, le mostra in grande con i colori delle risposte, il tempo, le barre dei risultati e la classifica, e ha il pulsante «Schermo intero».
+- **Aggiornamento garantito**: nuova versione della cache del service worker (sito e app Allievo), così chi aveva già la 1.7.0 riceve i file nuovi al primo ricaricamento, senza perdere dati e impostazioni.
+
 ## 1.7.0 · 23 novembre 2026
 
 - **Percorso di partenza dal test d'ingresso**: dopo il test il tutor vede subito il percorso consigliato (un incontro per percorso, con le prime lezioni dal livello emerso) e con un pulsante lo crea e apre nell'editor, pronto da controllare e assegnare.

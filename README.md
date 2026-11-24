@@ -35,8 +35,11 @@ Chi insegna tecnologia a domicilio o nelle associazioni ha bisogno di tre cose i
 | **Editor** | Lezioni, domande e schermate annotate (frecce, cerchi, numeri, scritte) proprie, con esportazione e importazione. |
 | **Schermate guida** | Diciassette guide disegnate per Android, iPhone, Windows, Mac, Smart TV, stampante, scanner, chiavette e dischi esterni, cuffie Bluetooth, con il punto da toccare a ogni passo, stampabili, filtrabili per dispositivo e per lezione e con la ricerca per parola. Ogni passo ha il suo link e la sua pagina, con la lettura ad alta voce. |
 | **Modalità aula** | Domanda sulla Smart TV, risposte dai telefoni con un QR, classifica; canale cifrato end-to-end, oppure alzata di mano senza Internet. |
+| **Quiz dal telefono** | Per una persona sola o fino a quattro, anche senza televisore: le domande restano sul monitor del computer, ognuno risponde dal telefono col QR, la correzione si vede sullo schermo e i risultati finiscono nella scheda. |
+| **Trasmetti allo schermo** | Un pulsante manda le domande a un Chromecast in Wi-Fi oppure apre lo schermo grande in una finestra per il cavo HDMI, il Fire TV o il secondo monitor; la pagina dello schermo ha il tutto schermo. |
 | **Fattura elettronica** | File XML FatturaPA (FPR12) per forfettari, minimi e regime ordinario, con PDF di cortesia, da caricare nel portale dell'Agenzia delle Entrate. |
 | **Accessibilità** | Contrasto elevato, pulsanti grandi, niente animazioni, «un pulsante alla volta» per chi ha difficoltà motorie; controllo axe WCAG 2 AA. |
+| **Segni e voce** | Comunicatore a frasi che legge ad alta voce (per chi non parla) e video in lingua dei segni registrati con la webcam, salvati sul dispositivo e collegati alle lezioni (per chi non sente). |
 | **Sincronizzazione** | PC, tablet e telefono del tutor abbinati con un QR e allineati con un archivio cifrato end-to-end; oppure backup cifrato con «Unisci». |
 | **Casella condivisa** | Per ogni cliente note, password con scadenza e piccoli file cifrati tra tutor e allievo. |
 | **Assistente vocale** | Domande a voce o scritte, risposte cercate sul dispositivo nelle lezioni e nelle guide, lette ad alta voce. |
@@ -68,6 +71,21 @@ A lezione basta un **QR code**: l'allievo inquadra con la fotocamera il kit, la 
 
 Come un TeamViewer semplice e senza installazioni: chi apre la sessione manda un **codice** e detta una **password di 6 cifre** che cambia a ogni sessione e ogni 10 minuti; l'altro rimanda un codice di risposta e i due dispositivi si collegano **direttamente** (WebRTC, cifrato). Si vede lo schermo dell'altro, si scrive in chat, si scambiano file e compiti. Il browser permette di vedere lo schermo ma non di comandare il mouse dell'altro: per il controllo completo si affianca un programma dedicato come RustDesk. Per trovarsi in rete la sessione usa i server pubblici STUN di Google e Cloudflare, che vedono solo gli indirizzi di rete.
 
+### Quiz dal telefono e schermo grande
+
+Non serve un televisore per far rispondere qualcuno dal telefono. In **Altro › Quiz dal telefono** (o dalla tile in home) il tutor sceglie livello, percorso, numero di domande, secondi e **partecipanti** (una persona oppure fino a quattro), apre la stanza e mostra un **QR**: ognuno lo inquadra, scrive il nome e risponde dal telefono, mentre le domande restano sul **monitor del computer**. La correzione appare subito; con una persona il punteggio è il suo, con due o più compare una classifica essenziale e alla fine i risultati si salvano nella scheda del gruppo (per una persona resta il riepilogo individuale nella scheda del cliente). È la versione raccolta della modalità aula: stesso canale cifrato, al massimo quattro telefoni, nessun televisore necessario.
+
+Sopra il quiz c'è il pulsante **«Trasmetti allo schermo»**: apre subito la pagina `schermo/` in una finestra, da trascinare sul televisore, da mostrare con *Chrome › Trasmetti* o da portare col cavo HDMI. Dove il browser ha il selettore dei dispositivi, il pulsante **«Chromecast»** manda le domande direttamente a un dispositivo in Wi-Fi; con il **Fire TV** si usa il rispecchiamento dello schermo del sistema. Il pulsante «Schermo intero» della pagina dello schermo toglie ogni cornice. Le domande viaggiano dallo stesso canale cifrato della stanza: lo schermo non ha comandi e non vede le risposte prima del tempo.
+
+### Segni e voce (LIS e comunicazione aumentativa)
+
+La pagina **Segni e voce** (menu Altro nel programma del tutor, voce **Segni** nell'app Allievo, e tile in entrambe le home) riunisce due strumenti che funzionano **senza Internet e senza servizi esterni**:
+
+- **Comunicatore a frasi** — si tocca una categoria (Presentarsi, Bisogni, A lezione, Emergenza, Cortesia, Come sto) e poi una o più frasi intere; la frase composta compare in grande e il pulsante **«Leggi ad alta voce»** la pronuncia con la voce del dispositivo. Ci sono anche le risposte rapide Sì, No, Non capisco, Ancora, Più lentamente, Grazie. Serve a chi non parla per farsi capire al telefono, allo sportello o a lezione; le frasi sull'essere sordi e sul leggere le labbra aiutano anche chi non sente a presentarsi.
+- **Video in lingua dei segni** — con la webcam si registra un saluto, una spiegazione o il segno di una parola (massimo 90 secondi, con audio se c'è il microfono). Il video resta **nel browser del dispositivo** (IndexedDB), compare nell'elenco con titolo, data, durata e lezione, si rivede, si scarica, si condivide con WhatsApp o email e si elimina. La webcam si accende solo premendo il pulsante e si spegne uscendo dalla pagina; nessun video viene inviato a server.
+
+Dalla testata di ogni lezione il pulsante **«Video in LIS»** apre la registrazione già intitolata con il nome della lezione, così il tutor (o un familiare) può registrare la spiegazione una volta e l'allievo sordo la rivede quando vuole. Non è un corso di LIS né un riconoscitore automatico dei segni: i video sono quelli che registri tu, e restano tuoi. Per conservarli o portarli su un altro dispositivo si usano «Scarica» e «Condividi»; non entrano nel backup cifrato del programma.
+
 ## Versione desktop
 
 Ogni [Release](https://github.com/danilodauria/tutor-digitale/releases) contiene i programmi da installare, costruiti da GitHub ([desktop.yml](.github/workflows/desktop.yml)): **Windows** (.exe e versione portatile .zip), **Linux e FeniceOS** (.deb e .AppImage), **Mac** (.dmg). Funzionano offline e si aggiornano da soli. I pacchetti non hanno un certificato a pagamento: al primo avvio Windows e Mac chiedono una conferma.
@@ -95,9 +113,9 @@ PDF, firme, attestati e quiz sono generati sul dispositivo, **senza librerie né
 
 ## Dati e privacy
 
-Non ci sono server, account o statistiche. Modalità aula, sincronizzazione e casella passano da un canale pubblico gratuito (broker MQTT di HiveMQ, EMQX o Mosquitto) con i messaggi cifrati AES-256: il broker vede solo testo illeggibile e un nome di stanza casuale. I dati dei clienti stanno nel browser del dispositivo del tutor (localStorage). Chi usa il programma per lavoro ne è titolare del trattamento: conviene proteggere il dispositivo con una password e fare ogni settimana un **backup cifrato** (*Impostazioni › Backup cifrato con password*): senza la password il file è illeggibile, quindi si può tenere su chiavetta, Google Drive o OneDrive. La home ricorda il backup se l'ultimo ha più di una settimana.
+Non ci sono server, account o statistiche. Modalità aula, quiz dal telefono, schermo trasmesso, sincronizzazione e casella passano da un canale pubblico gratuito (broker MQTT di HiveMQ, EMQX o Mosquitto) con i messaggi cifrati AES-256: il broker vede solo testo illeggibile e un nome di stanza casuale. I dati dei clienti stanno nel browser del dispositivo del tutor (localStorage). Chi usa il programma per lavoro ne è titolare del trattamento: conviene proteggere il dispositivo con una password e fare ogni settimana un **backup cifrato** (*Impostazioni › Backup cifrato con password*): senza la password il file è illeggibile, quindi si può tenere su chiavetta, Google Drive o OneDrive. La home ricorda il backup se l'ultimo ha più di una settimana.
 
-Kit, correzioni e attestati sono firmati con una **chiave ECDSA del tutor** creata sul dispositivo: l'app Allievo mostra «Kit verificato» e rifiuta i kit modificati; la pagina `verifica/` controlla gli attestati senza server.
+I video in lingua dei segni restano nel browser (IndexedDB) e non vengono mai caricati online; la webcam si accende solo su richiesta. Kit, correzioni e attestati sono firmati con una **chiave ECDSA del tutor** creata sul dispositivo: l'app Allievo mostra «Kit verificato» e rifiuta i kit modificati; la pagina `verifica/` controlla gli attestati senza server.
 
 ## Sicurezza
 

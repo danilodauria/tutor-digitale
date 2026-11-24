@@ -198,6 +198,7 @@
           tile("#/info", "user", "Il mio profilo", "Dati e copia di sicurezza") +
           (d.percorso ? tile("#/mio-percorso", "layers", "Il mio percorso", d.percorso.nome) : "") +
           tile("#/aula", "users", "Aula", "Quiz di gruppo con la TV") +
+          tile("#/segni", "hand", "Segni e voce", "Video in LIS e frasi da leggere") +
           (d.casella ? tile("#/casella", "lock", "Casella", "Note e password dal tutor") : "") +
           tile("#/assistente", "speaker", "Chiedi all'assistente", "A voce o scrivendo") +
         "</section>" +

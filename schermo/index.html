@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self'; connect-src 'self' wss://broker.hivemq.com:8884 wss://broker.emqx.io:8084 wss://test.mosquitto.org:8081; worker-src 'self'; manifest-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Schermo dell'aula · Tutor Digitale</title>
+  <meta name="description" content="Lo schermo grande del quiz: mostra le domande dell'aula e del quiz individuale.">
+  <meta name="author" content="Danilo D'Auria">
+  <meta name="theme-color" content="#0f1f36">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="../assets/img/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/css/styles.css?v=1.10.0">
+</head>
+<body class="schermo-page">
+  <main id="schermoApp" class="schermo-app" aria-live="polite">
+    <div class="sch-center"><h1>Tutor Digitale · Aula</h1><p class="sch-nota">Apro lo schermo…</p></div>
+  </main>
+  <script src="../assets/js/relay.js?v=1.10.0"></script>
+  <script src="../assets/js/schermo.js?v=1.10.0"></script>
+</body>
+</html>

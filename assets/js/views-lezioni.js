@@ -68,6 +68,8 @@
         '<section class="tiles">' +
           tile("#/percorsi", "book", "Lezioni", TD.LEZIONI.length + " lezioni in " + TD.LIVELLI.length + " livelli e " + TD.PERCORSI.length + " percorsi") +
           tile("#/quiz", "quiz", "Quiz casuali", "Domande e risposte sempre in ordine diverso") +
+          (TD.MODO !== "allievo" ? tile("#/quiz-telefono", "phone", "Quiz dal telefono", "Una persona o fino a quattro rispondono dal telefono, domande sul monitor") : "") +
+          tile("#/segni", "hand", "Segni e voce", "Video in lingua dei segni e frasi da far leggere") +
           tile("#/esercizi", "target", "Esercizi", "Facile, medio, esperto per ogni lezione") +
           tile("#/allievi", "upload", "App allievi", "Compiti a distanza, correzione automatica") +
           tile("#/clienti", "users", "Clienti", "Schede, registro, compiti, progressi") +
@@ -179,6 +181,7 @@
           '<button class="btn btn-primary" id="leggi">' + I("speaker") + "Leggi ad alta voce</button>" +
           '<button class="btn" id="stop">' + I("pause") + "Ferma</button>" +
           '<a class="btn" href="#/lavagna/' + l.id + '">' + I("screen") + "Modalità lavagna</a>" +
+          '<a class="btn" href="#/segni?lezione=' + E(l.id) + '">' + I("hand") + "Video in LIS</a>" +
           '<button class="btn" id="schedaPdf">' + I("download") + "Scheda PDF</button>" +
           '<a class="btn" href="#/quiz?dev=' + l.dev + "&liv=" + l.liv + '">' + I("quiz") + "Quiz</a>" +
         "</div>" +

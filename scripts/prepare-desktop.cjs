@@ -9,7 +9,7 @@ const path = require("path");
 const R = path.join(__dirname, "..");
 const DEST = path.join(R, "desktop", "app");
 const FILE = ["index.html", "manifest.webmanifest", "sw.js", "LICENSE", "LICENSE-CONTENT.md", "MARCHIO.md", "README.md", "CHANGELOG.md"];
-const CARTELLE = ["assets", "allievo", "verifica"];
+const CARTELLE = ["assets", "allievo", "verifica", "schermo"];
 fs.rmSync(DEST, { recursive: true, force: true });
 fs.mkdirSync(DEST, { recursive: true });
 FILE.forEach((f) => fs.copyFileSync(path.join(R, f), path.join(DEST, f)));

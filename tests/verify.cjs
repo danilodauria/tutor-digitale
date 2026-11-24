@@ -19,7 +19,7 @@ const html = leggi("index.html"), sw = leggi("sw.js");
 const VER = JSON.parse(leggi("package.json")).version;
 const SOLO_ALLIEVO = ["app-allievo.js"];
 const SOLO_VERIFICA = ["verifica.js"];
-const SOLO_TUTOR = ["views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js", "views-lavoro.js", "views-percorsi.js", "views-editor.js", "fattura.js", "sync.js"];
+const SOLO_TUTOR = ["views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js", "views-lavoro.js", "views-percorsi.js", "views-editor.js", "fattura.js", "sync.js", "schermo.js"];
 js.forEach((f) => {
   if (SOLO_ALLIEVO.includes(f) || SOLO_VERIFICA.includes(f)) return;
   ok(html.includes('src="assets/js/' + f + '?v=' + VER + '"'), "index.html non carica " + f + " con ?v=" + VER);
@@ -62,7 +62,7 @@ const ctx = {
 };
 ctx.window = ctx; ctx.self = ctx; ctx.Blob = Blob;
 vm.createContext(ctx);
-["data-lezioni.js", "data-quiz.js", "data-documenti.js", "core.js", "pdf.js", "scambio.js", "views-lezioni.js", "views-quiz.js", "views-palestra.js", "views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js", "views-lavoro.js", "remoto.js", "qr.js", "relay.js", "fattura.js", "guide.js", "views-percorsi.js", "views-editor.js", "aula.js", "accessibilita.js", "sync.js", "casella.js", "assistente.js", "marchio.js"]
+["data-lezioni.js", "data-quiz.js", "data-documenti.js", "data-segni.js", "core.js", "pdf.js", "scambio.js", "views-lezioni.js", "views-quiz.js", "views-palestra.js", "views-clienti.js", "views-documenti.js", "views-altro.js", "views-allievi.js", "views-lavoro.js", "remoto.js", "qr.js", "relay.js", "fattura.js", "guide.js", "views-percorsi.js", "views-editor.js", "aula.js", "segni.js", "accessibilita.js", "sync.js", "casella.js", "assistente.js", "marchio.js"]
   .forEach((f) => vm.runInContext(leggi("assets/js/" + f), ctx, { filename: f }));
 const TD = ctx.TD;
 
@@ -369,6 +369,31 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
     ok((await R.decifra(k1, cif)).x === "àè", "canale: cifratura e decifratura");
     let altra = false; try { await R.decifra(k2, cif); } catch (e) { altra = true; }
     ok(altra, "canale: con un'altra chiave il messaggio è illeggibile");
+    /* quiz dal telefono: una sola persona, riepilogo e trasmissione sullo schermo */
+    const rs = TD.aula.riepilogoSolo({ g1: { nome: "Piero", punti: 780, giuste: 6 } }, 8);
+    ok(rs && rs.perc === 75 && rs.totale === 8 && rs.nome === "Piero", "aula: riepilogo del quiz individuale");
+    ok(TD.aula.riepilogoSolo({}, 8) === null, "aula: senza partecipanti non c'è riepilogo");
+    ok(TD.aula.maxPartecipanti(true, "1") === 1 && TD.aula.maxPartecipanti(true, 1) === 1 && TD.aula.maxPartecipanti(true, "4") === 4 && TD.aula.maxPartecipanti(true, "99") === 4 && TD.aula.maxPartecipanti(false, "4") === 200, "aula: limite di partecipanti (quiz dal telefono 1 o 4, aula senza limite)");
+    const ind = TD.trasmissione.indirizzo("https://esempio.test/tutor-digitale/", "stanza1", "chiave1");
+    ok(ind === "https://esempio.test/tutor-digitale/schermo/index.html#/schermo?s=stanza1&k=chiave1", "trasmissione: indirizzo dello schermo (" + ind + ")");
+    const indA = TD.trasmissione.indirizzo("https://esempio.test/tutor-digitale/allievo/", "s2", "k2");
+    ok(indA.indexOf("/tutor-digitale/schermo/index.html#/schermo?s=s2&k=k2") > 0, "trasmissione: dall'app Allievo si usa la cartella giusta (" + indA + ")");
+    ok(TD.trasmissione.finestra.constructor.name === "Function", "trasmissione: la finestra si apre in modo sincrono, dentro il clic");
+    ok(TD.trasmissione.dispositivo.constructor.name === "AsyncFunction", "trasmissione: il selettore dei dispositivi è un'azione separata che può attendere");
+    ok(/<meta http-equiv="Content-Security-Policy"/.test(leggi("schermo/index.html")), "schermo: la pagina grande ha la Content-Security-Policy");
+  }
+
+  /* 18b. Segni e voce: comunicatore a frasi e video in lingua dei segni */
+  {
+    ok(TD.segni.frase(["Sì", " Grazie "]) === "Sì Grazie.", "segni: la frase mette in fila le scelte");
+    ok(TD.segni.frase([]) === "" && TD.segni.frase(["Non ho capito?"]) === "Non ho capito?", "segni: frase vuota e punteggiatura");
+    ok(TD.segni.durata(65) === "1:05" && TD.segni.durata(5) === "0:05" && TD.segni.durata(-3) === "0:00", "segni: durata dei video");
+    ok(TD.segni.nomeVideo("LIS · Come accendere il PC", "video/webm") === "lis-come-accendere-il-pc.webm", "segni: nome del file video (" + TD.segni.nomeVideo("LIS · Come accendere il PC", "video/webm") + ")");
+    ok(TD.segni.nomeVideo("", "video/mp4") === "video-lis.mp4", "segni: nome del file di riserva");
+    const vv = [{ titolo: "Accendere il computer", lezioneNome: "Primi passi" }, { titolo: "Spegnere", lezioneNome: "Sicurezza" }];
+    ok(TD.segni.cerca(vv, "computer").length === 1 && TD.segni.cerca(vv, "SICUREZZA").length === 1 && TD.segni.cerca(vv, "").length === 2, "segni: ricerca tra i video");
+    ok(TD.SEGNI.categorie.length >= 5 && TD.SEGNI.categorie.every((c) => c.voci.length >= 5 && c.voci.every((v) => v.t && v.t.length > 3 && v.e)), "segni: frasi pronte per il comunicatore");
+    ok(TD.SEGNI.rapide.some((v) => v.t === "Sì") && TD.SEGNI.rapide.some((v) => v.t === "No"), "segni: risposte rapide sì e no");
   }
 
   /* 19. sincronizzazione: unione di due archivi (13) */
