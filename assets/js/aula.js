@@ -46,11 +46,19 @@
     },
     /* il quiz dal telefono accetta una persona o un piccolo gruppo (massimo 4);
        l'aula di gruppo resta senza limite pratico */
-    maxPartecipanti: function (solo, scelta) { return solo ? (Number(scelta) > 1 ? 4 : 1) : 200; }
+    maxPartecipanti: function (solo, scelta) { return solo ? (Number(scelta) > 1 ? 4 : 1) : 200; },
+    /* chi chiude il telefono smette di riannunciarsi: dopo la tolleranza il
+       posto torna libero (in attesa il telefono manda «entra» ogni 5 secondi) */
+    scaduti: function (giocatori, ora, tolleranza) {
+      const t = Math.max(1000, Number(tolleranza) || 20000);
+      return Object.keys(giocatori || {}).filter(function (id) {
+        return Number(ora) - (Number(giocatori[id].visto) || 0) > t;
+      });
+    }
   };
 
   /* ================================================================ TUTOR: proiettore */
-  const H = { fase: "pronto", stanza: "", chiave: "", canale: null, domande: [], i: -1, giocatori: Object.create(null), risposte: Object.create(null), inizio: 0, tempo: 30, mostra: false, manuale: false, solo: false, max: 1, conta: [], timer: null, clienteId: "" };
+  const H = { fase: "pronto", stanza: "", chiave: "", canale: null, domande: [], i: -1, giocatori: Object.create(null), risposte: Object.create(null), inizio: 0, tempo: 30, mostra: false, manuale: false, solo: false, max: 1, conta: [], timer: null, pulizia: null, clienteId: "" };
   TD.aulaStato = H;
 
   function linkAula() { return URL_AULA + "?s=" + H.stanza + "&k=" + H.chiave; }
@@ -69,7 +77,7 @@
       classifica: H.fase === "fine" || H.mostra ? TD.aula.classifica(H.giocatori).slice(0, 10).map(function (g) { return { id: g.id, nome: g.nome, punti: g.punti, giuste: g.giuste }; }) : [] };
   }
   async function apriStanza(manuale, solo, max) {
-    clearInterval(H.timer); clearInterval(H.eco);
+    clearInterval(H.timer); clearInterval(H.eco); clearInterval(H.pulizia);
     H.manuale = !!manuale; H.solo = !!solo; H.max = TD.aula.maxPartecipanti(!!solo, max); H.conta = []; H.giocatori = Object.create(null); H.risposte = Object.create(null); H.i = -1; H.mostra = false;
     if (manuale) { H.fase = "attesa"; ridisegna(); return; }
     H.stanza = TD.relay.nuovaStanza(); H.chiave = TD.relay.nuovaChiave(); H.fase = "collegamento"; ridisegna();
@@ -77,26 +85,42 @@
       H.canale = await TD.relay.collega({ stanza: H.stanza, chiave: H.chiave, suMessaggio: ricevi, suStato: function (s) { if (s === "chiuso" && H.fase !== "pronto") { TD.toast("Canale interrotto: riapri l'aula."); } } });
       H.fase = "attesa"; ridisegna();
       clearInterval(H.eco); H.eco = setInterval(function () { if (H.canale && H.fase !== "pronto") trasmetti(statoPubblico()); }, 4000);
+      /* nella sala d'attesa i telefoni si riannunciano ogni 5 secondi: chi non
+         lo fa più ha chiuso la pagina e libera il posto per il quinto */
+      clearInterval(H.pulizia); H.pulizia = setInterval(function () {
+        if (!H.solo || H.fase !== "attesa") return;
+        const via = TD.aula.scaduti(H.giocatori, Date.now(), 20000);
+        if (!via.length) return;
+        via.forEach(function (id) { delete H.giocatori[id]; });
+        trasmetti(statoPubblico()); ridisegna();
+      }, 5000);
     } catch (e) { H.fase = "pronto"; TD.toast(e.message + " Puoi usare la conta per alzata di mano."); ridisegna(); }
   }
   function ricevi(m) {
     if (!TD.idOk(m.id)) return;   // identificativi strani (anche «__proto__») si ignorano
-    if (m.t === "schermo" || m.t === "ping") { trasmetti(statoPubblico()); return; }   // lo schermo (o un telefono rimasto indietro) chiede subito lo stato
+    if (m.t === "schermo" || m.t === "ping") {
+      if (m.t === "ping" && H.giocatori[m.id]) H.giocatori[m.id].visto = Date.now();
+      trasmetti(statoPubblico()); return;   // lo schermo (o un telefono rimasto indietro) chiede subito lo stato
+    }
     if (m.t === "entra" && Object.keys(H.giocatori).length < 200) {
       /* quiz dal telefono: una persona o al massimo quattro; gli altri ricevono un avviso solo per loro */
-      if (H.solo && !H.giocatori[m.id] && Object.keys(H.giocatori).length >= H.max) { trasmetti({ t: "pieno", id: m.id, max: H.max }); return; }
+      /* a partita iniziata non entra un telefono nuovo (chi c'era può rientrare);
+         nella sala d'attesa il limite è il numero scelto dal tutor */
+      if (H.solo && !H.giocatori[m.id] && (H.fase !== "attesa" || Object.keys(H.giocatori).length >= H.max)) { trasmetti({ t: "pieno", id: m.id, max: H.max, fase: H.fase }); return; }
       const nome = String(m.nome || "Partecipante").slice(0, 24);
       const nuovo = !H.giocatori[m.id];
       const rinominato = !nuovo && H.giocatori[m.id].nome !== nome;
-      if (nuovo) H.giocatori[m.id] = { nome: nome, punti: 0, giuste: 0 };
-      else if (rinominato) H.giocatori[m.id].nome = nome;
+      if (nuovo) H.giocatori[m.id] = { nome: nome, punti: 0, giuste: 0, visto: Date.now() };
+      else { H.giocatori[m.id].visto = Date.now(); if (rinominato) H.giocatori[m.id].nome = nome; }
       /* il telefono si riannuncia ogni 5 secondi finché si aspetta: si risponde sempre,
          ma si ridisegna solo se è cambiato qualcosa (altrimenti i clic vanno persi) */
+      trasmetti({ t: "dentro", id: m.id });
       trasmetti(statoPubblico());
       if (nuovo || rinominato) ridisegna();
     } else if (m.t === "risposta" && Object.prototype.hasOwnProperty.call(H.giocatori, m.id) && domanda() && m.n === domanda().n && !H.mostra && !H.risposte[m.id]) {
       const sc = Math.floor(Number(m.scelta));
       if (!(sc >= 0 && sc < domanda().opzioni.length)) return;
+      H.giocatori[m.id].visto = Date.now();
       H.risposte[m.id] = { scelta: sc, ms: Date.now() - H.inizio };
       ridisegna();
       if (Object.keys(H.risposte).length >= Object.keys(H.giocatori).length) rivela();
@@ -127,7 +151,7 @@
     trasmetti(statoPubblico()); ridisegna();
   }
   function chiudiAula() {
-    clearInterval(H.timer); clearInterval(H.eco);
+    clearInterval(H.timer); clearInterval(H.eco); clearInterval(H.pulizia);
     if (H.canale) { trasmetti({ t: "stato", fase: "chiusa" }); setTimeout(function () { if (H.canale) H.canale.chiudi(); H.canale = null; }, 300); }
     Object.assign(H, { fase: "pronto", domande: [], i: -1, giocatori: Object.create(null), risposte: Object.create(null), mostra: false, manuale: false, solo: rottaSolo });
     TD.trasmissione.ferma(true);
@@ -329,7 +353,7 @@
   }
 
   /* ================================================================ ALLIEVO: telefono */
-  const G = { canale: null, stato: null, id: "", nome: "", scelta: -1, n: 0, s: "", k: "", errore: "", ultimo: 0 };
+  const G = { canale: null, stato: null, id: "", nome: "", scelta: -1, n: 0, s: "", k: "", errore: "", attesaPosto: false, posti: 4, ultimo: 0 };
   function idGiocatore() {
     try { let v = sessionStorage.getItem("td-aula-id"); if (!v) { v = TD.uid("g"); sessionStorage.setItem("td-aula-id", v); } return v; } catch (e) { return G.id || TD.uid("g"); }
   }
@@ -345,10 +369,22 @@
     G.id = idGiocatore();
     try {
       G.canale = await TD.relay.collega({ stanza: G.s, chiave: G.k, suMessaggio: function (m) {
-        if (m.t === "pieno" && m.id === G.id) { const cap = Math.min(4, Math.max(1, Number(m.max) || 1)); G.errore = cap > 1 ? "Il quiz è al completo: ci sono già " + cap + " partecipanti." : "Questa sessione è già occupata: chiedi al tutor di riaprirla."; ridisegna(); return; }
+        if (m.t === "dentro" && m.id === G.id) {
+          if (G.attesaPosto || G.errore) { G.attesaPosto = false; G.errore = ""; ridisegna(); }
+          return;
+        }
+        if (m.t === "pieno" && m.id === G.id) {
+          const cap = Math.min(4, Math.max(1, Number(m.max) || 1)); G.posti = cap;
+          if (m.fase === "attesa") { G.attesaPosto = true; G.errore = ""; }
+          else if (m.fase === "chiusa") { G.attesaPosto = false; G.errore = "L'aula è stata chiusa."; }
+          else { G.attesaPosto = false; G.errore = "Il quiz è già iniziato: non è possibile entrare ora. Chiedi al tutor di riaprire l'aula."; }
+          ridisegna(); return;
+        }
         if (m.t !== "stato") return;
         G.stato = statoSicuro(m);
         G.ultimo = Date.now();
+        if (G.attesaPosto && G.stato.fase !== "attesa") { G.attesaPosto = false; G.errore = "Il quiz è già iniziato: non è possibile entrare ora. Chiedi al tutor di riaprire l'aula."; }
+        if (G.stato.fase === "chiusa") { G.attesaPosto = false; G.errore = ""; }
         if (G.stato.n !== G.n) { G.n = G.stato.n; G.scelta = -1; }
         ridisegna();
       }, suStato: function (s) { if (s === "chiuso") { G.errore = "Collegamento interrotto. Inquadra di nuovo il QR."; ridisegna(); } } });
@@ -368,6 +404,7 @@
     let corpo;
     if (!G.s || !G.k) corpo = '<section class="card"><h2>Aula</h2><p>Per entrare inquadra il QR mostrato dal tutor sullo schermo del computer o sulla TV.</p></section>';
     else if (G.errore) corpo = '<section class="card"><h2>Non riesco a entrare</h2><p>' + E(G.errore) + "</p></section>";
+    else if (G.attesaPosto) corpo = '<section class="card"><h2>Aula al completo</h2><p>' + (G.posti === 1 ? "C'è già un partecipante." : "Ci sono già " + G.posti + " partecipanti.") + (G.posti === 1 ? " Resta su questa pagina: appena si libera, entri automaticamente." : " Resta su questa pagina: appena uno esce, entri automaticamente.") + '</p><p class="muted">Controllo ogni pochi secondi…</p></section>';
     else if (!G.canale) corpo = '<form class="card form" id="gForm"><h2>' + I("users") + 'Entra in aula</h2><label class="field"><span>Il tuo nome</span><input name="nome" required maxlength="24" value="' + E(G.nome || (TD.db.allievo && TD.db.allievo.nome) || "") + '" autocomplete="given-name"></label><div class="actions"><button class="btn btn-primary btn-lg" type="submit">' + I("play") + "Entra</button></div></form>";
     else if (!st || st.fase === "attesa") corpo = '<section class="card aula-tel"><h2>Ci sei, ' + E(G.nome) + '!</h2><p class="aula-grande">Guarda lo schermo del tutor: si comincia tra poco.</p></section>';
     else if (st.fase === "chiusa") corpo = '<section class="card"><h2>Aula chiusa</h2><p>Grazie per aver partecipato!</p><a class="btn" href="#/">Torna all\'inizio</a></section>';

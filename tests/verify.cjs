@@ -392,6 +392,9 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
     /* quiz dal telefono: una sola persona, riepilogo e trasmissione sullo schermo */
     const rs = TD.aula.riepilogoSolo({ g1: { nome: "Piero", punti: 780, giuste: 6 } }, 8);
     ok(rs && rs.perc === 75 && rs.totale === 8 && rs.nome === "Piero", "aula: riepilogo del quiz individuale");
+    /* chi chiude il telefono non deve tenere occupato il posto per sempre */
+    ok(JSON.stringify(TD.aula.scaduti({ a: { visto: 1000 }, b: { visto: 9000 } }, 10000, 5000)) === '["a"]', "aula: chi non si annuncia più libera il posto");
+    ok(TD.aula.scaduti({ a: { visto: 9500 } }, 10000, 5000).length === 0, "aula: chi si è appena annunciato resta collegato");
     ok(TD.aula.riepilogoSolo({}, 8) === null, "aula: senza partecipanti non c'è riepilogo");
     ok(TD.aula.maxPartecipanti(true, "1") === 1 && TD.aula.maxPartecipanti(true, 1) === 1 && TD.aula.maxPartecipanti(true, "4") === 4 && TD.aula.maxPartecipanti(true, "99") === 4 && TD.aula.maxPartecipanti(false, "4") === 200, "aula: limite di partecipanti (quiz dal telefono 1 o 4, aula senza limite)");
     const ind = TD.trasmissione.indirizzo("https://esempio.test/tutor-digitale/", "stanza1", "chiave1");

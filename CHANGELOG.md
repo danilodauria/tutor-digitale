@@ -1,5 +1,9 @@
 # Versioni
 
+## 1.11.2 · 24 novembre 2026
+
+- **Quinto telefono in sala d'attesa**: se uno dei quattro partecipanti chiude la pagina (o perde la connessione), dopo circa 20 secondi il suo posto si libera e il quinto telefono entra automaticamente, senza ricaricare. Se invece il quiz è già iniziato, il quinto riceve un messaggio chiaro: non si può entrare a partita in corso e va chiesto al tutor di riaprire l'aula. Cache aggiornata alla 1.11.2.
+
 ## 1.11.1 · 24 novembre 2026
 
 - **Statistiche dei quiz di gruppo corrette**: i risultati di un quiz a più persone ora contano come **una sola sessione** nella media quiz e nel conteggio della scheda cliente, non come quattro quiz separati. Nella scheda restano visibili i risultati dei partecipanti (nome e percentuale) e la media del gruppo; cruscotto, andamento delle statistiche e attestato usano la media della sessione. Cache aggiornata alla 1.11.1.
