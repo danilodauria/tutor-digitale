@@ -419,8 +419,8 @@
   function quiz(body, c) {
     const l = (c.quiz || []).slice().reverse();
     body.innerHTML = '<section class="card"><h2>Risultati dei quiz</h2><div class="actions"><a class="btn btn-primary" href="#/quiz" id="fq">' + I("play") + "Nuovo quiz per questo cliente</a></div>" +
-      (l.length ? '<table class="table"><thead><tr><th>Data</th><th>Livello</th><th>Percorso</th><th>Risultato</th></tr></thead><tbody>' + l.map(function (x) {
-        return "<tr><td>" + E(TD.dataIt(x.data)) + "</td><td>" + (x.liv !== "" && x.liv != null ? TD.badgeLiv(Number(x.liv)) : "Tutti") + "</td><td>" + E(x.dev && x.dev !== "tutti" ? TD.percorso(x.dev).nome : "Tutti") + "</td><td><strong>" + x.perc + "%</strong> (" + x.giuste + "/" + x.totale + ")</td></tr>";
+      (l.length ? '<table class="table"><thead><tr><th>Data</th><th>Chi</th><th>Livello</th><th>Percorso</th><th>Risultato</th></tr></thead><tbody>' + l.map(function (x) {
+        return "<tr><td>" + E(TD.dataIt(x.data)) + "</td><td>" + E(x.nome || "—") + "</td><td>" + (x.liv !== "" && x.liv != null ? TD.badgeLiv(Number(x.liv)) : "Tutti") + "</td><td>" + E(x.dev && x.dev !== "tutti" ? TD.percorso(x.dev).nome : "Tutti") + "</td><td><strong>" + x.perc + "%</strong> (" + x.giuste + "/" + x.totale + ")</td></tr>";
       }).join("") + "</tbody></table>" : '<p class="muted">Nessun quiz ancora.</p>') + "</section>";
     document.getElementById("fq").onclick = function () { TD.impostaClienteAttivo(c.id); };
   }

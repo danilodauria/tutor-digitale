@@ -1,5 +1,9 @@
 # Versioni
 
+## 1.10.1 · 24 novembre 2026
+
+- **Risultati di gruppo leggibili nella scheda**: nella scheda del cliente la tabella dei quiz ha la colonna «Chi» con il nome del partecipante, così i risultati di un quiz dal telefono a più persone non sono più righe identiche senza nome. Cache aggiornata alla 1.10.1.
+
 ## 1.10.0 · 24 novembre 2026
 
 - **Quiz dal telefono anche in piccolo gruppo**: nella modalità `#/quiz-telefono` si sceglie «1 persona» o «Fino a 4 persone». Le domande restano sul monitor, ognuno risponde dal proprio telefono col QR; con più di una persona la correzione mostra le risposte e una classifica essenziale, il telefono dice la propria posizione e alla fine i risultati si salvano nella scheda del gruppo (con una persona resta il riepilogo individuale nella scheda del cliente). Un quinto telefono riceve un avviso di quiz completo; l'aula di gruppo resta com'era.
