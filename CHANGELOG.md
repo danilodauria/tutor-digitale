@@ -1,5 +1,9 @@
 # Versioni
 
+## 1.11.0 · 24 novembre 2026
+
+- **Ricerca rapida**: nuovo pulsante «Cerca» nell'header (si apre anche con Ctrl/Cmd+K) per trovare in un attimo funzioni, percorsi, lezioni e clienti. Ogni risultato mostra il percorso nel programma (per esempio «Lezioni › Tablet» o «Menu › Altro») e la rotta da aprire; frecce e Invio per scegliere, Esc per chiudere. La ricerca è locale, funziona anche offline e non manda nulla in rete. Cache aggiornata alla 1.11.0.
+
 ## 1.10.2 · 24 novembre 2026
 
 - **Menu «Altro» completo e scorrevole**: il tendina ora sta dentro lo schermo e scorre fino all'ultima voce, che prima restava tagliata; le frecce su/giù, Inizio e Fine spostano l'evidenziazione e il menu scorre con lei, Esc chiude e riporta il cursore su «Altro», un clic fuori chiude. Anche il menu a cassetto degli schermi piccoli scorre tutto. Cache aggiornata alla 1.10.2.

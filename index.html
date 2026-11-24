@@ -29,7 +29,7 @@
       } catch (e) {}
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/styles.css?v=1.10.2">
+  <link rel="stylesheet" href="assets/css/styles.css?v=1.11.0">
 </head>
 <body>
   <a class="skip-link" href="#main">Vai al contenuto</a>
@@ -80,6 +80,11 @@
       <div class="header-actions">
         <span class="spia" data-spia title="Stato della connessione"><i></i><span class="spia-testo">Online</span></span>
         <button class="timer-pill" id="timerPill" type="button" hidden title="Timer della lezione">⏱ <span>0:00</span></button>
+        <button class="cerca-btn" id="cercaBtn" type="button" aria-label="Cerca nel programma" title="Cerca nel programma (Ctrl+K)" aria-haspopup="dialog">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4.3-4.3"/></svg>
+          <span class="cerca-etichetta">Cerca</span>
+          <kbd class="cerca-tasto">Ctrl K</kbd>
+        </button>
         <button class="icon-btn" id="fontBtn" type="button" aria-label="Ingrandisci i caratteri" title="Dimensione dei caratteri"><span class="aa">A<small>A</small></span></button>
         <button class="icon-btn" id="themeBtn" type="button" aria-label="Tema chiaro o scuro" title="Tema chiaro / scuro">
           <svg class="ico-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.6M12 19.4V22M2 12h2.6M19.4 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg>
@@ -114,36 +119,53 @@
     <div class="wrap footer-bottom"><span>© 2026 Danilo D'Auria · codice MIT · contenuti CC BY-NC-SA 4.0 · versione <span data-versione></span></span><span>Senza account · senza pubblicità · anche offline</span></div>
   </footer>
 
-  <script src="assets/js/data-lezioni.js?v=1.10.2"></script>
-  <script src="assets/js/data-quiz.js?v=1.10.2"></script>
-  <script src="assets/js/data-documenti.js?v=1.10.2"></script>
-  <script src="assets/js/data-segni.js?v=1.10.2"></script>
-  <script src="assets/js/core.js?v=1.10.2"></script>
-  <script src="assets/js/pdf.js?v=1.10.2"></script>
-  <script src="assets/js/scambio.js?v=1.10.2"></script>
-  <script src="assets/js/qr.js?v=1.10.2"></script>
-  <script src="assets/js/relay.js?v=1.10.2"></script>
-  <script src="assets/js/fattura.js?v=1.10.2"></script>
-  <script src="assets/js/guide.js?v=1.10.2"></script>
-  <script src="assets/js/views-lezioni.js?v=1.10.2"></script>
-  <script src="assets/js/views-quiz.js?v=1.10.2"></script>
-  <script src="assets/js/views-palestra.js?v=1.10.2"></script>
-  <script src="assets/js/views-clienti.js?v=1.10.2"></script>
-  <script src="assets/js/views-documenti.js?v=1.10.2"></script>
-  <script src="assets/js/views-altro.js?v=1.10.2"></script>
-  <script src="assets/js/views-lavoro.js?v=1.10.2"></script>
-  <script src="assets/js/views-percorsi.js?v=1.10.2"></script>
-  <script src="assets/js/views-editor.js?v=1.10.2"></script>
-  <script src="assets/js/aula.js?v=1.10.2"></script>
-  <script src="assets/js/schermo.js?v=1.10.2"></script>
-  <script src="assets/js/segni.js?v=1.10.2"></script>
-  <script src="assets/js/sync.js?v=1.10.2"></script>
-  <script src="assets/js/casella.js?v=1.10.2"></script>
-  <script src="assets/js/assistente.js?v=1.10.2"></script>
-  <script src="assets/js/marchio.js?v=1.10.2"></script>
-  <script src="assets/js/accessibilita.js?v=1.10.2"></script>
-  <script src="assets/js/views-allievi.js?v=1.10.2"></script>
-  <script src="assets/js/remoto.js?v=1.10.2"></script>
-  <script src="assets/js/init.js?v=1.10.2"></script>
+  <div class="cerca-finestra" id="cercaModal" hidden>
+    <div class="modal-box cerca-box" role="dialog" aria-modal="true" aria-labelledby="cercaTitolo">
+      <div class="cerca-testa">
+        <h2 id="cercaTitolo">Cerca nel programma</h2>
+        <button class="icon-btn" id="cercaChiudi" type="button" aria-label="Chiudi la ricerca" title="Chiudi (Esc)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+      <div class="cerca-campo">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4.3-4.3"/></svg>
+        <input id="cercaInput" type="search" placeholder="Funzione, lezione, cliente…" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="cercaEsiti" aria-autocomplete="list" aria-label="Cerca nel programma">
+        <kbd class="cerca-tasto">Ctrl K</kbd>
+      </div>
+      <p class="cerca-aiuto" id="cercaAiuto">Scrivi per cercare in tutto il programma.</p>
+      <div class="cerca-esiti" id="cercaEsiti" role="listbox" aria-label="Risultati della ricerca"></div>
+    </div>
+  </div>
+
+  <script src="assets/js/data-lezioni.js?v=1.11.0"></script>
+  <script src="assets/js/data-quiz.js?v=1.11.0"></script>
+  <script src="assets/js/data-documenti.js?v=1.11.0"></script>
+  <script src="assets/js/data-segni.js?v=1.11.0"></script>
+  <script src="assets/js/core.js?v=1.11.0"></script>
+  <script src="assets/js/pdf.js?v=1.11.0"></script>
+  <script src="assets/js/scambio.js?v=1.11.0"></script>
+  <script src="assets/js/qr.js?v=1.11.0"></script>
+  <script src="assets/js/relay.js?v=1.11.0"></script>
+  <script src="assets/js/fattura.js?v=1.11.0"></script>
+  <script src="assets/js/guide.js?v=1.11.0"></script>
+  <script src="assets/js/views-lezioni.js?v=1.11.0"></script>
+  <script src="assets/js/views-quiz.js?v=1.11.0"></script>
+  <script src="assets/js/views-palestra.js?v=1.11.0"></script>
+  <script src="assets/js/views-clienti.js?v=1.11.0"></script>
+  <script src="assets/js/views-documenti.js?v=1.11.0"></script>
+  <script src="assets/js/views-altro.js?v=1.11.0"></script>
+  <script src="assets/js/views-lavoro.js?v=1.11.0"></script>
+  <script src="assets/js/views-percorsi.js?v=1.11.0"></script>
+  <script src="assets/js/views-editor.js?v=1.11.0"></script>
+  <script src="assets/js/aula.js?v=1.11.0"></script>
+  <script src="assets/js/schermo.js?v=1.11.0"></script>
+  <script src="assets/js/segni.js?v=1.11.0"></script>
+  <script src="assets/js/sync.js?v=1.11.0"></script>
+  <script src="assets/js/casella.js?v=1.11.0"></script>
+  <script src="assets/js/assistente.js?v=1.11.0"></script>
+  <script src="assets/js/marchio.js?v=1.11.0"></script>
+  <script src="assets/js/accessibilita.js?v=1.11.0"></script>
+  <script src="assets/js/views-allievi.js?v=1.11.0"></script>
+  <script src="assets/js/remoto.js?v=1.11.0"></script>
+  <script src="assets/js/cerca.js?v=1.11.0"></script>
+  <script src="assets/js/init.js?v=1.11.0"></script>
 </body>
 </html>

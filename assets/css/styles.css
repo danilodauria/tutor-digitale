@@ -447,6 +447,42 @@ html.board-mode .site-header, html.board-mode .site-footer { display: none; }
 .modal-box { background: var(--surface); border-radius: var(--radius); padding: 1.5rem; width: min(760px, 100%); max-height: 92vh; overflow: auto; }
 .modal-box .doc-preview { max-height: 45vh; margin: 1rem 0; }
 
+/* ricerca rapida */
+.cerca-btn { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; height: 40px; padding: 0 .65rem; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--text); font: 600 .86rem var(--sans); cursor: pointer; }
+.cerca-btn:hover { background: var(--surface-2); }
+.cerca-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; flex: none; }
+.cerca-btn kbd { font: .66rem var(--sans); color: var(--faint); border: 1px solid var(--line); border-radius: 5px; padding: .1rem .3rem; }
+.cerca-finestra { position: fixed; inset: 0; z-index: 80; display: grid; place-items: start center; padding: clamp(.8rem, 8vh, 5rem) 1rem 1rem; overflow-y: auto; background: rgba(10, 16, 32, .55); }
+.cerca-box { width: min(760px, 100%); max-height: min(78vh, 680px); display: flex; flex-direction: column; padding: 1rem 1.1rem 1.1rem; overflow: hidden; }
+.cerca-testa { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.cerca-testa h2 { margin: 0; font-size: 1.15rem; }
+.cerca-campo { display: flex; align-items: center; gap: .6rem; margin-top: .8rem; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
+.cerca-campo:focus-within { box-shadow: var(--focus); }
+.cerca-campo > svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; color: var(--faint); flex: none; }
+.cerca-campo input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--text); font: inherit; outline: none; }
+.cerca-campo input:focus-visible { box-shadow: none; }
+.cerca-campo kbd { font: .7rem var(--sans); color: var(--faint); border: 1px solid var(--line); border-radius: 6px; padding: .15rem .35rem; white-space: nowrap; }
+.cerca-aiuto { margin: .55rem .2rem .15rem; font-size: .8rem; color: var(--faint); }
+.cerca-esiti { display: grid; gap: .1rem; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: .2rem; margin-top: .25rem; }
+.cerca-gruppo { margin: .55rem .5rem .15rem; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); font-weight: 800; }
+.cerca-voce { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "nome via" "percorso via"; gap: .1rem .8rem; width: 100%; padding: .5rem .6rem; border: 0; border-radius: 10px; background: transparent; color: var(--text); text-align: left; cursor: pointer; }
+.cerca-voce:hover, .cerca-voce[aria-selected="true"] { background: var(--surface-2); }
+.cerca-voce[aria-selected="true"] { box-shadow: inset 0 0 0 2px var(--accent); }
+.cerca-nome { grid-area: nome; font-weight: 700; overflow-wrap: anywhere; }
+.cerca-percorso { grid-area: percorso; font-size: .8rem; color: var(--faint); }
+.cerca-via { grid-area: via; align-self: center; max-width: 210px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .72rem; color: var(--faint); }
+.cerca-vuoto { padding: .8rem .6rem; color: var(--faint); }
+.cerca-aperta { overflow: hidden; }
+@media (max-width: 1180px) { .cerca-etichetta, .cerca-btn kbd { display: none; } .cerca-btn { width: 40px; padding: 0; } }
+@media (max-width: 520px) {
+  .spia-testo { display: none; }
+  .spia { padding: .35rem; }
+  .menu-label { display: none; }
+  .menu-btn { padding: .5rem .6rem; }
+  .cerca-voce { grid-template-columns: 1fr; grid-template-areas: "nome" "percorso" "via"; gap: .15rem; }
+  .cerca-via { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+}
+
 /* ----------------------------------------------------------- strumenti, idee */
 .timer-big { font: 700 clamp(3rem, 8vw, 5rem) var(--serif); font-variant-numeric: tabular-nums; text-align: center; margin: .5rem 0; }
 .method { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; }
