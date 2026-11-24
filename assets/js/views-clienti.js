@@ -48,6 +48,10 @@
     if (!s.length) return null;
     return Math.round(s.reduce(function (a, x) { return a + x.perc; }, 0) / s.length);
   };
+  /* avviso prima del download: il file è leggibile da chiunque, firme comprese */
+  TD.avvisoEsportazione = function (c) {
+    return "L'esportazione dei dati di " + TD.nomeCliente(c) + " contiene in chiaro anagrafica, registro delle lezioni, compiti, quiz, documenti e firme. Salvala solo dove sei sicuro e cancellala quando non serve più: per una copia protetta usa il backup cifrato con password. Continuare?";
+  };
   /* i dati di un solo cliente in un file leggibile: per una richiesta di accesso
      o di portabilità non serve esportare l'archivio intero */
   TD.datiCliente = function (c) {
@@ -283,6 +287,7 @@
       TD.render();
     };
     document.getElementById("esportaDati").onclick = function () {
+      if (!TD.conferma(TD.avvisoEsportazione(c))) return;
       TD.scarica(new Blob([JSON.stringify(TD.datiCliente(c), null, 2)], { type: "application/json" }), "dati-" + TD.nomeFile(TD.nomeCliente(c)) + "-" + TD.oggi() + ".json");
       TD.toast("Dati di " + TD.nomeCliente(c) + " esportati in un file.");
     };

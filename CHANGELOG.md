@@ -1,5 +1,9 @@
 # Versioni
 
+## 1.12.3 · 24 novembre 2026
+
+- **Avviso prima di esportare i dati di un cliente**: «Esporta dati» ora chiede conferma ricordando che il file contiene **in chiaro** anagrafica, registro delle lezioni, compiti, quiz, documenti e firme, e che per una copia protetta c'è il backup cifrato con password — lo stesso avviso del backup non cifrato. Se si annulla, non si scarica nulla. Cache aggiornata alla 1.12.3.
+
 ## 1.12.2 · 24 novembre 2026
 
 - **«Chi ha risposto» prima di salvare**: nella schermata finale del quiz di gruppo la scheda con l'abbinamento dei telefoni ai partecipanti ora sta **sopra** i pulsanti, così si vede prima di premere «Salva i risultati» e non si può salvare senza averla incontrata. Cache aggiornata alla 1.12.2.

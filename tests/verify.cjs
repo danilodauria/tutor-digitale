@@ -302,6 +302,9 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
     ok(ex.documenti.length === 1 && ex.documenti[0].id === "d1" && ex.attestati.length === 1 && ex.attestati[0].id === "a1", "esporta: solo documenti e attestati di quel cliente");
     ok(ex.cliente.id === "exp" && ex.programma === "Tutor Digitale" && ex.versione === VER, "esporta: file leggibile con la versione del programma");
     ok(leggi("assets/js/views-clienti.js").includes("id=\"esportaDati\""), "esporta: il pulsante è nella scheda del cliente");
+    const avviso = TD.avvisoEsportazione(cli);
+    ok(avviso.indexOf("Elena Prova") >= 0 && /in chiaro/.test(avviso) && /firme/.test(avviso) && /backup cifrato/.test(avviso), "esporta: avviso chiaro su dati in chiaro e firme, con l'alternativa del backup cifrato");
+    ok(leggi("assets/js/views-clienti.js").includes("if (!TD.conferma(TD.avvisoEsportazione(c))) return;"), "esporta: senza conferma il file non viene scaricato");
   }
   ok(TD.incontriDelMese(dbS.clienti[0], "2026-03", false).length === 0 && TD.incontriDelMese(dbS.clienti[0], "2026-03", true).length === 1, "presenze: incontri pianificati solo se richiesti");
   ok(TD.incontriDelMese(dbS.clienti[1], "2026-01").length === 1, "presenze: incontri del mese dell'ente");
