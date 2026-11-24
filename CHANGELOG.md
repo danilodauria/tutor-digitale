@@ -1,5 +1,11 @@
 # Versioni
 
+## 1.12.1 · 24 novembre 2026
+
+- **«Cerca» si vede anche sul telefono e sul tablet**: la parola «Cerca» resta accanto alla lente a ogni larghezza (si nasconde solo la scorciatoia Ctrl K), e nel menu a cassetto c'è la voce **«Cerca nel programma»** con la lente e il testo, così non serve riconoscere l'icona. Il pulsante diventa visibile anche sui portatili con lo schermo stretto o lo zoom alto, dove prima restava solo la lente.
+- **Ricerca rapida anche nell'app Allievo**: stessa lente nell'intestazione e stessa voce nel menu, con l'indice di pagine, lezioni e percorsi dell'allievo. Funziona offline, non manda nulla in rete e si apre anche con Ctrl/Cmd+K.
+- Cache aggiornata alla 1.12.1.
+
 ## 1.12.0 · 24 novembre 2026
 
 - **Abbina i nomi nel quiz di gruppo**: alla fine di una partita a più persone, se il cliente è un ente con l'elenco dei partecipanti, la schermata finale mostra «Chi ha risposto» con un elenco per ogni telefono. Il partecipante giusto è già proposto (nome e cognome, oppure solo il nome se è l'unico) e si può correggere prima di salvare; chi non è in elenco si salva comunque col nome scritto sul telefono. Così il risultato entra nella scheda della persona giusta, i filtri per partecipante e il cruscotto lo vedono.

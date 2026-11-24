@@ -35,6 +35,15 @@ jsA.forEach((f) => { ok(fs.existsSync(path.join(R, "assets/js", f)), "allievo: m
 [...swA.matchAll(/^\s+"([^"]+)",?$/gm)].map((m) => m[1].split("?")[0]).filter((a) => a !== "./").forEach((a) => ok(fs.existsSync(path.join(R, "allievo", a)), "allievo/sw.js cita un file che non esiste: " + a));
 ok(swA.includes('VERSION = "tda-v' + JSON.parse(leggi("package.json")).version + '"'), "versione di allievo/sw.js diversa da package.json");
 JSON.parse(leggi("allievo/manifest.webmanifest"));
+ok(jsA.includes("cerca.js"), "allievo: carica il modulo della ricerca rapida");
+ok(htmlA.includes('id="cercaBtn"') && htmlA.includes('id="cercaModal"') && htmlA.includes('id="cercaNav"'), "allievo: ricerca rapida nell'intestazione e nel menu a cassetto");
+ok(html.includes('id="cercaNav"'), "tutor: «Cerca nel programma» è anche nel menu a cassetto");
+ok(leggi("assets/js/cerca.js").includes('getElementById("cercaNav")'), "ricerca: la voce del menu apre la finestra");
+{
+  const cssCerca = leggi("assets/css/styles.css");
+  ok(cssCerca.includes("@media (max-width: 1180px) { .cerca-btn kbd { display: none; } }") && !/\.cerca-etichetta[^{]*\{[^}]*display:\s*none/.test(cssCerca), "ricerca: la parola Cerca resta visibile a ogni larghezza");
+  ok(cssCerca.includes(".nav-cerca { display: none;") && cssCerca.includes(".nav-cerca { display: flex; }"), "ricerca: la voce del menu compare in quello a cassetto");
+}
 ok(htmlA.indexOf('MODO: "allievo"') > 0 && htmlA.indexOf('MODO: "allievo"') < htmlA.indexOf("core.js"), "l'app Allievo deve dichiarare la modalità prima di core.js");
 const asset = [...sw.matchAll(/^\s+"([^"]+)",?$/gm)].map((m) => m[1].split("?")[0]).filter((a) => a !== "./");
 asset.forEach((a) => ok(fs.existsSync(path.join(R, a)), "sw.js cita un file che non esiste: " + a));

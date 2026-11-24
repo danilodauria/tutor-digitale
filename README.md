@@ -47,13 +47,14 @@ Chi insegna tecnologia a domicilio o nelle associazioni ha bisogno di tre cose i
 | **Kit per altri tutor** | Marchio personale, listino e licenze per formatori firmate ([LICENZA-FORMATORI.md](LICENZA-FORMATORI.md)). |
 | **Agenda e strumenti** | Appuntamenti con esportazione nel calendario (.ics), timer della lezione con promemoria della pausa, kit del tutor, idee per il lavoro e metodo in cinque tempi. |
 | **Impostazioni** | Profilo del docente con firma, listino, tema chiaro o scuro, caratteri grandi, **backup cifrato con password** (AES-256, file `.tdcifrato` da tenere su chiavetta o cloud), firma digitale dei kit con impronta della chiave. |
+| **Ricerca rapida** | Il pulsante **«Cerca»** nell'intestazione (e Ctrl/Cmd+K), presente in entrambe le app e anche come voce nel menu a cassetto: trova funzioni, percorsi, lezioni, guide e clienti sul dispositivo, senza rete. |
 
 ## Due app: Tutor e Allievo
 
 | | **Tutor Digitale** (il «server», per il tutor) | **Tutor Digitale · Allievo** (il «client», per il cliente) |
 |---|---|---|
 | Indirizzo | [danilodauria.github.io/tutor-digitale](https://danilodauria.github.io/tutor-digitale/) | [danilodauria.github.io/tutor-digitale/allievo](https://danilodauria.github.io/tutor-digitale/allievo/) |
-| Contiene | tutto: clienti, registro, documenti, attestati, listino, correzione | lezioni, compiti, quiz da consegnare, allenamento, palestra, aiuto a distanza |
+| Contiene | tutto: clienti, registro, documenti, attestati, listino, correzione | lezioni, compiti, quiz da consegnare, allenamento, palestra, aiuto a distanza, ricerca rapida |
 | Dati | archivio completo dei clienti | solo il profilo e i compiti di quell'allievo |
 
 Le due app si installano allo stesso modo e funzionano offline, ognuna con il proprio archivio.

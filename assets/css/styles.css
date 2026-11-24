@@ -473,7 +473,13 @@ html.board-mode .site-header, html.board-mode .site-footer { display: none; }
 .cerca-via { grid-area: via; align-self: center; max-width: 210px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .72rem; color: var(--faint); }
 .cerca-vuoto { padding: .8rem .6rem; color: var(--faint); }
 .cerca-aperta { overflow: hidden; }
-@media (max-width: 1180px) { .cerca-etichetta, .cerca-btn kbd { display: none; } .cerca-btn { width: 40px; padding: 0; } }
+@media (max-width: 1180px) { .cerca-btn kbd { display: none; } }
+@media (max-width: 520px) { .cerca-btn { padding: 0 .5rem; gap: .3rem; } .cerca-etichetta { font-size: .82rem; } }
+/* voce «Cerca» nel menu a cassetto: si vede anche quando l'intestazione è stretta */
+.nav-cerca { display: none; align-items: center; gap: .5rem; width: 100%; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--text); padding: .85rem 1rem; font: 600 .95rem var(--sans); text-align: left; cursor: pointer; }
+.nav-cerca svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.nav-cerca:hover { background: var(--surface-2); }
+@media (max-width: 980px) { .nav-cerca { display: flex; } }
 @media (max-width: 520px) {
   .spia-testo { display: none; }
   .spia { padding: .35rem; }

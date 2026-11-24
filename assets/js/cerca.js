@@ -223,7 +223,7 @@
   function avvia() {
     btn = document.getElementById("cercaBtn");
     modal = document.getElementById("cercaModal");
-    if (!btn || !modal) return;
+    if (!modal) return;
     box = modal.querySelector(".cerca-box");
     input = document.getElementById("cercaInput");
     esiti = document.getElementById("cercaEsiti");
@@ -231,7 +231,10 @@
     chiudiBtn = document.getElementById("cercaChiudi");
     const tasto = modal.querySelector(".cerca-tasto");
     if (tasto && /Mac|iPhone|iPad|iPod/.test(navigator.platform || "")) tasto.textContent = "⌘ K";
-    btn.addEventListener("click", apri);
+    if (btn) btn.addEventListener("click", apri);
+    /* la voce testuale nel menu a cassetto: chi non riconosce la lente trova «Cerca» */
+    const navBtn = document.getElementById("cercaNav");
+    if (navBtn) navBtn.addEventListener("click", apri);
     if (chiudiBtn) chiudiBtn.addEventListener("click", chiudi);
     modal.addEventListener("click", function (e) { if (e.target === modal) chiudi(); });
     esiti.addEventListener("click", function (e) {
