@@ -284,6 +284,9 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
     ok(letta.indexOf("Quale tasto?") === 0 && letta.indexOf("Proposta: Invio.") > 0 && letta.indexOf("A, Esc") > 0 && letta.indexOf("B, Invio") > 0, "aula: la lettura dice domanda, proposta e risposte con la lettera");
     ok(TD.aula.testoDaLeggere(null) === "", "aula: senza domanda la lettura è vuota");
     ok(leggi("assets/js/aula.js").includes("data-part") && leggi("assets/js/aula.js").includes("TD.aula.trovaPartecipante"), "aula: la schermata finale abbina i telefoni all'elenco del gruppo");
+    const aula = leggi("assets/js/aula.js");
+    ok(aula.includes("corpo = abbinamentoHtml() + '<section class=\"aula-tv\"><h2>'"), "aula: l'abbinamento dei nomi viene prima del pulsante Salva");
+    ok(!/\+\s*abbinamentoHtml\(\);/.test(aula), "aula: la scheda non resta dopo le azioni");
     ok(leggi("assets/js/aula.js").includes("id=\"gLeggi\"") && leggi("assets/js/aula.js").includes("id=\"aLeggi\""), "aula: la lettura ad alta voce c'è sul telefono e sul monitor");
   }
 

@@ -329,12 +329,13 @@
         '<div class="actions">' + (H.mostra ? '<button class="btn btn-primary btn-lg" id="aAvanti">' + I("arrow") + (H.i + 1 < H.domande.length ? "Domanda successiva" : "Risultato finale") + "</button>" : '<button class="btn btn-primary btn-lg" id="aRivela">' + I("eye") + "Mostra la risposta</button>") + '<button class="btn" id="aLeggi" title="Legge la domanda e le risposte ad alta voce">' + I("speaker") + "Leggi</button>" + '<button class="btn" id="aChiudi">Chiudi</button></div></section>';
     } else if (H.fase === "fine") {
       const r = H.max === 1 ? TD.aula.riepilogoSolo(H.giocatori, H.domande.length) : null;
-      corpo = '<section class="aula-tv"><h2>' + (H.max === 1 ? "Quiz concluso" : "Classifica finale") + "</h2>" +
+      /* prima l'abbinamento dei nomi, poi le azioni: il pulsante Salva resta
+         sotto la scheda, così non si può salvare senza averla vista */
+      corpo = abbinamentoHtml() + '<section class="aula-tv"><h2>' + (H.max === 1 ? "Quiz concluso" : "Classifica finale") + "</h2>" +
         (H.max === 1
           ? r ? '<p class="aula-grande">' + E(r.nome) + ": " + r.giuste + " risposte giuste su " + r.totale + " (" + r.perc + "%) · " + r.punti + " punti.</p>" : '<p class="muted">Nessuna risposta ricevuta.</p>'
           : H.manuale ? '<p class="aula-grande">Bravi tutti! Le risposte per alzata di mano non hanno classifica.</p>' : classificaHtml(20)) +
-        '<div class="actions">' + (!H.manuale && nG && TD.cliente(H.clienteId) ? '<button class="btn btn-primary" id="aSalva">' + I("check") + "Salva i risultati nella scheda " + (H.max === 1 ? "del cliente" : "del gruppo") + "</button>" : "") + '<button class="btn" id="aChiudi">Chiudi l\'aula</button></div></section>' +
-        abbinamentoHtml();
+        '<div class="actions">' + (!H.manuale && nG && TD.cliente(H.clienteId) ? '<button class="btn btn-primary" id="aSalva">' + I("check") + "Salva i risultati nella scheda " + (H.max === 1 ? "del cliente" : "del gruppo") + "</button>" : "") + '<button class="btn" id="aChiudi">Chiudi l\'aula</button></div></section>';
     }
     const titoloSolo = H.fase === "pronto" ? "Quiz dal telefono" : H.max === 1 ? "Quiz dal telefono · una persona" : "Quiz dal telefono · fino a 4 persone";
     appEl.innerHTML = TD.intest(H.solo ? titoloSolo : "Modalità gruppo in aula",

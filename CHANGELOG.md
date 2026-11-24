@@ -1,5 +1,9 @@
 # Versioni
 
+## 1.12.2 · 24 novembre 2026
+
+- **«Chi ha risposto» prima di salvare**: nella schermata finale del quiz di gruppo la scheda con l'abbinamento dei telefoni ai partecipanti ora sta **sopra** i pulsanti, così si vede prima di premere «Salva i risultati» e non si può salvare senza averla incontrata. Cache aggiornata alla 1.12.2.
+
 ## 1.12.1 · 24 novembre 2026
 
 - **«Cerca» si vede anche sul telefono e sul tablet**: la parola «Cerca» resta accanto alla lente a ogni larghezza (si nasconde solo la scorciatoia Ctrl K), e nel menu a cassetto c'è la voce **«Cerca nel programma»** con la lente e il testo, così non serve riconoscere l'icona. Il pulsante diventa visibile anche sui portatili con lo schermo stretto o lo zoom alto, dove prima restava solo la lente.
