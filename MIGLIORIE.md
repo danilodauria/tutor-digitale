@@ -1,6 +1,6 @@
 # Migliorie e idee per le prossime versioni
 
-Elenco ragionato, dal più utile e semplice al più ambizioso. ★ = impatto, ⏱ = lavoro. Le voci fatte sono segnate con ✅: il promemoria settimanale legge questo file e propone le successive.
+Elenco ragionato, dal più utile e semplice al più ambizioso. ★ = impatto, ⏱ = lavoro. Le voci fatte sono segnate con ✅: `node scripts/idee.cjs` legge questo file e stampa le proposte ancora aperte (lo fa anche la pubblicazione), così a ogni giro si riparte dalla prima non fatta.
 
 ## Subito (1.2 e 1.3)
 

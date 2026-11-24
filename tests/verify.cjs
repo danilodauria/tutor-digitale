@@ -519,6 +519,18 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
     ok(fermato, "sicurezza: un pacchetto compresso enorme viene fermato");
     ok(TD.aula && typeof TD.aula.classifica === "function", "sicurezza: modulo aula presente");
   }
+  /* 25. promemoria: le proposte restano elencate, numerate e con la stima */
+  {
+    const idee = leggi("MIGLIORIE.md");
+    const voci = [...idee.matchAll(/^(\d+)\.\s+/gm)].map((m) => Number(m[1]));
+    ok(voci.length >= 46 && new Set(voci).size === voci.length, "promemoria: proposte numerate tutte presenti e senza doppioni (" + voci.length + ")");
+    ok(Array.from({ length: 12 }, (_, i) => 35 + i).every((n) => voci.includes(n)), "promemoria: le dodici proposte dopo la 1.11.1 sono tutte in MIGLIORIE.md");
+    ok([35, 36, 37].every((n) => new RegExp("^" + n + "\\.\\s+✅", "m").test(idee)), "promemoria: le proposte realizzate nella 1.12.0 sono segnate con ✅");
+    const righe = idee.split(/\r?\n/).filter((r) => /^\d+\.\s+/.test(r));
+    ok(righe.filter((r) => !/^\d+\.\s+✅/.test(r)).every((r) => /★/.test(r)), "promemoria: ogni proposta aperta ha la stima ★/⏱");
+    ok(fs.existsSync(path.join(R, "scripts/idee.cjs")) && leggi("scripts/idee.cjs").includes("--controlla"), "promemoria: lo script delle idee sa controllare l'elenco");
+  }
+
   /* 24. chiave pubblica dell'autore: stessa nel programma e nel registro, impronta corretta */
   {
     const reg = JSON.parse(leggi("verifica/chiavi.json")).chiavi;

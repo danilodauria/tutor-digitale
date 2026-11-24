@@ -25,6 +25,8 @@ jobs:
           node-version: "22"
       - run: node scripts/sicurezza.cjs
       - run: node tests/verify.cjs
+      - name: Promemoria delle idee
+        run: node scripts/idee.cjs --controlla
 
   deploy:
     name: Pubblicazione
