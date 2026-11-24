@@ -262,6 +262,35 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
   ] };
   ok(TD.quizSessioni(gl).length === 2 && TD.mediaQuiz(gl) === 80, "quiz di gruppo già salvati: raggruppati per data (media 80%)");
   ok(leggi("assets/js/aula.js").includes("voce.sessione = sessione"), "aula: il salvataggio lega i risultati alla stessa sessione");
+
+  /* 13b. abbinamento dei nomi nel quiz di gruppo (1.12.0) */
+  {
+    ok(TD.aula.nomeChiave("  Nicolò   ROSSI ") === "nicolo rossi", "aula: nomi confrontati senza accenti, maiuscole e spazi doppi");
+    const elenco = [{ id: "p1", nome: "Maria Rossi" }, { id: "p2", nome: "Nicola Bianchi" }, { id: "p3", nome: "Nicola Verdi" }];
+    ok(TD.aula.trovaPartecipante("maria rossi", elenco) === "p1", "aula: nome e cognome trovano il partecipante");
+    ok(TD.aula.trovaPartecipante("Maria", elenco) === "p1", "aula: il solo nome basta se è l'unico");
+    ok(TD.aula.trovaPartecipante("Nicola", elenco) === "", "aula: con due omonimi non si indovina");
+    ok(TD.aula.trovaPartecipante("Sconosciuto", elenco) === "" && TD.aula.trovaPartecipante("", elenco) === "", "aula: chi non è in elenco resta senza abbinamento");
+    const letta = TD.aula.testoDaLeggere({ testo: "Quale tasto?", proposta: "Invio", opzioni: ["Esc", "Invio"] });
+    ok(letta.indexOf("Quale tasto?") === 0 && letta.indexOf("Proposta: Invio.") > 0 && letta.indexOf("A, Esc") > 0 && letta.indexOf("B, Invio") > 0, "aula: la lettura dice domanda, proposta e risposte con la lettera");
+    ok(TD.aula.testoDaLeggere(null) === "", "aula: senza domanda la lettura è vuota");
+    ok(leggi("assets/js/aula.js").includes("data-part") && leggi("assets/js/aula.js").includes("TD.aula.trovaPartecipante"), "aula: la schermata finale abbina i telefoni all'elenco del gruppo");
+    ok(leggi("assets/js/aula.js").includes("id=\"gLeggi\"") && leggi("assets/js/aula.js").includes("id=\"aLeggi\""), "aula: la lettura ad alta voce c'è sul telefono e sul monitor");
+  }
+
+  /* 13c. esportazione dei dati di un solo cliente (1.12.0) */
+  {
+    const cli = { id: "exp", tipo: "persona", nome: "Elena", cognome: "Prova", registro: [{ data: "2026-05-01", durata: 60, stato: "svolta" }, { data: "2026-05-08", durata: 30, stato: "pianificata" }], compiti: [], quiz: [{ data: "2026-05-02", perc: 80 }] };
+    const vecchiD = TD.db.documenti, vecchiA = TD.db.attestati;
+    TD.db.documenti = [{ id: "d1", cliente: "exp" }, { id: "d2", cliente: "altro" }];
+    TD.db.attestati = [{ id: "a1", cliente: "exp" }, { id: "a2", cliente: "altro" }];
+    const ex = TD.datiCliente(cli);
+    TD.db.documenti = vecchiD; TD.db.attestati = vecchiA;
+    ok(ex.riepilogo.nome === "Elena Prova" && ex.riepilogo.lezioniSvolte === 1 && ex.riepilogo.ore === 1 && ex.riepilogo.quiz === 1 && ex.riepilogo.mediaQuiz === 80, "esporta: riepilogo del cliente (nome, lezioni svolte, ore, quiz)");
+    ok(ex.documenti.length === 1 && ex.documenti[0].id === "d1" && ex.attestati.length === 1 && ex.attestati[0].id === "a1", "esporta: solo documenti e attestati di quel cliente");
+    ok(ex.cliente.id === "exp" && ex.programma === "Tutor Digitale" && ex.versione === VER, "esporta: file leggibile con la versione del programma");
+    ok(leggi("assets/js/views-clienti.js").includes("id=\"esportaDati\""), "esporta: il pulsante è nella scheda del cliente");
+  }
   ok(TD.incontriDelMese(dbS.clienti[0], "2026-03", false).length === 0 && TD.incontriDelMese(dbS.clienti[0], "2026-03", true).length === 1, "presenze: incontri pianificati solo se richiesti");
   ok(TD.incontriDelMese(dbS.clienti[1], "2026-01").length === 1, "presenze: incontri del mese dell'ente");
 

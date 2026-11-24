@@ -1,5 +1,13 @@
 # Versioni
 
+## 1.12.0 · 24 novembre 2026
+
+- **Abbina i nomi nel quiz di gruppo**: alla fine di una partita a più persone, se il cliente è un ente con l'elenco dei partecipanti, la schermata finale mostra «Chi ha risposto» con un elenco per ogni telefono. Il partecipante giusto è già proposto (nome e cognome, oppure solo il nome se è l'unico) e si può correggere prima di salvare; chi non è in elenco si salva comunque col nome scritto sul telefono. Così il risultato entra nella scheda della persona giusta, i filtri per partecipante e il cruscotto lo vedono.
+- **Leggi ad alta voce in aula e sul telefono**: nella modalità aula e nel quiz dal telefono c'è «Leggi» sul monitor del tutor e su ogni telefono. Pronuncia la domanda, la proposta e le risposte con la lettera (A, B, C, D); dopo la correzione legge anche la spiegazione. È pensato per chi legge con fatica e per i gruppi, dove il pulsante sul monitor non basta.
+- **Esporta i dati di un cliente**: nella scheda del cliente il pulsante «Esporta dati» scarica un file JSON leggibile con anagrafica, registro delle lezioni, compiti, quiz, documenti e attestati di quella sola persona, più un riepilogo di lezioni svolte, ore, numero di quiz e media. Serve per una richiesta di accesso o di portabilità senza esportare l'archivio intero.
+- **Promemoria delle proposte**: le idee non ancora realizzate sono elencate in `MIGLIORIE.md` con stima e stato, da rileggere e verificare a ogni giro per non perderne nessuna.
+- Cache aggiornata alla 1.12.0.
+
 ## 1.11.2 · 24 novembre 2026
 
 - **Quinto telefono in sala d'attesa**: se uno dei quattro partecipanti chiude la pagina (o perde la connessione), dopo circa 20 secondi il suo posto si libera e il quinto telefono entra automaticamente, senza ricaricare. Se invece il quiz è già iniziato, il quinto riceve un messaggio chiaro: non si può entrare a partita in corso e va chiesto al tutor di riaprire l'aula. Cache aggiornata alla 1.11.2.

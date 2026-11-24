@@ -54,11 +54,39 @@
       return Object.keys(giocatori || {}).filter(function (id) {
         return Number(ora) - (Number(giocatori[id].visto) || 0) > t;
       });
+    },
+    /* confronto dei nomi senza maiuscole, accenti o spazi doppi: «Maria Rossi»
+       e «maria rossi» sono la stessa persona, «Nicola» e «Nicolò» no */
+    nomeChiave: function (s) {
+      return String(s == null ? "" : s).normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase().replace(/\s+/g, " ").trim();
+    },
+    /* il partecipante dell'elenco che corrisponde al nome usato sul telefono:
+       prima il nome intero, poi il solo nome di battesimo se è l'unico */
+    trovaPartecipante: function (nome, partecipanti) {
+      const n = TD.aula.nomeChiave(nome);
+      const elenco = (partecipanti || []).filter(function (p) { return p && p.id && p.nome; });
+      if (!n) return "";
+      const pieno = elenco.find(function (p) { return TD.aula.nomeChiave(p.nome) === n; });
+      if (pieno) return pieno.id;
+      const primo = n.split(" ")[0];
+      const omonimi = elenco.filter(function (p) { return TD.aula.nomeChiave(p.nome).split(" ")[0] === primo; });
+      return omonimi.length === 1 ? omonimi[0].id : "";
+    },
+    /* testo letto ad alta voce: domanda, proposta e risposte con la loro lettera,
+       così chi non legge bene può rispondere anche dal telefono in gruppo */
+    testoDaLeggere: function (q) {
+      if (!q) return "";
+      const parti = [String(q.testo || "")];
+      if (q.proposta) parti.push("Proposta: " + q.proposta + ".");
+      const opzioni = Array.isArray(q.opzioni) ? q.opzioni : [];
+      if (opzioni.length) parti.push("Risposte: " + opzioni.map(function (o, i) { return "ABCD"[i] + ", " + o; }).join("; ") + ".");
+      return parti.join(" ").trim();
     }
   };
 
   /* ================================================================ TUTOR: proiettore */
-  const H = { fase: "pronto", stanza: "", chiave: "", canale: null, domande: [], i: -1, giocatori: Object.create(null), risposte: Object.create(null), inizio: 0, tempo: 30, mostra: false, manuale: false, solo: false, max: 1, conta: [], timer: null, pulizia: null, clienteId: "" };
+  const H = { fase: "pronto", stanza: "", chiave: "", canale: null, domande: [], i: -1, giocatori: Object.create(null), risposte: Object.create(null), abbinamenti: Object.create(null), inizio: 0, tempo: 30, mostra: false, manuale: false, solo: false, max: 1, conta: [], timer: null, pulizia: null, clienteId: "" };
   TD.aulaStato = H;
 
   function linkAula() { return URL_AULA + "?s=" + H.stanza + "&k=" + H.chiave; }
@@ -78,7 +106,7 @@
   }
   async function apriStanza(manuale, solo, max) {
     clearInterval(H.timer); clearInterval(H.eco); clearInterval(H.pulizia);
-    H.manuale = !!manuale; H.solo = !!solo; H.max = TD.aula.maxPartecipanti(!!solo, max); H.conta = []; H.giocatori = Object.create(null); H.risposte = Object.create(null); H.i = -1; H.mostra = false;
+    H.manuale = !!manuale; H.solo = !!solo; H.max = TD.aula.maxPartecipanti(!!solo, max); H.conta = []; H.giocatori = Object.create(null); H.risposte = Object.create(null); H.abbinamenti = Object.create(null); H.i = -1; H.mostra = false;
     if (manuale) { H.fase = "attesa"; ridisegna(); return; }
     H.stanza = TD.relay.nuovaStanza(); H.chiave = TD.relay.nuovaChiave(); H.fase = "collegamento"; ridisegna();
     try {
@@ -128,7 +156,15 @@
   }
   function prossima() {
     H.i++; H.mostra = false; H.risposte = Object.create(null);
-    if (H.i >= H.domande.length) { H.fase = "fine"; clearInterval(H.timer); trasmetti(statoPubblico()); ridisegna(); return; }
+    if (H.i >= H.domande.length) {
+      H.fase = "fine"; clearInterval(H.timer);
+      /* nomi dei telefoni ↔ partecipanti dell'elenco: la corrispondenza parte dal
+         nome intero e, se è l'unico, dal solo nome di battesimo */
+      H.abbinamenti = Object.create(null);
+      const cli = TD.cliente(H.clienteId), elenco = (cli && cli.partecipanti) || [];
+      Object.keys(H.giocatori).forEach(function (id) { H.abbinamenti[id] = TD.aula.trovaPartecipante(H.giocatori[id].nome, elenco); });
+      trasmetti(statoPubblico()); ridisegna(); return;
+    }
     if (H.manuale) H.conta = new Array(domanda().opzioni.length).fill(0);
     H.fase = "domanda"; H.inizio = Date.now();
     trasmetti(statoPubblico()); ridisegna();
@@ -153,7 +189,7 @@
   function chiudiAula() {
     clearInterval(H.timer); clearInterval(H.eco); clearInterval(H.pulizia);
     if (H.canale) { trasmetti({ t: "stato", fase: "chiusa" }); setTimeout(function () { if (H.canale) H.canale.chiudi(); H.canale = null; }, 300); }
-    Object.assign(H, { fase: "pronto", domande: [], i: -1, giocatori: Object.create(null), risposte: Object.create(null), mostra: false, manuale: false, solo: rottaSolo });
+    Object.assign(H, { fase: "pronto", domande: [], i: -1, giocatori: Object.create(null), risposte: Object.create(null), abbinamenti: Object.create(null), mostra: false, manuale: false, solo: rottaSolo });
     TD.trasmissione.ferma(true);
     ridisegna();
   }
@@ -290,14 +326,15 @@
             (H.manuale && !H.mostra ? '<span class="aula-conta"><button class="icon-btn" data-meno="' + i + '" aria-label="Togli uno">−</button><b>' + H.conta[i] + '</b><button class="icon-btn" data-piu="' + i + '" aria-label="Aggiungi uno">+</button></span>' : "") + "</div>";
         }).join("") + "</div>" +
         (H.mostra ? barreDistribuzione(d, q.giusta, q.opzioni.map(function (_, i) { return "ABCD"[i]; })) + '<p class="aula-spiega">' + E(q.spiegazione) + "</p>" + (H.manuale ? "" : H.max === 1 ? esitoSoloHtml() : classificaHtml(5)) : "") +
-        '<div class="actions">' + (H.mostra ? '<button class="btn btn-primary btn-lg" id="aAvanti">' + I("arrow") + (H.i + 1 < H.domande.length ? "Domanda successiva" : "Risultato finale") + "</button>" : '<button class="btn btn-primary btn-lg" id="aRivela">' + I("eye") + "Mostra la risposta</button>") + '<button class="btn" id="aChiudi">Chiudi</button></div></section>';
+        '<div class="actions">' + (H.mostra ? '<button class="btn btn-primary btn-lg" id="aAvanti">' + I("arrow") + (H.i + 1 < H.domande.length ? "Domanda successiva" : "Risultato finale") + "</button>" : '<button class="btn btn-primary btn-lg" id="aRivela">' + I("eye") + "Mostra la risposta</button>") + '<button class="btn" id="aLeggi" title="Legge la domanda e le risposte ad alta voce">' + I("speaker") + "Leggi</button>" + '<button class="btn" id="aChiudi">Chiudi</button></div></section>';
     } else if (H.fase === "fine") {
       const r = H.max === 1 ? TD.aula.riepilogoSolo(H.giocatori, H.domande.length) : null;
       corpo = '<section class="aula-tv"><h2>' + (H.max === 1 ? "Quiz concluso" : "Classifica finale") + "</h2>" +
         (H.max === 1
           ? r ? '<p class="aula-grande">' + E(r.nome) + ": " + r.giuste + " risposte giuste su " + r.totale + " (" + r.perc + "%) · " + r.punti + " punti.</p>" : '<p class="muted">Nessuna risposta ricevuta.</p>'
           : H.manuale ? '<p class="aula-grande">Bravi tutti! Le risposte per alzata di mano non hanno classifica.</p>' : classificaHtml(20)) +
-        '<div class="actions">' + (!H.manuale && nG && TD.cliente(H.clienteId) ? '<button class="btn btn-primary" id="aSalva">' + I("check") + "Salva i risultati nella scheda " + (H.max === 1 ? "del cliente" : "del gruppo") + "</button>" : "") + '<button class="btn" id="aChiudi">Chiudi l\'aula</button></div></section>';
+        '<div class="actions">' + (!H.manuale && nG && TD.cliente(H.clienteId) ? '<button class="btn btn-primary" id="aSalva">' + I("check") + "Salva i risultati nella scheda " + (H.max === 1 ? "del cliente" : "del gruppo") + "</button>" : "") + '<button class="btn" id="aChiudi">Chiudi l\'aula</button></div></section>' +
+        abbinamentoHtml();
     }
     const titoloSolo = H.fase === "pronto" ? "Quiz dal telefono" : H.max === 1 ? "Quiz dal telefono · una persona" : "Quiz dal telefono · fino a 4 persone";
     appEl.innerHTML = TD.intest(H.solo ? titoloSolo : "Modalità gruppo in aula",
@@ -313,6 +350,19 @@
     const cl = TD.aula.classifica(H.giocatori).slice(0, n);
     return cl.length ? '<ol class="aula-classifica">' + cl.map(function (g, i) { return "<li><span>" + (i + 1) + ".</span><strong>" + E(g.nome) + "</strong><span>" + g.punti + " punti · " + g.giuste + " giuste</span></li>"; }).join("") + "</ol>" : '<p class="muted">Nessun partecipante collegato.</p>';
   }
+  /* elenco del gruppo: si sceglie chi è ogni telefono prima di salvare */
+  function abbinamentoHtml() {
+    const c = TD.cliente(H.clienteId), parti = (c && c.partecipanti) || [];
+    if (H.max <= 1 || !parti.length) return "";
+    const cl = TD.aula.classifica(H.giocatori);
+    if (!cl.length) return "";
+    const abbinati = cl.filter(function (g) { return H.abbinamenti[g.id]; }).length;
+    return '<section class="card"><h2>' + I("users") + 'Chi ha risposto</h2><p class="muted">Abbina ogni telefono al partecipante del gruppo: il risultato entra nella scheda con il nome giusto.</p><div class="grid-2">' +
+      cl.map(function (g) {
+        return '<label class="field"><span>' + E(g.nome) + " · " + g.giuste + "/" + H.domande.length + '</span><select data-part="' + E(g.id) + '" aria-label="Partecipante per ' + E(g.nome) + '"><option value="">— non in elenco —</option>' +
+          parti.map(function (p) { return '<option value="' + E(p.id) + '"' + (H.abbinamenti[g.id] === p.id ? " selected" : "") + ">" + E(p.nome) + "</option>"; }).join("") + "</select></label>";
+      }).join("") + '</div><p class="muted text-small" id="aAbbinati">' + abbinati + " di " + cl.length + " abbinati. Chi resta «non in elenco» si salva comunque con il nome scritto sul telefono.</p></section>";
+  }
   function collegaHost() {
     const $ = function (id) { return document.getElementById(id); };
     const f = $("aForm");
@@ -327,6 +377,18 @@
     if ($("aVia")) $("aVia").onclick = prossima;
     if ($("aAvanti")) $("aAvanti").onclick = prossima;
     if ($("aRivela")) $("aRivela").onclick = rivela;
+    if ($("aLeggi")) $("aLeggi").onclick = function () {
+      const q = domanda(); if (!q) return;
+      TD.leggi(TD.aula.testoDaLeggere(q) + (H.mostra && q.spiegazione ? " " + q.spiegazione : ""));
+    };
+    appEl.querySelectorAll("[data-part]").forEach(function (s) {
+      s.onchange = function () {
+        H.abbinamenti[s.dataset.part] = s.value;
+        const tot = Object.keys(H.abbinamenti).length, n = Object.keys(H.abbinamenti).filter(function (k) { return H.abbinamenti[k]; }).length;
+        const el = document.getElementById("aAbbinati");
+        if (el) el.textContent = n + " di " + tot + " abbinati. Chi resta «non in elenco» si salva comunque con il nome scritto sul telefono.";
+      };
+    });
     if ($("aChiudi")) $("aChiudi").onclick = function () { if (H.fase === "pronto" || TD.conferma("Chiudere l'aula? I telefoni verranno scollegati.")) chiudiAula(); };
     if ($("aLink")) $("aLink").onclick = function () { TD.scambio.copia(linkAula()).then(function (ok) { TD.toast(ok ? "Link copiato." : "Copia non riuscita."); }); };
     /* nessun await prima di window.open: la finestra si apre dentro il clic */
@@ -341,8 +403,8 @@
       const sessione = H.max > 1 ? TD.uid("s") : "";
       let salvati = 0;
       TD.aula.classifica(H.giocatori).forEach(function (g) {
-        const p = parts.find(function (x) { return x.nome.toLowerCase() === g.nome.toLowerCase() || x.nome.toLowerCase().split(" ")[0] === g.nome.toLowerCase().split(" ")[0]; });
-        const voce = { id: TD.uid("q"), data: TD.oggi(), liv: "", dev: "aula", giuste: g.giuste, totale: H.domande.length, perc: Math.round(100 * g.giuste / H.domande.length), partecipante: p ? p.id : "", nome: g.nome, aula: true };
+        const pid = (H.abbinamenti && H.abbinamenti[g.id]) || TD.aula.trovaPartecipante(g.nome, parts);
+        const voce = { id: TD.uid("q"), data: TD.oggi(), liv: "", dev: "aula", giuste: g.giuste, totale: H.domande.length, perc: Math.round(100 * g.giuste / H.domande.length), partecipante: pid || "", nome: g.nome, aula: true };
         if (H.max === 1) voce.individuale = true;
         else voce.sessione = sessione;
         c.quiz.push(voce);
@@ -412,6 +474,7 @@
       const q = st.domanda, mostra = st.giusta >= 0;
       const mia = (st.classifica || []).findIndex(function (x) { return x.id === G.id; });
       corpo = '<section class="aula-tel"><p class="muted">Domanda ' + q.n + " di " + st.totale + "</p><h2>" + E(q.testo) + (q.proposta ? "<br><em>«" + E(q.proposta) + "»</em>" : "") + "</h2>" +
+        '<div class="actions"><button class="btn btn-sm" id="gLeggi" title="Legge la domanda e le risposte ad alta voce">' + I("speaker") + "Leggi la domanda</button></div>" +
         '<div class="aula-tasti">' + q.opzioni.map(function (o, i) {
           const cls = mostra ? (i === st.giusta ? " giusta" : (i === G.scelta ? " sbagliata" : " spenta")) : (G.scelta === i ? " scelta" : "");
           return '<button class="aula-tasto' + cls + '" style="--c:' + COLORI[i % 4] + '" data-sc="' + i + '"' + (G.scelta >= 0 || mostra ? " disabled" : "") + '><span class="aula-forma">' + FORME[i % 4] + " " + "ABCD"[i] + "</span>" + E(o) + "</button>";
@@ -424,6 +487,8 @@
     appEl.innerHTML = '<div class="wrap aula-tel-wrap">' + corpo + "</div>";
     const f = document.getElementById("gForm");
     if (f) f.onsubmit = function (e) { e.preventDefault(); G.nome = f.nome.value.trim().slice(0, 24); if (!G.nome) return; f.querySelector("button").disabled = true; entraAula(); };
+    const gl = document.getElementById("gLeggi");
+    if (gl) gl.onclick = function () { if (G.stato && G.stato.domanda) TD.leggi(TD.aula.testoDaLeggere(G.stato.domanda)); };
     appEl.querySelectorAll("[data-sc]").forEach(function (b) {
       b.onclick = function () {
         if (G.scelta >= 0 || !G.stato) return;

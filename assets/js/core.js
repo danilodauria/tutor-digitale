@@ -8,7 +8,7 @@ window.TD = window.TD || {};
 (function () {
   "use strict";
 
-  TD.VERSIONE = "1.11.2";
+  TD.VERSIONE = "1.12.0";
   TD.MODO = TD.MODO || "tutor";
   const KEY = TD.MODO === "allievo" ? "tutor-digitale-allievo:v1:db" : "tutor-digitale:v1:db";
   TD.CHIAVE = KEY;

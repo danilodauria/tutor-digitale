@@ -48,6 +48,29 @@
     if (!s.length) return null;
     return Math.round(s.reduce(function (a, x) { return a + x.perc; }, 0) / s.length);
   };
+  /* i dati di un solo cliente in un file leggibile: per una richiesta di accesso
+     o di portabilità non serve esportare l'archivio intero */
+  TD.datiCliente = function (c) {
+    const copia = function (x) { return JSON.parse(JSON.stringify(x == null ? null : x)); };
+    const docs = (TD.db.documenti || []).filter(function (d) { return d.cliente === c.id; });
+    const att = (TD.db.attestati || []).filter(function (a) { return a.cliente === c.id; });
+    return {
+      programma: "Tutor Digitale",
+      versione: TD.VERSIONE,
+      esportato: new Date().toISOString(),
+      riepilogo: {
+        nome: TD.nomeCliente(c),
+        lezioniSvolte: (c.registro || []).filter(function (r) { return r.stato !== "pianificata"; }).length,
+        ore: Math.round(TD.oreCliente(c) * 10) / 10,
+        quiz: TD.contaQuiz(c),
+        mediaQuiz: TD.mediaQuiz(c),
+        compiti: (c.compiti || []).length
+      },
+      cliente: copia(c),
+      documenti: copia(docs),
+      attestati: copia(att)
+    };
+  };
 
   /* ------------------------------------------------------------ riepilogo lezione
      Un foglio (PDF) e un messaggio da incollare in WhatsApp con ciò che si è
@@ -245,6 +268,7 @@
         '<p class="meta"><span>' + I("map") + E(c.luogo || "") + "</span>" + (c.citta ? "<span>" + E(c.citta) + "</span>" : "") + (c.telefono ? '<a href="tel:' + E(c.telefono) + '">' + E(c.telefono) + "</a>" : "") + (c.email ? '<a href="mailto:' + E(c.email) + '">' + E(c.email) + "</a>" : "") + TD.statoLiberatoria(c) + "</p></div>" +
         '<div class="head-actions">' +
           '<button class="btn ' + (attivo ? "btn-ok" : "btn-primary") + '" id="attiva">' + I(attivo ? "check" : "play") + (attivo ? "In lezione ora" : "Inizia la lezione") + "</button>" +
+          '<button class="btn" id="esportaDati" title="Scarica i dati di questo cliente in un file leggibile">' + I("download") + "Esporta dati</button>" +
           '<a class="btn" href="#/cliente/' + c.id + '/modifica">' + I("pen") + "Modifica</a>" +
           '<a class="btn" href="#/casella/' + c.id + '">' + I("lock") + "Casella</a>" +
           (c.rustdesk ? '<a class="btn" href="rustdesk://' + E(String(c.rustdesk).replace(/\s+/g, "")) + '">' + I("screen") + "RustDesk</a>" : "") +
@@ -257,6 +281,10 @@
       TD.impostaClienteAttivo(attivo ? "" : c.id);
       TD.toast(attivo ? "Lezione chiusa." : "Ora le lezioni, i quiz e gli esercizi si registrano per " + TD.nomeCliente(c) + ".");
       TD.render();
+    };
+    document.getElementById("esportaDati").onclick = function () {
+      TD.scarica(new Blob([JSON.stringify(TD.datiCliente(c), null, 2)], { type: "application/json" }), "dati-" + TD.nomeFile(TD.nomeCliente(c)) + "-" + TD.oggi() + ".json");
+      TD.toast("Dati di " + TD.nomeCliente(c) + " esportati in un file.");
     };
     const body = document.getElementById("tabBody");
     ({ panoramica: panoramica, registro: registro, percorso: percorso, compiti: compiti, quiz: quiz, allievo: TD.tabAllievo, documenti: documenti }[tab] || panoramica)(body, c, q);
