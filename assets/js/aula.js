@@ -314,11 +314,13 @@
     if ($("aSalva")) $("aSalva").onclick = function () {
       const c = TD.cliente(H.clienteId); if (!c) return;
       c.quiz = c.quiz || []; const parts = c.partecipanti || [];
+      const sessione = H.max > 1 ? TD.uid("s") : "";
       let salvati = 0;
       TD.aula.classifica(H.giocatori).forEach(function (g) {
         const p = parts.find(function (x) { return x.nome.toLowerCase() === g.nome.toLowerCase() || x.nome.toLowerCase().split(" ")[0] === g.nome.toLowerCase().split(" ")[0]; });
         const voce = { id: TD.uid("q"), data: TD.oggi(), liv: "", dev: "aula", giuste: g.giuste, totale: H.domande.length, perc: Math.round(100 * g.giuste / H.domande.length), partecipante: p ? p.id : "", nome: g.nome, aula: true };
         if (H.max === 1) voce.individuale = true;
+        else voce.sessione = sessione;
         c.quiz.push(voce);
         salvati++;
       });

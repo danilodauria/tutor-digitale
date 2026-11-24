@@ -34,8 +34,8 @@
       const reg = (c.registro || []).filter(function (r) { return r.stato !== "pianificata" && r.data; });
       const compiti = (c.compiti || []).filter(function (k) { return !k.fatto; });
       const scaduti = compiti.filter(function (k) { return k.scadenza && k.scadenza < oggi; });
-      const quiz = (c.quiz || []).slice().sort(function (a, b) { return String(a.data).localeCompare(String(b.data)); });
-      const ultimoQuiz = quiz[quiz.length - 1];
+      const sessioni = TD.quizSessioni(c);
+      const ultimoQuiz = sessioni.length ? sessioni[sessioni.length - 1] : null;
       const media = TD.mediaQuiz(c);
       const quizBasso = ultimoQuiz ? Number(ultimoQuiz.perc) < 60 : (media != null && media < 60);
       const ultima = reg.slice().sort(function (a, b) { return String(a.data).localeCompare(String(b.data)); }).pop();
@@ -195,8 +195,8 @@
         const l = c.luogo || "Non indicato"; luoghi[l] = (luoghi[l] || 0) + 1;
         const ct = c.citta || "Non indicata"; citta[ct] = (citta[ct] || 0) + 1;
       }
-      const quiz = (c.quiz || []).slice().sort(function (a, b) { return String(a.data).localeCompare(String(b.data)); });
-      perCliente.push({ id: c.id, nome: TD.nomeCliente(c), minuti: minC, incontri: incC, incassato: eurC, completate: (c.completate || []).length, quiz: quiz.map(function (x) { return x.perc; }), stato: c.stato || "" });
+      const sessioni = TD.quizSessioni(c);
+      perCliente.push({ id: c.id, nome: TD.nomeCliente(c), minuti: minC, incontri: incC, incassato: eurC, completate: (c.completate || []).length, quiz: sessioni.map(function (x) { return x.perc; }), stato: c.stato || "" });
     });
     function ordina(o) { return Object.keys(o).map(function (k) { return [k, o[k]]; }).sort(function (a, b) { return b[1] - a[1] || a[0].localeCompare(b[0]); }); }
     return { anno: anno, mesi: mesi, minuti: minuti, incontri: incontri, incassato: incassato, daIncassare: daIncassare,

@@ -16,10 +16,37 @@
   TD.oreCliente = function (c) {
     return (c.registro || []).filter(function (r) { return r.stato !== "pianificata"; }).reduce(function (s, r) { return s + (Number(r.durata) || 0); }, 0) / 60;
   };
+  /* un quiz di gruppo vale una sola volta: i risultati dei partecipanti
+     formano una sessione, non quattro quiz separati. I dati già esistenti
+     (senza «sessione») si raggruppano per data; i nuovi per sessione. */
+  TD.quizSessioni = function (c, partId) {
+    const voci = (c.quiz || []).filter(function (x) { return !partId || !x.partecipante || x.partecipante === partId; });
+    const out = [], gruppi = {};
+    voci.forEach(function (x) {
+      if (!(x.aula === true && x.individuale !== true)) {
+        out.push({ aula: false, data: x.data, perc: Number(x.perc) || 0, voce: x });
+        return;
+      }
+      const chiave = x.sessione ? "s:" + x.sessione : "d:" + (x.data || "");
+      if (!gruppi[chiave]) {
+        gruppi[chiave] = { aula: true, data: x.data, sessione: x.sessione || "", voci: [] };
+        out.push(gruppi[chiave]);
+      }
+      gruppi[chiave].voci.push(x);
+    });
+    out.forEach(function (s) {
+      if (!s.aula) return;
+      s.perc = Math.round(s.voci.reduce(function (a, x) { return a + (Number(x.perc) || 0); }, 0) / s.voci.length);
+      s.nomi = s.voci.map(function (x) { return x.nome || "Partecipante"; });
+    });
+    out.sort(function (a, b) { return String(a.data || "").localeCompare(String(b.data || "")); });
+    return out;
+  };
+  TD.contaQuiz = function (c, partId) { return TD.quizSessioni(c, partId).length; };
   TD.mediaQuiz = function (c, partId) {
-    const q = (c.quiz || []).filter(function (x) { return !partId || !x.partecipante || x.partecipante === partId; });
-    if (!q.length) return null;
-    return Math.round(q.reduce(function (s, x) { return s + x.perc; }, 0) / q.length);
+    const s = TD.quizSessioni(c, partId);
+    if (!s.length) return null;
+    return Math.round(s.reduce(function (a, x) { return a + x.perc; }, 0) / s.length);
   };
 
   /* ------------------------------------------------------------ riepilogo lezione
@@ -417,10 +444,19 @@
 
   /* quiz */
   function quiz(body, c) {
-    const l = (c.quiz || []).slice().reverse();
-    body.innerHTML = '<section class="card"><h2>Risultati dei quiz</h2><div class="actions"><a class="btn btn-primary" href="#/quiz" id="fq">' + I("play") + "Nuovo quiz per questo cliente</a></div>" +
-      (l.length ? '<table class="table"><thead><tr><th>Data</th><th>Chi</th><th>Livello</th><th>Percorso</th><th>Risultato</th></tr></thead><tbody>' + l.map(function (x) {
-        return "<tr><td>" + E(TD.dataIt(x.data)) + "</td><td>" + E(x.nome || "—") + "</td><td>" + (x.liv !== "" && x.liv != null ? TD.badgeLiv(Number(x.liv)) : "Tutti") + "</td><td>" + E(x.dev && x.dev !== "tutti" ? TD.percorso(x.dev).nome : "Tutti") + "</td><td><strong>" + x.perc + "%</strong> (" + x.giuste + "/" + x.totale + ")</td></tr>";
+    const sessioni = TD.quizSessioni(c).slice().reverse();
+    const risultati = (c.quiz || []).length;
+    body.innerHTML = '<section class="card"><h2>Risultati dei quiz</h2>' +
+      '<p class="muted text-small">' + sessioni.length + " quiz · " + risultati + " risultati. Un quiz di gruppo conta una volta nella media; qui sotto restano anche i risultati dei partecipanti.</p>" +
+      '<div class="actions"><a class="btn btn-primary" href="#/quiz" id="fq">' + I("play") + "Nuovo quiz per questo cliente</a></div>" +
+      (sessioni.length ? '<table class="table"><thead><tr><th>Data</th><th>Chi</th><th>Livello</th><th>Percorso</th><th>Risultato</th></tr></thead><tbody>' + sessioni.map(function (s) {
+        if (s.aula) {
+          const chi = s.voci.map(function (x) { return (x.nome || "Partecipante") + " " + (Number(x.perc) || 0) + "%"; }).join(" · ");
+          return "<tr><td>" + E(TD.dataIt(s.data)) + '</td><td><strong>Gruppo</strong><br><span class="muted text-small">' + E(chi) + "</span></td><td>Tutti</td><td>Aula</td><td><strong>" + s.perc + '%</strong><br><span class="muted text-small">media · ' + s.voci.length + (s.voci.length === 1 ? " partecipante" : " partecipanti") + "</span></td></tr>";
+        }
+        const x = s.voce;
+        const percorso = x.dev === "aula" ? (x.individuale ? "Telefono" : "Aula") : (x.dev && x.dev !== "tutti" ? TD.percorso(x.dev).nome : "Tutti");
+        return "<tr><td>" + E(TD.dataIt(x.data)) + "</td><td>" + E(x.nome || "—") + "</td><td>" + (x.liv !== "" && x.liv != null ? TD.badgeLiv(Number(x.liv)) : "Tutti") + "</td><td>" + E(percorso) + "</td><td><strong>" + x.perc + "%</strong> (" + x.giuste + "/" + x.totale + ")</td></tr>";
       }).join("") + "</tbody></table>" : '<p class="muted">Nessun quiz ancora.</p>') + "</section>";
     document.getElementById("fq").onclick = function () { TD.impostaClienteAttivo(c.id); };
   }

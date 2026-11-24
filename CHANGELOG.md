@@ -1,5 +1,9 @@
 # Versioni
 
+## 1.11.1 · 24 novembre 2026
+
+- **Statistiche dei quiz di gruppo corrette**: i risultati di un quiz a più persone ora contano come **una sola sessione** nella media quiz e nel conteggio della scheda cliente, non come quattro quiz separati. Nella scheda restano visibili i risultati dei partecipanti (nome e percentuale) e la media del gruppo; cruscotto, andamento delle statistiche e attestato usano la media della sessione. Cache aggiornata alla 1.11.1.
+
 ## 1.11.0 · 24 novembre 2026
 
 - **Ricerca rapida**: nuovo pulsante «Cerca» nell'header (si apre anche con Ctrl/Cmd+K) per trovare in un attimo funzioni, percorsi, lezioni e clienti. Ogni risultato mostra il percorso nel programma (per esempio «Lezioni › Tablet» o «Menu › Altro») e la rotta da aprire; frecce e Invio per scegliere, Esc per chiudere. La ricerca è locale, funziona anche offline e non manda nulla in rete. Cache aggiornata alla 1.11.0.

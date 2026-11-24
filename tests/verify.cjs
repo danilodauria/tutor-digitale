@@ -242,6 +242,26 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
   ok(st.argomenti[0][0] === TD.LEZIONI[0].id && st.argomenti[0][1] === 3, "statistiche: argomento più richiesto");
   ok(st.clientiAttivi === 2 && st.luoghi.length === 2 && st.citta[0][0] === "Roma" && st.citta[0][1] === 2, "statistiche: clienti per luogo e città");
   ok(JSON.stringify(st.clienti.find((c) => c.id === "a").quiz) === "[50,80]", "statistiche: andamento dei quiz in ordine di data");
+
+  /* quiz di gruppo: i risultati dei partecipanti sono una sola sessione */
+  const gc = { quiz: [
+    { data: "2026-03-01", perc: 100, aula: true, sessione: "s1", nome: "Anna" },
+    { data: "2026-03-01", perc: 100, aula: true, sessione: "s1", nome: "Bruno" },
+    { data: "2026-03-01", perc: 100, aula: true, sessione: "s1", nome: "Carla" },
+    { data: "2026-03-01", perc: 100, aula: true, sessione: "s1", nome: "Dino" },
+    { data: "2026-03-02", perc: 0, individuale: true },
+    { data: "2026-03-03", perc: 0, individuale: true }
+  ] };
+  ok(TD.quizSessioni(gc).length === 3, "quiz di gruppo: i quattro risultati sono una sola sessione");
+  ok(TD.contaQuiz(gc) === 3, "quiz di gruppo: il conteggio è per sessione, non per risultato");
+  ok(TD.mediaQuiz(gc) === 33, "media quiz: un quiz di gruppo pesa una volta sola (33%)");
+  const gl = { quiz: [
+    { data: "2026-04-01", perc: 50, aula: true },
+    { data: "2026-04-01", perc: 70, aula: true },
+    { data: "2026-04-02", perc: 100 }
+  ] };
+  ok(TD.quizSessioni(gl).length === 2 && TD.mediaQuiz(gl) === 80, "quiz di gruppo già salvati: raggruppati per data (media 80%)");
+  ok(leggi("assets/js/aula.js").includes("voce.sessione = sessione"), "aula: il salvataggio lega i risultati alla stessa sessione");
   ok(TD.incontriDelMese(dbS.clienti[0], "2026-03", false).length === 0 && TD.incontriDelMese(dbS.clienti[0], "2026-03", true).length === 1, "presenze: incontri pianificati solo se richiesti");
   ok(TD.incontriDelMese(dbS.clienti[1], "2026-01").length === 1, "presenze: incontri del mese dell'ente");
 
