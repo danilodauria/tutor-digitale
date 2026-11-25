@@ -35,6 +35,93 @@
     if (r && Array.isArray(r.presenti)) return r.presenti.slice();
     return (c.partecipanti || []).map(function (x) { return x.id; });
   };
+  /* ------------------------------------------------------------ import partecipanti
+     Legge un CSV/TSV (anche copiato da Excel), riconosce l'intestazione e
+     confronta i nomi con quelli già in elenco: l'anteprima mostra nuovi,
+     già presenti e doppioni, e solo i nuovi vengono aggiunti. */
+  function chiaveNome(n) {
+    return String(n || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+  }
+  function righeTesto(testo, delim) {
+    const righe = []; let riga = [], campo = "", dentro = false;
+    for (let i = 0; i < testo.length; i++) {
+      const ch = testo[i];
+      if (dentro) {
+        if (ch === '"' && testo[i + 1] === '"') { campo += '"'; i++; }
+        else if (ch === '"') dentro = false;
+        else campo += ch;
+      } else if (ch === '"') dentro = true;
+      else if (ch === delim) { riga.push(campo); campo = ""; }
+      else if (ch === "\n" || ch === "\r") {
+        if (ch === "\r" && testo[i + 1] === "\n") i++;
+        riga.push(campo); righe.push(riga); riga = []; campo = "";
+      } else campo += ch;
+    }
+    if (campo !== "" || riga.length) { riga.push(campo); righe.push(riga); }
+    return righe.filter(function (r) { return r.some(function (x) { return String(x).trim(); }); });
+  }
+  function delimitatore(testo) {
+    const riga = testo.split(/\r?\n/).find(function (r) { return r.trim(); }) || "";
+    const conta = { ";": 0, ",": 0, "\t": 0 }; let dentro = false;
+    for (let i = 0; i < riga.length; i++) {
+      const ch = riga[i];
+      if (ch === '"') dentro = !dentro;
+      else if (!dentro && conta[ch] != null) conta[ch]++;
+    }
+    return Object.keys(conta).sort(function (a, b) { return conta[b] - conta[a]; })[0] || ";";
+  }
+  function normalizzaTitolo(s) {
+    return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+  }
+  TD.partecipantiDaCSV = function (testo) {
+    const grezzo = String(testo || "").replace(/^\uFEFF/, "");
+    if (!grezzo.trim()) return { nomi: [], scartate: 0 };
+    const righe = righeTesto(grezzo, delimitatore(grezzo));
+    if (!righe.length) return { nomi: [], scartate: 0 };
+    const testa = righe[0].map(normalizzaTitolo);
+    const isHeader = testa.some(function (x) { return /^(nome|cognome|partecipante|partecipanti|nominativo|nome completo|nome e cognome|cognome e nome|name|first name|last name|surname|student|allievo)$/.test(x); });
+    let colonne = null;
+    if (isHeader) {
+      colonne = {
+        iFull: testa.findIndex(function (x) { return /^(partecipante|partecipanti|nominativo|nome completo|nome e cognome|cognome e nome|name|student|allievo)$/.test(x); }),
+        iNome: testa.findIndex(function (x) { return /^(nome|first name)$/.test(x); }),
+        iCognome: testa.findIndex(function (x) { return /^(cognome|last name|surname)$/.test(x); })
+      };
+    }
+    const nomi = [];
+    let scartate = 0;
+    for (let k = isHeader ? 1 : 0; k < righe.length; k++) {
+      const r = righe[k];
+      let nome = "";
+      if (colonne && colonne.iFull >= 0) nome = r[colonne.iFull] || "";
+      else if (colonne && colonne.iNome >= 0) nome = [r[colonne.iNome], colonne.iCognome >= 0 ? r[colonne.iCognome] : ""].join(" ");
+      else {
+        const celle = r.map(function (x) { return String(x).trim(); }).filter(Boolean);
+        nome = celle.length > 1 ? celle[0] + " " + celle[1] : (celle[0] || "");
+      }
+      nome = String(nome).replace(/\s+/g, " ").trim().slice(0, 80);
+      if (!nome) { scartate++; continue; }
+      nomi.push(nome);
+    }
+    return { nomi: nomi, scartate: scartate };
+  };
+  TD.confrontaPartecipanti = function (nomi, esistenti) {
+    const visti = Object.create(null);
+    (esistenti || []).forEach(function (n) { const k = chiaveNome(n); if (k) visti[k] = 1; });
+    const nelFile = Object.create(null);
+    const out = { voci: [], nuovi: [], esistenti: 0, doppioni: 0 };
+    (nomi || []).forEach(function (nome) {
+      const k = chiaveNome(nome);
+      if (!k) return;
+      let stato = "nuovo";
+      if (visti[k]) { stato = "esistente"; out.esistenti++; }
+      else if (nelFile[k]) { stato = "doppione"; out.doppioni++; }
+      else { nelFile[k] = 1; out.nuovi.push(nome); }
+      out.voci.push({ nome: nome, stato: stato });
+    });
+    return out;
+  };
+
   /* chiude la lezione in un colpo: aggiorna o crea l'incontro, segna le presenze,
      aggiunge gli argomenti alle competenze e mette il prossimo appuntamento in agenda */
   TD.chiudiLezione = function (c, o) {
@@ -262,7 +349,11 @@
         '</div><p class="muted text-small">Non sai il livello? Dopo il salvataggio usa il <strong>test d\'ingresso</strong> dalla scheda cliente.</p></fieldset>' +
         campo("sistemi", "Modelli e sistemi (es. Windows 11, iPhone 13, TV Samsung)", c.sistemi) +
         campo("rustdesk", "ID RustDesk del computer del cliente (per il controllo a distanza, facoltativo)", c.rustdesk) +
-        '<label class="field solo-ente"><span>Partecipanti (uno per riga: Nome Cognome)</span><textarea name="partecipanti" rows="5">' + E((c.partecipanti || []).map(function (x) { return x.nome; }).join("\n")) + "</textarea></label>" +
+        '<div class="field solo-ente"><span>Partecipanti (uno per riga: Nome Cognome)</span>' +
+          '<div class="actions"><label class="btn btn-sm">' + I("upload") + 'Importa da CSV/Excel<input type="file" id="impPart" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values" hidden></label></div>' +
+          '<textarea name="partecipanti" rows="5">' + E((c.partecipanti || []).map(function (x) { return x.nome; }).join("\n")) + '</textarea>' +
+          '<small class="muted">Va bene un CSV con una colonna di nomi o con le colonne Nome e Cognome, anche esportato da Excel; l\'anteprima controlla i doppioni prima di aggiungere.</small>' +
+          '<div id="impPartAnteprima"></div></div>' +
         '<label class="field"><span>Obiettivi del cliente</span><textarea name="obiettivi" rows="3" placeholder="Es. videochiamare i nipoti, usare lo SPID, gestire le email di lavoro">' + E(c.obiettivi || "") + "</textarea></label>" +
         '<label class="field"><span>Esigenze di accessibilità (facoltativo, solo con consenso nella liberatoria)</span><textarea name="accessibilita" rows="2" placeholder="Es. caratteri grandi, parlare lentamente, preferisce il tablet al mouse">' + E(c.accessibilita || "") + "</textarea></label>" +
         '<label class="field"><span>Note</span><textarea name="note" rows="3">' + E(c.note || "") + "</textarea></label>" +
@@ -280,6 +371,43 @@
     }
     f.querySelectorAll('input[name="tipo"]').forEach(function (r) { r.onchange = aggiornaTipo; });
     aggiornaTipo();
+    /* import partecipanti: il file resta sul dispositivo, l'anteprima non salva nulla */
+    const impPart = document.getElementById("impPart");
+    if (impPart) impPart.onchange = function () {
+      const file = impPart.files && impPart.files[0];
+      if (!file) return;
+      const rd = new FileReader();
+      rd.onload = function () { anteprimaPartecipanti(String(rd.result || ""), file.name); };
+      rd.onerror = function () { TD.toast("Non riesco a leggere il file."); };
+      rd.readAsText(file, "UTF-8");
+      impPart.value = "";
+    };
+    function anteprimaPartecipanti(testo, nomeFile) {
+      const area = f.querySelector('[name="partecipanti"]');
+      const box = document.getElementById("impPartAnteprima");
+      if (!area || !box) return;
+      const letti = TD.partecipantiDaCSV(testo);
+      if (!letti.nomi.length) { box.innerHTML = '<p class="pill ko">' + I("alert") + "Nessun nome riconosciuto nel file.</p>"; return; }
+      const esistenti = area.value.split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+      const conf = TD.confrontaPartecipanti(letti.nomi, esistenti);
+      const etichetta = { nuovo: "nuovo", esistente: "già presente", doppione: "doppione nel file" };
+      const conta = function (n, uno, molti) { return n + " " + (n === 1 ? uno : molti); };
+      box.innerHTML = '<div class="note-box">' + I("info") + '<div><strong>Anteprima di ' + E(nomeFile) + '</strong>: ' + conta(conf.nuovi.length, "nuovo", "nuovi") + ', ' + conta(conf.esistenti, "già presente", "già presenti") + ', ' + conta(conf.doppioni, "doppione nel file", "doppioni nel file") + (letti.scartate ? ', ' + letti.scartate + ' righe vuote' : "") + '.</div></div>' +
+        '<ul class="list">' + conf.voci.map(function (v) { return '<li><span>' + E(v.nome) + '</span><span class="pill ' + (v.stato === "nuovo" ? "ok" : "warn") + '">' + etichetta[v.stato] + "</span></li>"; }).join("") + "</ul>" +
+        '<div class="actions"><button type="button" class="btn btn-primary btn-sm" id="impAggiungi"' + (conf.nuovi.length ? "" : " disabled") + '>' + I("plus") + 'Aggiungi ' + conta(conf.nuovi.length, "nuovo", "nuovi") + '</button><button type="button" class="btn btn-sm" id="impAnnulla">Annulla</button></div>';
+      const add = document.getElementById("impAggiungi");
+      if (add) add.onclick = function () {
+        const attuali = area.value.split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+        const visti = Object.create(null);
+        attuali.forEach(function (n) { visti[chiaveNome(n)] = 1; });
+        conf.nuovi.forEach(function (n) { const k = chiaveNome(n); if (!visti[k]) { attuali.push(n); visti[k] = 1; } });
+        area.value = attuali.join("\n");
+        box.innerHTML = "";
+        TD.toast(conf.nuovi.length + " partecipanti aggiunti. Ricordati di salvare il cliente.");
+      };
+      const annulla = document.getElementById("impAnnulla");
+      if (annulla) annulla.onclick = function () { box.innerHTML = ""; };
+    }
     f.onsubmit = function (e) {
       e.preventDefault();
       const o = TD.form(f);

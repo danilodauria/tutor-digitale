@@ -1,5 +1,9 @@
 # Versioni
 
+## 1.12.9 · 25 novembre 2026
+
+- **Import dell'elenco partecipanti da CSV/Excel**: nel modulo di un ente o gruppo il pulsante **«Importa da CSV/Excel»** legge un file CSV/TSV (anche esportato o copiato da Excel) e mostra un'**anteprima** con nuovi, già presenti e doppioni nel file. Solo i nomi nuovi vengono aggiunti alla casella dei partecipanti, che resta modificabile e viene salvata col resto della scheda; i duplicati, le righe vuote e le intestazioni non entrano nell'elenco. Lettura locale, nessun file inviato fuori. Test su intestazioni, virgole tra virgolette, tabulazioni, BOM, righe vuote e nomi con accenti; cache aggiornata alla 1.12.9.
+
 ## 1.12.8 · 25 novembre 2026
 
 - **Chiusura della lezione in un flusso unico**: dalla scheda cliente il pulsante **«Chiudi la lezione»** apre un solo modulo con data, ora e durata, argomenti già selezionati e presenze già segnate. Se oggi c'era un incontro pianificato diventa **«svolta» senza duplicati**; altrimenti ne viene creato uno nuovo. Nello stesso passaggio si scrivono le note e il **prossimo appuntamento**, che finisce in agenda con le presenze di tutto il gruppo (se esiste già allo stesso giorno e ora viene aggiornato, non duplicato). Gli argomenti svolti entrano nelle competenze del cliente. Test su precompilazione, aggiornamento senza duplicati, creazione da zero, prossimo appuntamento e data non valida; cache aggiornata alla 1.12.8.

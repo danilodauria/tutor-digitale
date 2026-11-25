@@ -371,7 +371,24 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
     ok(src.includes('id="tuttiP"') && src.includes("Presenze, registro, note e prossimo appuntamento"), "chiusura: presenze precompilate e azione unica");
   }
 
-  /* 16. editor: lezioni e domande proprie (8) */
+  /* 16. import dell'elenco partecipanti da CSV/Excel */
+  {
+    const p = TD.partecipantiDaCSV("\uFEFFNome;Cognome\nAnna;Prova\nBruno;Prova\n\nAnna;Prova\n");
+    ok(p.nomi.length === 3 && p.nomi[0] === "Anna Prova" && p.nomi[1] === "Bruno Prova" && p.scartate === 0, "import: CSV con intestazione Nome;Cognome e riga vuota");
+    const q = TD.partecipantiDaCSV('Partecipante\n"Prova, Anna"\n"Bianchi, Carla"\n');
+    ok(q.nomi.length === 2 && q.nomi[0] === "Prova, Anna" && q.nomi[1] === "Bianchi, Carla", "import: CSV con virgole dentro le virgolette");
+    const t = TD.partecipantiDaCSV("Anna\tProva\nCarla\tBianchi\n");
+    ok(t.nomi.length === 2 && t.nomi[0] === "Anna Prova" && t.nomi[1] === "Carla Bianchi", "import: testo copiato da Excel con tabulazioni");
+    ok(TD.partecipantiDaCSV("\n\n").nomi.length === 0, "import: un file vuoto non produce nomi");
+    const conf = TD.confrontaPartecipanti(["Anna Prova", "Bruno Prova", "bruno prova", "Carla Bianchi", "Nicolò Verdi"], ["anna prova", "NICOLO VERDI"]);
+    ok(conf.nuovi.length === 2 && conf.nuovi[0] === "Bruno Prova" && conf.nuovi[1] === "Carla Bianchi", "import: solo i nomi nuovi vanno aggiunti");
+    ok(conf.esistenti === 2 && conf.doppioni === 1 && conf.voci.filter((v) => v.stato === "doppione").length === 1, "import: già presenti e doppioni nel file vengono riconosciuti");
+    const src = leggi("assets/js/views-clienti.js");
+    ok(src.includes("Importa da CSV/Excel") && src.includes("id=\"impPart\"") && src.includes("id=\"impPartAnteprima\""), "import: il modulo cliente ha il caricamento e l'anteprima");
+    ok(src.includes("già presente") && src.includes("doppione nel file") && src.includes("TD.confrontaPartecipanti"), "import: l'anteprima distingue nuovi, presenti e doppioni");
+  }
+
+  /* 17. editor: lezioni e domande proprie (8) */
   {
     const prima = TD.LEZIONI.length, primaD = TD.DOMANDE.length;
     const lez = { id: "my-prova", dev: "pc", liv: 1, n: 9, titolo: "Lezione di prova", durata: 60, obiettivi: ["Uno"], spiegazione: ["Testo"], passi: ["A", "B"], esercizi: { facile: "f", medio: "m", esperto: "e" }, compito: "Fai la prova", digcomp: [1], immagini: [], personale: true };
