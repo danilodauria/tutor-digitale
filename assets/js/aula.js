@@ -86,6 +86,9 @@
       const i = Number(q && q.b);
       return isFinite(i) && i >= 0 && i < TD.relay.BROKER.length ? Math.floor(i) : -1;
     },
+    /* il telefono è finito su un canale diverso da quello della stanza:
+       meglio avvisare subito che mostrare «Ci sei» senza essere visti */
+    canaleDiverso: function (atteso, reale) { return !!(atteso && reale && atteso !== reale); },
     /* testo letto ad alta voce: domanda, proposta e risposte con la loro lettera,
        così chi non legge bene può rispondere anche dal telefono in gruppo */
     testoDaLeggere: function (q) {
@@ -448,6 +451,11 @@
     return { fase: ["attesa", "domanda", "fine", "chiusa"].indexOf(m.fase) >= 0 ? m.fase : "attesa", solo: m.solo === true, max: n(m.max, 1), n: n(m.n), totale: n(m.totale), giusta: n(m.giusta, -1), domanda: q, giocatori: n(m.giocatori),
       classifica: (Array.isArray(m.classifica) ? m.classifica : []).slice(0, 20).map(function (g) { return { id: t(g && g.id, 80), nome: t(g && g.nome, 24), punti: n(g && g.punti) }; }) };
   }
+  /* broker scritto nel QR (o nel prefisso della stanza): quello dove sta il monitor */
+  function brokerAtteso() {
+    const i = G.b >= 0 ? G.b : TD.relay.indiceStanza(G.s);
+    return i >= 0 ? TD.relay.BROKER[i] : "";
+  }
   async function entraAula() {
     G.id = idGiocatore();
     try {
@@ -492,12 +500,11 @@
     let corpo;
     if (!G.s || !G.k) corpo = '<section class="card"><h2>Aula</h2><p>Per entrare inquadra il QR mostrato dal tutor sullo schermo del computer o sulla TV.</p></section>';
     else if (G.errore) corpo = '<section class="card"><h2>Non riesco a entrare</h2><p>' + E(G.errore) + "</p></section>";
+    else if (G.canale && TD.aula.canaleDiverso(brokerAtteso(), G.canale.broker)) corpo = '<section class="card aula-tel"><h2>Sei su un altro canale</h2><p>Il telefono si è collegato a un broker diverso da quello scritto nel QR: il monitor non ti vede. Controlla la connessione e riprova.</p><div class="actions"><button class="btn btn-primary" id="gRiprova">Riprova</button></div></section>';
     else if (G.attesaPosto) corpo = '<section class="card"><h2>Aula al completo</h2><p>' + (G.posti === 1 ? "C'è già un partecipante." : "Ci sono già " + G.posti + " partecipanti.") + (G.posti === 1 ? " Resta su questa pagina: appena si libera, entri automaticamente." : " Resta su questa pagina: appena uno esce, entri automaticamente.") + '</p><p class="muted">Controllo ogni pochi secondi…</p></section>';
     else if (!G.canale) corpo = '<form class="card form" id="gForm"><h2>' + I("users") + 'Entra in aula</h2><label class="field"><span>Il tuo nome</span><input name="nome" required maxlength="24" value="' + E(G.nome || (TD.db.allievo && TD.db.allievo.nome) || "") + '" autocomplete="given-name"></label><div class="actions"><button class="btn btn-primary btn-lg" type="submit">' + I("play") + "Entra</button></div></form>";
     else if (!st) corpo = G.monitorAssente
-      ? '<section class="card aula-tel"><h2>Il monitor non risponde</h2><p>' + (G.canale.broker && G.b >= 0 && G.canale.broker !== TD.relay.BROKER[G.b]
-        ? "Il telefono è su un canale diverso da quello indicato dal QR: per questo il monitor non ti vede."
-        : "Sei collegato al canale cifrato, ma non arriva lo stato dell'aula: può essere un momento di rete.") + '</p><p class="muted text-small">Controlla che il tutor abbia l\'aula aperta, poi riprova.</p><div class="actions"><button class="btn btn-primary" id="gRiprova">Riprova</button></div></section>'
+      ? '<section class="card aula-tel"><h2>Il monitor non risponde</h2><p>Sei collegato al canale cifrato, ma non arriva lo stato dell\'aula: può essere un momento di rete.</p><p class="muted text-small">Controlla che il tutor abbia l\'aula aperta, poi riprova.</p><div class="actions"><button class="btn btn-primary" id="gRiprova">Riprova</button></div></section>'
       : '<section class="card aula-tel"><h2>In attesa del monitor…</h2><p class="aula-grande">Sei collegato al canale cifrato: aspetto che arrivi lo stato dell\'aula.</p></section>';
     else if (st.fase === "attesa") corpo = '<section class="card aula-tel"><h2>Ci sei, ' + E(G.nome) + '!</h2><p class="aula-grande">Guarda lo schermo del tutor: si comincia tra poco.</p></section>';
     else if (st.fase === "chiusa") corpo = '<section class="card"><h2>Aula chiusa</h2><p>Grazie per aver partecipato!</p><a class="btn" href="#/">Torna all\'inizio</a></section>';

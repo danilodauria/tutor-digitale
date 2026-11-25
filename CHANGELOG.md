@@ -1,5 +1,9 @@
 # Versioni
 
+## 1.12.6 · 25 novembre 2026
+
+- **Canale diverso: avviso subito, non «Ci sei»**: se il telefono ripiega su un broker diverso da quello scritto nel QR (o nel prefisso della stanza), non aspetta più il timeout né mostra «Ci sei»: appena connesso mostra **«Sei su un altro canale»**, spiega che il monitor non lo vede e propone **Riprova**. Il confronto è esplicito (`TD.aula.canaleDiverso`, broker atteso da `b` o dalla stanza) e ha la precedenza su qualsiasi stato ricevuto. Test sul confronto e sull'ordine dei rami; cache aggiornata alla 1.12.6.
+
 ## 1.12.5 · 25 novembre 2026
 
 - **«In attesa del monitor» e broker nel link del QR**: il link del QR porta ora anche l'indice del broker (`&b=`), accanto alla stanza che già lo conteneva. Il telefono non dice più «Ci sei» appena si connette: aspetta il primo stato dell'aula. Se dopo 8 secondi non arriva, mostra **«Il monitor non risponde»** con il pulsante **Riprova** e, se il ripiego lo ha portato su un canale diverso da quello del QR, lo dice esplicitamente invece di far finta di essere collegato. Il ripiego resta: prima il broker indicato, poi gli altri nello stesso ordine. Test su link, lettura del broker dal link, precedenza dell'indice e attesa del primo stato. Cache aggiornata alla 1.12.5.

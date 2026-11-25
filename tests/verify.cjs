@@ -450,7 +450,8 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
     ok(srcAula.includes("H.broker = scelta.indice") && srcAula.includes("TD.aula.link(H.stanza, H.chiave, H.broker)"), "aula: il monitor passa il suo broker al link");
     ok(srcAula.includes("In attesa del monitor") && srcAula.includes("Il monitor non risponde") && srcAula.includes("ATTESA_MONITOR = 8000"), "aula: il telefono aspetta il primo stato prima di dire «Ci sei»");
     ok(srcAula.includes("else if (!st)") && srcAula.includes("else if (st.fase === \"attesa\")"), "aula: «Ci sei» compare solo quando arriva lo stato del monitor");
-    ok(srcAula.includes("id=\"gRiprova\"") && srcAula.includes("canale diverso da quello indicato"), "aula: se il ripiego porta su un altro canale, lo dice e offre Riprova");
+    ok(typeof TD.aula.canaleDiverso === "function" && TD.aula.canaleDiverso(TD.relay.BROKER[1], TD.relay.BROKER[0]) === true && TD.aula.canaleDiverso(TD.relay.BROKER[1], TD.relay.BROKER[1]) === false && TD.aula.canaleDiverso("", TD.relay.BROKER[0]) === false, "aula: il telefono riconosce un canale diverso da quello della stanza");
+    ok(srcAula.includes("Sei su un altro canale") && srcAula.includes("id=\"gRiprova\"") && srcAula.indexOf("Sei su un altro canale") < srcAula.indexOf("else if (st.fase === \"attesa\")"), "aula: sul canale sbagliato avvisa e propone Riprova prima di mostrare «Ci sei»");
     /* quiz dal telefono: una sola persona, riepilogo e trasmissione sullo schermo */
     const rs = TD.aula.riepilogoSolo({ g1: { nome: "Piero", punti: 780, giuste: 6 } }, 8);
     ok(rs && rs.perc === 75 && rs.totale === 8 && rs.nome === "Piero", "aula: riepilogo del quiz individuale");
