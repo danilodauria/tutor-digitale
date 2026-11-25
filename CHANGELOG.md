@@ -1,5 +1,9 @@
 # Versioni
 
+## 1.12.7 · 25 novembre 2026
+
+- **Riprova dal broker successivo dopo il timeout**: quando compare «Il monitor non risponde», il pulsante **Riprova** non si ricollega più allo stesso canale muto: riparte dal broker successivo nell'ordine (in modo circolare) e poi dagli altri. L'indice di avvio vale solo per quel tentativo (`G.avvio`), mentre il broker atteso resta quello della stanza, quindi se il nuovo canale è diverso l'avviso «Sei su un altro canale» resta. Test su `TD.aula.brokerSuccessivo` e sul passaggio dell'indice di avvio a `TD.relay.collega`; cache aggiornata alla 1.12.7.
+
 ## 1.12.6 · 25 novembre 2026
 
 - **Canale diverso: avviso subito, non «Ci sei»**: se il telefono ripiega su un broker diverso da quello scritto nel QR (o nel prefisso della stanza), non aspetta più il timeout né mostra «Ci sei»: appena connesso mostra **«Sei su un altro canale»**, spiega che il monitor non lo vede e propone **Riprova**. Il confronto è esplicito (`TD.aula.canaleDiverso`, broker atteso da `b` o dalla stanza) e ha la precedenza su qualsiasi stato ricevuto. Test sul confronto e sull'ordine dei rami; cache aggiornata alla 1.12.6.

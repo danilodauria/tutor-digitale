@@ -89,6 +89,11 @@
     /* il telefono è finito su un canale diverso da quello della stanza:
        meglio avvisare subito che mostrare «Ci sei» senza essere visti */
     canaleDiverso: function (atteso, reale) { return !!(atteso && reale && atteso !== reale); },
+    /* dopo un timeout il tentativo successivo parte dal broker dopo quello usato */
+    brokerSuccessivo: function (indice) {
+      const i = Number(indice);
+      return isFinite(i) && i >= 0 && i < TD.relay.BROKER.length ? (Math.floor(i) + 1) % TD.relay.BROKER.length : -1;
+    },
     /* testo letto ad alta voce: domanda, proposta e risposte con la loro lettera,
        così chi non legge bene può rispondere anche dal telefono in gruppo */
     testoDaLeggere: function (q) {
@@ -439,7 +444,7 @@
   }
 
   /* ================================================================ ALLIEVO: telefono */
-  const G = { canale: null, stato: null, id: "", nome: "", scelta: -1, n: 0, s: "", k: "", b: -1, errore: "", attesaPosto: false, posti: 4, ultimo: 0, monitorAssente: false, attesaMonitor: null };
+  const G = { canale: null, stato: null, id: "", nome: "", scelta: -1, n: 0, s: "", k: "", b: -1, avvio: -1, errore: "", attesaPosto: false, posti: 4, ultimo: 0, monitorAssente: false, attesaMonitor: null };
   function idGiocatore() {
     try { let v = sessionStorage.getItem("td-aula-id"); if (!v) { v = TD.uid("g"); sessionStorage.setItem("td-aula-id", v); } return v; } catch (e) { return G.id || TD.uid("g"); }
   }
@@ -458,8 +463,10 @@
   }
   async function entraAula() {
     G.id = idGiocatore();
+    const avvio = G.avvio;
+    G.avvio = -1;
     try {
-      G.canale = await TD.relay.collega({ stanza: G.s, chiave: G.k, indice: G.b >= 0 ? G.b : undefined, suMessaggio: function (m) {
+      G.canale = await TD.relay.collega({ stanza: G.s, chiave: G.k, indice: avvio >= 0 ? avvio : (G.b >= 0 ? G.b : undefined), suMessaggio: function (m) {
         if (m.t === "dentro" && m.id === G.id) {
           if (G.attesaPosto || G.errore) { G.attesaPosto = false; G.errore = ""; ridisegna(); }
           return;
@@ -528,6 +535,11 @@
     const rp = document.getElementById("gRiprova");
     if (rp) rp.onclick = function () {
       clearTimeout(G.attesaMonitor); G.attesaMonitor = null;
+      /* dal timeout si riparte dal broker successivo, non dallo stesso canale muto */
+      const daTimeout = G.monitorAssente;
+      const i = G.canale ? TD.relay.BROKER.indexOf(G.canale.broker) : -1;
+      const base = i >= 0 ? i : G.b;
+      if (daTimeout) G.avvio = TD.aula.brokerSuccessivo(base);
       if (G.canale) G.canale.chiudi();
       Object.assign(G, { canale: null, stato: null, errore: "", monitorAssente: false, attesaPosto: false });
       entraAula();

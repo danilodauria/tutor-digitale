@@ -454,6 +454,8 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
     ok(srcAula.includes("Sei su un altro canale") && srcAula.includes("id=\"gRiprova\"") && srcAula.indexOf("Sei su un altro canale") < srcAula.indexOf("else if (st.fase === \"attesa\")"), "aula: sul canale sbagliato avvisa e propone Riprova prima di mostrare «Ci sei»");
     const ramoCanale = srcAula.indexOf("TD.aula.canaleDiverso(brokerAtteso(), G.canale.broker)");
     ok(ramoCanale > 0 && ramoCanale < srcAula.indexOf("else if (G.attesaPosto)") && ramoCanale < srcAula.indexOf("else if (!st)"), "aula: l'avviso di canale diverso viene prima di attesa e di qualsiasi stato");
+    ok(TD.aula.brokerSuccessivo(0) === 1 && TD.aula.brokerSuccessivo(TD.relay.BROKER.length - 1) === 0 && TD.aula.brokerSuccessivo(-1) === -1 && TD.aula.brokerSuccessivo(9) === -1, "aula: dopo il timeout il tentativo riparte dal broker successivo");
+    ok(srcAula.includes("const daTimeout = G.monitorAssente") && srcAula.includes("if (daTimeout) G.avvio = TD.aula.brokerSuccessivo(base)") && srcAula.includes("indice: avvio >= 0 ? avvio : (G.b >= 0 ? G.b : undefined)"), "aula: Riprova dopo il timeout usa l'indice di avvio successivo");
     /* quiz dal telefono: una sola persona, riepilogo e trasmissione sullo schermo */
     const rs = TD.aula.riepilogoSolo({ g1: { nome: "Piero", punti: 780, giuste: 6 } }, 8);
     ok(rs && rs.perc === 75 && rs.totale === 8 && rs.nome === "Piero", "aula: riepilogo del quiz individuale");
