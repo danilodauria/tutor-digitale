@@ -346,7 +346,32 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
     ok(txt.includes("Prossimo incontro") && txt.includes("Esercizio") && txt.includes(l0.titolo), "riepilogo: testo pronto per WhatsApp");
   }
 
-  /* 15. editor: lezioni e domande proprie (8) */
+  /* 15. chiusura della lezione in un flusso unico */
+  {
+    const l0 = TD.LEZIONI[0], l1 = TD.LEZIONI[1];
+    const cL = { id: "cl", tipo: "ente", luogo: "Casa", partecipanti: [{ id: "p1", nome: "Anna" }, { id: "p2", nome: "Bruno" }], completate: [], registro: [
+      { id: "r1", data: "2026-11-25", ora: "10:00", durata: 60, stato: "pianificata", argomenti: [l0.id], presenti: ["p1", "p2"], note: "Prevista", luogo: "Casa" },
+      { id: "r2", data: "2026-12-02", ora: "10:00", durata: 60, stato: "pianificata", argomenti: [], presenti: ["p1", "p2"], luogo: "Casa" }
+    ] };
+    const info = TD.incontroDaChiudere(cL, "2026-11-25");
+    ok(info.previsto.id === "r1" && info.prossimo.id === "r2", "chiusura: propone l'incontro di oggi e il prossimo in agenda");
+    ok(TD.presenzeLezione(cL, info.previsto).length === 2 && TD.presenzeLezione(cL, { presenti: ["p1"] }).join(",") === "p1", "chiusura: presenze precompilate dall'incontro o da tutto il gruppo");
+    const res = TD.chiudiLezione(cL, { incontro: "r1", data: "2026-11-25", ora: "10:00", durata: 90, argomenti: [l0.id], presenti: ["p1"], note: "Fatto bene", prossimo: { data: "2026-12-09", ora: "10:00", durata: 60, argomenti: [l1.id] } });
+    ok(res.incontro.id === "r1" && cL.registro.filter((x) => x.id === "r1").length === 1 && res.incontro.stato === "svolta" && res.incontro.durata === 90 && res.incontro.presenti.join(",") === "p1" && res.incontro.note === "Fatto bene", "chiusura: l'incontro pianificato diventa svolta, senza duplicati");
+    ok(cL.completate.indexOf(l0.id) >= 0 && res.prossimo && res.prossimo.stato === "pianificata" && res.prossimo.presenti.length === 2, "chiusura: competenze e prossimo appuntamento");
+    const res2 = TD.chiudiLezione(cL, { incontro: "r2", data: "2026-12-02", ora: "10:00", durata: 60, argomenti: [l1.id], presenti: ["p1", "p2"], note: "", prossimo: { data: "2026-12-09", ora: "10:00", durata: 60, argomenti: [l0.id] } });
+    ok(cL.registro.filter((x) => x.data === "2026-12-09").length === 1 && res2.prossimo.id === res.prossimo.id, "chiusura: il prossimo appuntamento esistente viene aggiornato, non duplicato");
+    const cN = { id: "cn", tipo: "persona", nome: "Nadia", cognome: "Prova", luogo: "Casa", partecipanti: [], registro: [], completate: [] };
+    const res3 = TD.chiudiLezione(cN, { data: "2026-11-25", ora: "15:00", durata: 45, argomenti: [l0.id], presenti: [], note: "Prima lezione" });
+    ok(cN.registro.length === 1 && res3.incontro.stato === "svolta" && res3.incontro.ora === "15:00" && res3.prossimo === null, "chiusura: senza incontro pianificato ne crea uno nuovo");
+    let errore = false; try { TD.chiudiLezione(cN, { data: "25/11/2026" }); } catch (e) { errore = true; }
+    ok(errore, "chiusura: una data non valida viene rifiutata");
+    const src = leggi("assets/js/views-clienti.js");
+    ok(src.includes('TD.rotta("/chiudi-lezione/:id"') && src.includes("#/chiudi-lezione/") && src.includes("Prossimo appuntamento"), "chiusura: il flusso è nella scheda cliente");
+    ok(src.includes('id="tuttiP"') && src.includes("Presenze, registro, note e prossimo appuntamento"), "chiusura: presenze precompilate e azione unica");
+  }
+
+  /* 16. editor: lezioni e domande proprie (8) */
   {
     const prima = TD.LEZIONI.length, primaD = TD.DOMANDE.length;
     const lez = { id: "my-prova", dev: "pc", liv: 1, n: 9, titolo: "Lezione di prova", durata: 60, obiettivi: ["Uno"], spiegazione: ["Testo"], passi: ["A", "B"], esercizi: { facile: "f", medio: "m", esperto: "e" }, compito: "Fai la prova", digcomp: [1], immagini: [], personale: true };

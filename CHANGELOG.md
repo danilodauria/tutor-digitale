@@ -1,5 +1,9 @@
 # Versioni
 
+## 1.12.8 · 25 novembre 2026
+
+- **Chiusura della lezione in un flusso unico**: dalla scheda cliente il pulsante **«Chiudi la lezione»** apre un solo modulo con data, ora e durata, argomenti già selezionati e presenze già segnate. Se oggi c'era un incontro pianificato diventa **«svolta» senza duplicati**; altrimenti ne viene creato uno nuovo. Nello stesso passaggio si scrivono le note e il **prossimo appuntamento**, che finisce in agenda con le presenze di tutto il gruppo (se esiste già allo stesso giorno e ora viene aggiornato, non duplicato). Gli argomenti svolti entrano nelle competenze del cliente. Test su precompilazione, aggiornamento senza duplicati, creazione da zero, prossimo appuntamento e data non valida; cache aggiornata alla 1.12.8.
+
 ## 1.12.7 · 25 novembre 2026
 
 - **Riprova dal broker successivo dopo il timeout**: quando compare «Il monitor non risponde», il pulsante **Riprova** non si ricollega più allo stesso canale muto: riparte dal broker successivo nell'ordine (in modo circolare) e poi dagli altri. L'indice di avvio vale solo per quel tentativo (`G.avvio`), mentre il broker atteso resta quello della stanza, quindi se il nuovo canale è diverso l'avviso «Sei su un altro canale» resta. Test su `TD.aula.brokerSuccessivo` e sul passaggio dell'indice di avvio a `TD.relay.collega`; cache aggiornata alla 1.12.7.

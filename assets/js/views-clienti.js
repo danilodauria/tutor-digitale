@@ -16,6 +16,64 @@
   TD.oreCliente = function (c) {
     return (c.registro || []).filter(function (r) { return r.stato !== "pianificata"; }).reduce(function (s, r) { return s + (Number(r.durata) || 0); }, 0) / 60;
   };
+  /* prossimo incontro pianificato: la chiusura della lezione lo propone già compilato */
+  TD.prossimoIncontro = function (c, dopo, escludi) {
+    const limite = dopo || TD.oggi();
+    return (c.registro || []).filter(function (r) {
+      return r.stato === "pianificata" && r.data && r.data >= limite && r.id !== escludi;
+    }).sort(function (a, b) { return (a.data + (a.ora || "")).localeCompare(b.data + (b.ora || "")); })[0] || null;
+  };
+  /* l'incontro di oggi da chiudere e il prossimo già in agenda */
+  TD.incontroDaChiudere = function (c, giorno) {
+    const data = giorno || TD.oggi();
+    const previsto = (c.registro || []).filter(function (r) { return r.stato === "pianificata" && r.data === data; })
+      .sort(function (a, b) { return (a.ora || "").localeCompare(b.ora || ""); })[0] || null;
+    return { giorno: data, previsto: previsto, prossimo: TD.prossimoIncontro(c, data, previsto ? previsto.id : "") };
+  };
+  /* presenze precompilate: quelle già segnate nell'incontro, altrimenti tutti i partecipanti */
+  TD.presenzeLezione = function (c, r) {
+    if (r && Array.isArray(r.presenti)) return r.presenti.slice();
+    return (c.partecipanti || []).map(function (x) { return x.id; });
+  };
+  /* chiude la lezione in un colpo: aggiorna o crea l'incontro, segna le presenze,
+     aggiunge gli argomenti alle competenze e mette il prossimo appuntamento in agenda */
+  TD.chiudiLezione = function (c, o) {
+    o = o || {};
+    const data = String(o.data || TD.oggi());
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) throw new Error("Data della lezione non valida.");
+    c.registro = c.registro || [];
+    const tutti = (c.partecipanti || []).map(function (x) { return x.id; });
+    const presenti = (Array.isArray(o.presenti) ? o.presenti : tutti).filter(function (id) { return tutti.indexOf(id) >= 0; });
+    const argomenti = (Array.isArray(o.argomenti) ? o.argomenti : []).filter(function (id) { return TD.lezione(id); });
+    let r = o.incontro ? c.registro.find(function (x) { return x.id === o.incontro; }) : null;
+    if (!r) r = c.registro.filter(function (x) { return x.stato === "pianificata" && x.data === data; }).sort(function (a, b) { return (a.ora || "").localeCompare(b.ora || ""); })[0] || null;
+    if (!r) {
+      r = { id: TD.uid("r"), data: data, ora: o.ora || "10:00", durata: 60, luogo: c.luogo, argomenti: [], note: "", importo: "", pagato: false, stato: "svolta", presenti: [] };
+      c.registro.push(r);
+    }
+    r.data = data;
+    r.ora = o.ora || r.ora || "10:00";
+    r.durata = Number(o.durata) || r.durata || 60;
+    r.stato = "svolta";
+    r.argomenti = argomenti;
+    r.presenti = presenti;
+    if (o.note != null) r.note = String(o.note).trim().slice(0, 500);
+    c.completate = c.completate || [];
+    argomenti.forEach(function (id) { if (c.completate.indexOf(id) < 0) c.completate.push(id); });
+    let prossimo = null;
+    if (o.prossimo && o.prossimo.data) {
+      const p = o.prossimo, oraP = p.ora || "10:00";
+      prossimo = c.registro.find(function (x) { return x.stato === "pianificata" && x.data === p.data && (x.ora || "10:00") === oraP; }) || null;
+      if (!prossimo) {
+        prossimo = { id: TD.uid("r"), data: p.data, ora: oraP, durata: 60, luogo: c.luogo, argomenti: [], note: "", importo: "", pagato: false, stato: "pianificata", presenti: tutti.slice() };
+        c.registro.push(prossimo);
+      }
+      prossimo.durata = Number(p.durata) || 60;
+      prossimo.argomenti = (Array.isArray(p.argomenti) ? p.argomenti : []).filter(function (id) { return TD.lezione(id); });
+      prossimo.presenti = tutti.slice();
+    }
+    return { incontro: r, prossimo: prossimo };
+  };
   /* un quiz di gruppo vale una sola volta: i risultati dei partecipanti
      formano una sessione, non quattro quiz separati. I dati già esistenti
      (senza «sessione») si raggruppano per data; i nuovi per sessione. */
@@ -257,6 +315,64 @@
   TD.rotta("/nuovo-cliente", function (app) { modulo(app, null); });
   TD.rotta("/cliente/:id/modifica", function (app, p) { const c = TD.cliente(p.id); if (!c) return TD.vai("#/clienti"); modulo(app, c); });
 
+  /* ------------------------------------------------------------ chiudi lezione
+     Un solo passaggio dopo la lezione: presenze già segnate, registro già
+     compilato (l'incontro pianificato di oggi diventa «svolta»), note e
+     prossimo appuntamento in agenda. */
+  function oraAdesso() {
+    const d = new Date();
+    return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
+  function opzioniArgomenti(sel) {
+    sel = sel || [];
+    return TD.PERCORSI.map(function (pc) {
+      return '<optgroup label="' + E(pc.nome) + '">' + TD.lezioniDi(pc.id).map(function (l) {
+        return '<option value="' + l.id + '"' + (sel.indexOf(l.id) >= 0 ? " selected" : "") + '>' + E(TD.livello(l.liv).breve + " · " + l.titolo) + "</option>";
+      }).join("") + "</optgroup>";
+    }).join("");
+  }
+  TD.rotta("/chiudi-lezione/:id", function (app, p) {
+    const c = TD.cliente(p.id);
+    if (!c) { TD.vai("#/clienti"); return; }
+    const info = TD.incontroDaChiudere(c);
+    const previsto = info.previsto, prossimo = info.prossimo;
+    const r = previsto || { data: info.giorno, ora: oraAdesso(), durata: 60, argomenti: [], note: "" };
+    const presenti = TD.presenzeLezione(c, previsto || {});
+    const pLez = prossimo && prossimo.argomenti && prossimo.argomenti.length ? prossimo.argomenti[0] : "";
+    app.innerHTML = TD.intest("Chiudi la lezione · " + E(TD.nomeCliente(c)), "Presenze, registro, note e prossimo appuntamento in un unico passaggio. Quello che scrivi qui finisce nella scheda e nell'agenda, senza ricompilare due volte.") +
+      '<div class="wrap"><form class="card form" id="fc">' +
+        '<input type="hidden" name="incontro" value="' + E(previsto ? previsto.id : "") + '">' +
+        (previsto
+          ? '<div class="note-box">' + I("calendar") + '<div><strong>Incontro pianificato del ' + E(TD.dataIt(previsto.data)) + '</strong>' + (previsto.ora ? " alle " + E(previsto.ora) : "") + ': chiudendolo qui diventa «svolta» e non viene duplicato.</div></div>'
+          : '<p class="muted">Nessun incontro pianificato oggi: compila i dati e ne registri uno nuovo.</p>') +
+        '<div class="grid-3">' + campo("data", "Data", r.data, "date") + campo("ora", "Ora", r.ora, "time") + campo("durata", "Durata (minuti)", r.durata, "number") + '</div>' +
+        '<label class="field"><span>Argomenti svolti (lezioni del programma)</span><select name="argomenti" multiple size="7">' + opzioniArgomenti(r.argomenti || []) + '</select><small class="muted">Tieni premuto Ctrl (o Cmd) per sceglierne più di una.</small></label>' +
+        ((c.partecipanti || []).length ? '<fieldset class="field"><legend>Presenze</legend><div class="actions"><button type="button" class="btn btn-sm" id="tuttiP">' + I("users") + 'Segna tutti presenti</button></div><div class="checkrow">' + c.partecipanti.map(function (x) { return '<label class="check"><input type="checkbox" name="presenti" data-multi="1" value="' + x.id + '"' + (presenti.indexOf(x.id) >= 0 ? " checked" : "") + "> " + E(x.nome) + "</label>"; }).join("") + "</div></fieldset>" : "") +
+        '<label class="field"><span>Note della lezione</span><textarea name="note" rows="3" placeholder="Come è andata, cosa serve riprendere, cosa portare la prossima volta">' + E(r.note || "") + '</textarea></label>' +
+        '<h2>Prossimo appuntamento</h2><p class="muted">Facoltativo: se compili la data, l\'incontro finisce subito in agenda con le presenze di tutto il gruppo.</p>' +
+        '<div class="grid-3">' + campo("pData", "Data", prossimo ? prossimo.data : "", "date") + campo("pOra", "Ora", prossimo ? prossimo.ora : r.ora, "time") + campo("pDurata", "Durata (minuti)", prossimo ? prossimo.durata : r.durata, "number") + '</div>' +
+        '<label class="field"><span>Argomento previsto</span><select name="pLez"><option value="">—</option>' + opzioniArgomenti(pLez ? [pLez] : []) + '</select></label>' +
+        '<div class="actions"><button class="btn btn-primary btn-lg" type="submit">' + I("check") + 'Chiudi la lezione</button><a class="btn" href="#/cliente/' + c.id + '?tab=registro">Annulla</a></div>' +
+      "</form></div>";
+    const f = document.getElementById("fc");
+    f.onsubmit = function (e) {
+      e.preventDefault();
+      const o = TD.form(f);
+      if (!o.data) { TD.toast("Scegli la data della lezione."); return; }
+      const argomenti = Array.from(f.querySelector('[name="argomenti"]').selectedOptions).map(function (x) { return x.value; });
+      const presenti = Array.isArray(o.presenti) ? o.presenti : (o.presenti ? [o.presenti] : []);
+      try {
+        const res = TD.chiudiLezione(c, { incontro: o.incontro, data: o.data, ora: o.ora, durata: o.durata, argomenti: argomenti, presenti: presenti, note: o.note,
+          prossimo: { data: o.pData, ora: o.pOra || r.ora, durata: o.pDurata, argomenti: o.pLez ? [o.pLez] : [] } });
+        TD.salva();
+        TD.toast("Lezione chiusa" + (res.prossimo ? " e prossimo appuntamento in agenda." : "."));
+        TD.vai("#/cliente/" + c.id + "?tab=registro");
+      } catch (err) { TD.toast(err.message); }
+    };
+    const tp = document.getElementById("tuttiP");
+    if (tp) tp.onclick = function () { f.querySelectorAll('input[name="presenti"]').forEach(function (x) { x.checked = true; }); };
+  });
+
   /* ------------------------------------------------------------ scheda */
   const TABS = [["panoramica", "Panoramica"], ["registro", "Registro lezioni"], ["percorso", "Percorso"], ["compiti", "Compiti"], ["quiz", "Quiz"], ["allievo", "App allievo"], ["documenti", "Documenti"]];
 
@@ -272,6 +388,7 @@
         '<p class="meta"><span>' + I("map") + E(c.luogo || "") + "</span>" + (c.citta ? "<span>" + E(c.citta) + "</span>" : "") + (c.telefono ? '<a href="tel:' + E(c.telefono) + '">' + E(c.telefono) + "</a>" : "") + (c.email ? '<a href="mailto:' + E(c.email) + '">' + E(c.email) + "</a>" : "") + TD.statoLiberatoria(c) + "</p></div>" +
         '<div class="head-actions">' +
           '<button class="btn ' + (attivo ? "btn-ok" : "btn-primary") + '" id="attiva">' + I(attivo ? "check" : "play") + (attivo ? "In lezione ora" : "Inizia la lezione") + "</button>" +
+          '<a class="btn" href="#/chiudi-lezione/' + c.id + '">' + I("check") + "Chiudi la lezione</a>" +
           '<button class="btn" id="esportaDati" title="Scarica i dati di questo cliente in un file leggibile">' + I("download") + "Esporta dati</button>" +
           '<a class="btn" href="#/cliente/' + c.id + '/modifica">' + I("pen") + "Modifica</a>" +
           '<a class="btn" href="#/casella/' + c.id + '">' + I("lock") + "Casella</a>" +
