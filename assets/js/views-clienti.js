@@ -560,6 +560,7 @@
           azione("#/percorsi", "book", "Scegli la lezione", "Il cliente diventa quello attivo") +
           azione("#/quiz", "quiz", "Quiz", "Il risultato si salva qui") +
           azione("#/attestato/" + c.id, "award", "Attestato finale", "PDF stampabile con competenze e codice") +
+          ((c.partecipanti || []).length > 1 ? azione("#/attestati-gruppo/" + c.id, "award", "Attestati del gruppo", "Un PDF con una pagina per partecipante") : "") +
           azione("#/preventivo?cliente=" + c.id, "euro", "Preventivo o ricevuta", "Dal listino, numerazione automatica") +
           azione("#/cliente/" + c.id + "?tab=allievo", "upload", "App allievo e compiti a distanza", "Kit personalizzato, correzione automatica") +
         "</div></section>" +
@@ -745,7 +746,7 @@
     const att = TD.db.attestati.filter(function (a) { return a.cliente === c.id; });
     body.innerHTML = '<div class="grid-2">' +
       '<section class="card"><h2>Liberatoria</h2><p>' + TD.statoLiberatoria(c) + '</p><div class="actions"><a class="btn btn-primary" href="#/liberatoria/' + c.id + '">' + I("doc") + "Apri liberatoria</a></div></section>" +
-      '<section class="card"><h2>Attestati</h2>' + (att.length ? '<ul class="list">' + att.map(function (a) { return "<li><span><strong>" + E(a.codice) + "</strong> · " + E(TD.dataIt(a.data)) + " · " + E(a.intestatario) + "</span></li>"; }).join("") + "</ul>" : '<p class="muted">Nessun attestato.</p>') + '<div class="actions"><a class="btn" href="#/attestato/' + c.id + '">' + I("award") + "Nuovo attestato</a></div></section>" +
+      '<section class="card"><h2>Attestati</h2>' + (att.length ? '<ul class="list">' + att.map(function (a) { return "<li><span><strong>" + E(a.codice) + "</strong> · " + E(TD.dataIt(a.data)) + " · " + E(a.intestatario) + "</span></li>"; }).join("") + "</ul>" : '<p class="muted">Nessun attestato.</p>') + '<div class="actions"><a class="btn" href="#/attestato/' + c.id + '">' + I("award") + "Nuovo attestato</a>" + ((c.partecipanti || []).length > 1 ? '<a class="btn" href="#/attestati-gruppo/' + c.id + '">' + I("layers") + "Attestati del gruppo</a>" : "") + '</div></section>' +
       '<section class="card"><h2>Preventivi e ricevute</h2>' + (docs.length ? '<ul class="list">' + docs.map(function (d) { return '<li><a href="#/preventivo?doc=' + d.id + '"><span><strong>' + E(d.tipo === "ricevuta" ? "Ricevuta" : "Preventivo") + " " + E(d.numero) + "</strong> · " + E(TD.dataIt(d.data)) + " · " + TD.euro(d.totale) + "</span>" + I("arrow") + "</a></li>"; }).join("") + "</ul>" : '<p class="muted">Nessun documento.</p>') + '<div class="actions"><a class="btn" href="#/preventivo?cliente=' + c.id + '">' + I("euro") + "Nuovo documento</a></div></section>" +
     "</div>";
   }

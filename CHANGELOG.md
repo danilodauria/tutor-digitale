@@ -1,5 +1,9 @@
 # Versioni
 
+## 1.13.0 · 25 novembre 2026
+
+- **Attestati in blocco per un gruppo**: dalla scheda di un ente o gruppo, **«Attestati del gruppo»** prepara un attestato per partecipante prendendo **ore, presenze e media dei quiz dal registro**; le lezioni pianificate non contano e chi non ha presenze resta a zero. La tabella mostra i dati di ogni persona e segnala chi ha già un attestato. Si sceglie chi includere, si vede l'**anteprima** e si scarica **un PDF con una pagina per partecipante**: ogni pagina ha il suo **codice progressivo** e il **QR firmato** con la chiave del tutor, verificabile dalla pagina di verifica. Il registro pubblico non viene toccato. Test su ore e presenze per persona, lezioni pianificate, quiz, codici validi e unici, PDF a più pagine e verifica della firma; cache aggiornata alla 1.13.0.
+
 ## 1.12.9 · 25 novembre 2026
 
 - **Import dell'elenco partecipanti da CSV/Excel**: nel modulo di un ente o gruppo il pulsante **«Importa da CSV/Excel»** legge un file CSV/TSV (anche esportato o copiato da Excel) e mostra un'**anteprima** con nuovi, già presenti e doppioni nel file. Solo i nomi nuovi vengono aggiunti alla casella dei partecipanti, che resta modificabile e viene salvata col resto della scheda; i duplicati, le righe vuote e le intestazioni non entrano nell'elenco. Lettura locale, nessun file inviato fuori. Test su intestazioni, virgole tra virgolette, tabulazioni, BOM, righe vuote e nomi con accenti; cache aggiornata alla 1.12.9.

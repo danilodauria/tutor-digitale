@@ -56,10 +56,10 @@
   /* codice attestato con cifra di controllo */
   function controllo(base) { let s = 0; for (let i = 0; i < base.length; i++) s += base.charCodeAt(i) * (i + 1); return String(s % 10); }
   TD.codiceValido = function (cod) { const m = /^(TD-\d{4}-\d{4})-(\d)$/.exec(cod || ""); return !!m && controllo(m[1]) === m[2]; };
-  function nuovoCodice() {
+  function nuovoCodice(extra) {
     const anno = TD.oggi().slice(0, 4);
     const n = TD.db.attestati.filter(function (a) { return a.codice.indexOf("TD-" + anno) === 0; })
-      .reduce(function (m, a) { return Math.max(m, parseInt(a.codice.slice(8, 12), 10) || 0); }, 0) + 1;
+      .reduce(function (m, a) { return Math.max(m, parseInt(a.codice.slice(8, 12), 10) || 0); }, 0) + 1 + (Number(extra) || 0);
     const base = "TD-" + anno + "-" + String(n).padStart(4, "0");
     return base + "-" + controllo(base);
   }
@@ -210,6 +210,62 @@
     });
     return perArea;
   }
+  function percorsiDi(c) {
+    const out = [];
+    (c.completate || []).map(TD.lezione).filter(Boolean).forEach(function (l) { if (out.indexOf(l.dev) < 0) out.push(l.dev); });
+    return out;
+  }
+  function testoCompetenze(c) {
+    const perArea = competenzeDi(c);
+    return Object.keys(perArea).sort().map(function (a) { return perArea[a].slice(0, 4).join("\n"); }).join("\n");
+  }
+  function chiaveNome(n) {
+    return String(n || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+  }
+  /* ore, presenze e quiz di una persona, letti dal registro del gruppo */
+  TD.statistichePartecipante = function (c, p) {
+    const pid = p && p.id ? p.id : "";
+    const svolte = (c.registro || []).filter(function (r) { return r.stato !== "pianificata"; });
+    const mie = svolte.filter(function (r) {
+      if (!Array.isArray(r.presenti)) return true;
+      return pid ? r.presenti.indexOf(pid) >= 0 : true;
+    });
+    const date = mie.map(function (r) { return r.data; }).filter(Boolean).sort();
+    return {
+      ore: Math.round(mie.reduce(function (s, r) { return s + (Number(r.durata) || 0); }, 0) / 6) / 10,
+      incontri: mie.length,
+      quiz: TD.mediaQuiz(c, pid),
+      dal: date[0] || "",
+      al: date[date.length - 1] || ""
+    };
+  };
+  /* record pronti da firmare: un attestato per partecipante, codici progressivi
+     unici e dati presi dal registro; il rilascio vero aggiunge la firma e il QR. */
+  TD.preparaAttestatiGruppo = function (c, ids, opz) {
+    opz = opz || {};
+    const scelti = Array.isArray(ids) ? ids : (c.partecipanti || []).map(function (p) { return p.id; });
+    const partecipanti = (c.partecipanti || []).filter(function (p) { return scelti.indexOf(p.id) >= 0; });
+    const svolte = (c.registro || []).filter(function (r) { return r.stato !== "pianificata" && r.data; }).map(function (r) { return r.data; }).sort();
+    const fatte = (c.completate || []).map(TD.lezione).filter(Boolean);
+    const livMax = fatte.reduce(function (m, l) { return Math.max(m, l.liv); }, 0);
+    const livello = Number(opz.livello == null ? livMax : opz.livello) || 0;
+    const titolo = String(opz.titolo || "Percorso di competenze digitali").trim();
+    const giorno = opz.data || TD.oggi();
+    const luogo = opz.luogo || ((TD.db.profilo.citta || "") + ", " + TD.dataLunga(giorno));
+    const competenze = testoCompetenze(c).split("\n").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 12);
+    const percorsi = percorsiDi(c);
+    return partecipanti.map(function (p, i) {
+      const st = TD.statistichePartecipante(c, p);
+      return {
+        codice: nuovoCodice(i), cliente: c.id, intestatario: p.nome, partecipante: p.id,
+        data: giorno, livello: TD.livello(livello).nome, livelloId: livello,
+        titolo: titolo, ore: st.ore, percorsi: percorsi.slice(), competenze: competenze.slice(),
+        dal: st.dal || opz.dal || (svolte[0] || giorno), al: st.al || opz.al || (svolte[svolte.length - 1] || giorno),
+        esito: st.quiz == null ? "" : "Media dei quiz: " + st.quiz + "%",
+        tutor: TD.db.profilo.nome || "", pubblico: false, luogo: luogo
+      };
+    });
+  };
 
   TD.rotta("/attestato/:id", function (app, p) {
     const c = TD.cliente(p.id);
@@ -275,6 +331,144 @@
         TD.toast("Attestato " + codice + " rilasciato e registrato" + (urlVerifica ? ", con QR di verifica." : "."));
         codice = null; urlVerifica = "";
       });
+    };
+  });
+
+  /* --------------------------------------------------------------- ATTESTATI DEL GRUPPO */
+  TD.rotta("/attestati-gruppo/:id", function (app, p) {
+    const c = TD.cliente(p.id);
+    if (!c) { TD.vai("#/clienti"); return; }
+    const partecipanti = c.partecipanti || [];
+    if (!partecipanti.length) {
+      app.innerHTML = TD.intest("Attestati del gruppo · " + E(TD.nomeCliente(c)), "Questo cliente non ha partecipanti: usa l'attestato singolo.") +
+        '<div class="wrap"><section class="card"><p>Per gli attestati in blocco serve un ente o un gruppo con almeno un partecipante.</p><div class="actions"><a class="btn" href="#/attestato/' + c.id + '">' + I("award") + "Attestato singolo</a></div></section></div>";
+      return;
+    }
+    const fatte = (c.completate || []).map(TD.lezione).filter(Boolean);
+    const livMax = fatte.reduce(function (m, l) { return Math.max(m, l.liv); }, 0);
+    const svolte = (c.registro || []).filter(function (r) { return r.stato !== "pianificata" && r.data; }).map(function (r) { return r.data; }).sort();
+    const luogo = (TD.db.profilo.citta || "") + ", " + TD.dataLunga(TD.oggi());
+    const voci = partecipanti.map(function (x) {
+      const st = TD.statistichePartecipante(c, x);
+      const gia = (TD.db.attestati || []).find(function (a) {
+        return a.cliente === c.id && (a.partecipante === x.id || chiaveNome(a.intestatario) === chiaveNome(x.nome));
+      }) || null;
+      return { p: x, st: st, gia: gia };
+    });
+    app.innerHTML = TD.intest("Attestati del gruppo · " + E(TD.nomeCliente(c)), "Un attestato per partecipante, con ore e presenze prese dal registro. Controlla l'anteprima, scegli chi include e scarica un PDF con una pagina per persona: ogni attestato ha un codice e un QR verificabile.") +
+      '<div class="wrap"><div class="grid-2 att-grid">' +
+        '<form class="card form" id="fg">' +
+          '<label class="field"><span>Titolo del percorso</span><input name="titolo" value="Percorso di competenze digitali"></label>' +
+          '<div class="grid-2"><label class="field"><span>Livello raggiunto</span><select name="livello">' + TD.LIVELLI.map(function (l) { return '<option value="' + l.id + '"' + (l.id === livMax ? " selected" : "") + ">" + E(l.nome) + "</option>"; }).join("") + '</select></label>' +
+            '<label class="field"><span>Luogo e data di rilascio</span><input name="luogo" value="' + E(luogo) + '"></label></div>' +
+          '<p class="muted text-small">' + I("info") + " Ore, presenze e media dei quiz arrivano dal registro della scheda cliente; le lezioni pianificate non contano. Chi non ha presenze registrate compare con 0 ore: controlla le presenze prima di rilasciare.</p>" +
+          '<div class="table-wrap"><table class="table"><thead><tr><th>Includi</th><th>Partecipante</th><th>Ore</th><th>Incontri</th><th>Quiz</th><th>Attestato</th></tr></thead><tbody>' +
+            voci.map(function (v) {
+              return '<tr data-part="' + E(v.p.id) + '"><td><input type="checkbox" name="partecipanti" data-multi="1" value="' + E(v.p.id) + '" checked aria-label="Includi ' + E(v.p.nome) + '"></td><td><strong>' + E(v.p.nome) + '</strong>' + (v.gia ? '<br><span class="pill ok">' + I("check") + "già attestato</span>" : "") + '</td><td>' + v.st.ore.toLocaleString("it-IT", { maximumFractionDigits: 1 }) + '</td><td>' + v.st.incontri + '</td><td>' + (v.st.quiz == null ? "—" : v.st.quiz + "%") + '</td><td class="att-cod">' + (v.gia ? "<strong>" + E(v.gia.codice) + "</strong>" : '<span class="muted">—</span>') + '</td></tr>';
+            }).join("") +
+          '</tbody></table></div>' +
+          '<div class="grid-2"><label class="check"><input type="checkbox" id="selTutti" checked> Seleziona tutti</label><label class="field"><span>Anteprima di</span><select id="prevScelta"></select></label></div>' +
+          '<div id="esitoB"></div>' +
+          '<div class="actions"><button class="btn btn-primary" type="submit" id="rilasciaB">' + I("award") + "Rilascia gli attestati</button><button class='btn' type='button' id='stampaB'>" + I("print") + "Stampa anteprima</button></div>" +
+          '<p class="muted text-small">' + I("lock") + ' Il PDF contiene una pagina per partecipante. Al rilascio ogni attestato riceve un codice progressivo e un QR firmato con la tua chiave; il registro pubblico non viene toccato.</p>' +
+        '</form>' +
+        '<div><div class="doc-preview land" id="prevB"></div><p class="muted text-small" id="notaB">L\'anteprima usa un codice segnaposto: al rilascio compare il codice definitivo con il QR di verifica.</p><p class="muted text-small">L\'attestato è un documento privato di frequenza e verifica delle competenze, con riferimento al quadro europeo DigComp 2.2: non è un titolo di studio né una certificazione con valore legale.</p></div>' +
+      '</div></div>';
+
+    const f = document.getElementById("fg");
+    const sel = document.getElementById("prevScelta");
+    const prev = document.getElementById("prevB");
+    const esito = document.getElementById("esitoB");
+    const nota = document.getElementById("notaB");
+    const bottone = document.getElementById("rilasciaB");
+    function scelte() {
+      return Array.prototype.slice.call(f.querySelectorAll('input[name="partecipanti"]:checked')).map(function (x) { return x.value; });
+    }
+    function partecipante(id) { return partecipanti.find(function (x) { return x.id === id; }); }
+    function dati(r) {
+      return { codice: r.codice, intestatario: r.intestatario, titolo: r.titolo, livello: r.livelloId, ore: r.ore, percorsi: r.percorsi, competenze: r.competenze, dal: r.dal, al: r.al, esito: r.esito, luogo: r.luogo, verifica: r.verifica || "" };
+    }
+    function recordAnteprima() {
+      const ids = scelte();
+      if (!ids.length) return null;
+      const scelto = ids.indexOf(sel.value) >= 0 ? sel.value : ids[0];
+      const recs = TD.preparaAttestatiGruppo(c, [scelto], { titolo: f.elements.titolo.value, livello: Number(f.elements.livello.value), luogo: f.elements.luogo.value });
+      const r = recs[0];
+      if (!r) return null;
+      r.codice = "TD-" + TD.oggi().slice(0, 4) + "-0000-0";
+      r.verifica = "";
+      return r;
+    }
+    function aggiornaScelte() {
+      const ids = scelte();
+      const prima = sel.value;
+      sel.innerHTML = ids.length ? ids.map(function (id) { const x = partecipante(id); return '<option value="' + E(id) + '">' + E(x ? x.nome : id) + "</option>"; }).join("") : '<option value="">Nessuno selezionato</option>';
+      if (ids.indexOf(prima) >= 0) sel.value = prima;
+      document.getElementById("selTutti").checked = !!ids.length && ids.length === f.querySelectorAll('input[name="partecipanti"]').length;
+      bottone.innerHTML = I("award") + (ids.length === 1 ? "Rilascia 1 attestato" : "Rilascia " + ids.length + " attestati");
+      bottone.disabled = !ids.length;
+    }
+    let timer = null;
+    function anteprima() {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        const r = recordAnteprima();
+        if (!r) { prev.innerHTML = '<p class="muted">Scegli almeno un partecipante per vedere l\'anteprima.</p>'; nota.textContent = ""; return; }
+        TD.immagine(TD.db.profilo.firma).then(function (firma) { TD.anteprima(prev, [attestatoCanvas(dati(r), firma)]); });
+        nota.textContent = "Anteprima di " + r.intestatario + ": " + (r.ore === 1 ? "1 ora" : r.ore.toLocaleString("it-IT", { maximumFractionDigits: 1 }) + " ore") + " dal registro. Il codice definitivo viene assegnato al rilascio.";
+      }, 180);
+    }
+    f.querySelectorAll('input[name="partecipanti"]').forEach(function (cb) {
+      cb.onchange = function () { aggiornaScelte(); anteprima(); };
+    });
+    document.getElementById("selTutti").onchange = function () {
+      f.querySelectorAll('input[name="partecipanti"]').forEach(function (cb) { cb.checked = this.checked; }, this);
+      aggiornaScelte(); anteprima();
+    };
+    sel.onchange = anteprima;
+    f.elements.titolo.oninput = anteprima;
+    f.elements.livello.onchange = anteprima;
+    f.elements.luogo.oninput = anteprima;
+    aggiornaScelte();
+    anteprima();
+
+    document.getElementById("stampaB").onclick = function () {
+      const r = recordAnteprima();
+      if (!r) { TD.toast("Scegli almeno un partecipante."); return; }
+      TD.immagine(TD.db.profilo.firma).then(function (firma) { TD.stampa([attestatoCanvas(dati(r), firma)]); });
+    };
+    f.onsubmit = function (e) {
+      e.preventDefault();
+      const ids = scelte();
+      if (!ids.length) { TD.toast("Scegli almeno un partecipante."); return; }
+      const recs = TD.preparaAttestatiGruppo(c, ids, { titolo: f.elements.titolo.value, livello: Number(f.elements.livello.value), luogo: f.elements.luogo.value });
+      if (!recs.length) { TD.toast("Nessun partecipante da attestare."); return; }
+      const testo = bottone.innerHTML;
+      bottone.disabled = true; bottone.textContent = "Preparo i PDF…";
+      Promise.all([TD.immagine(TD.db.profilo.firma), TD.chiaviTutor().catch(function () { return null; })]).then(function (r) {
+        const firma = r[0], ch = r[1];
+        return recs.reduce(function (p, rec) {
+          return p.then(function () {
+            if (!ch) { rec.verifica = ""; return; }
+            return TD.scambio.firmaAttestato(rec, ch).then(function (url) { rec.verifica = url; }).catch(function () { rec.verifica = ""; });
+          });
+        }, Promise.resolve()).then(function () {
+          recs.forEach(function (rec) { TD.db.attestati.push(rec); });
+          TD.salva();
+          const pagine = recs.map(function (rec) { return attestatoCanvas(dati(rec), firma); });
+          TD.scaricaPdf(pagine, "attestati-" + TD.nomeFile(TD.nomeCliente(c)) + "-" + TD.oggi() + ".pdf", { titolo: "Attestati · " + TD.nomeCliente(c) });
+          recs.forEach(function (rec) {
+            Array.prototype.slice.call(f.querySelectorAll("tr[data-part]")).forEach(function (tr) {
+              if (tr.getAttribute("data-part") !== rec.partecipante) return;
+              const cella = tr.querySelector(".att-cod");
+              if (cella) cella.innerHTML = '<span class="pill ok">' + I("check") + E(rec.codice) + "</span>";
+            });
+          });
+          esito.innerHTML = '<div class="note-box">' + I("check") + '<div><strong>' + recs.length + (recs.length === 1 ? " attestato pronto" : " attestati pronti") + '</strong>: PDF scaricato con una pagina per partecipante. Codici: ' + recs.slice(0, 6).map(function (rec) { return "<strong>" + E(rec.codice) + "</strong>"; }).join(", ") + (recs.length > 6 ? " e altri " + (recs.length - 6) : "") + ".</div></div>";
+          TD.toast(recs.length + (recs.length === 1 ? " attestato rilasciato" : " attestati rilasciati") + (ch ? ", con QR di verifica." : ", senza QR: imposta le chiavi nelle impostazioni."));
+        });
+      }).catch(function () { TD.toast("Non riesco a preparare gli attestati: riprova."); })
+        .then(function () { bottone.disabled = false; bottone.innerHTML = testo; });
     };
   });
 

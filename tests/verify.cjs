@@ -388,6 +388,47 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
     ok(src.includes("già presente") && src.includes("doppione nel file") && src.includes("TD.confrontaPartecipanti"), "import: l'anteprima distingue nuovi, presenti e doppioni");
   }
 
+  /* 18. attestati in blocco dal registro */
+  {
+    const lez = TD.LEZIONI[0];
+    const cG = {
+      id: "prova-gruppo", tipo: "ente", ragione: "Prova gruppo",
+      partecipanti: [{ id: "p1", nome: "Anna Prova" }, { id: "p2", nome: "Bruno Prova" }, { id: "p3", nome: "Carla Bianchi" }],
+      registro: [
+        { data: "2026-11-02", stato: "svolta", durata: 90, presenti: ["p1", "p2"] },
+        { data: "2026-11-09", stato: "svolta", durata: 60, presenti: ["p1"] },
+        { data: "2026-11-16", stato: "svolta", durata: 120, presenti: ["p1", "p2"] },
+        { data: "2026-11-23", stato: "pianificata", durata: 60, presenti: ["p1", "p2"] }
+      ],
+      completate: [lez.id],
+      quiz: [
+        { partecipante: "p1", data: "2026-11-10", perc: 80 },
+        { partecipante: "p1", data: "2026-11-17", perc: 100 },
+        { partecipante: "p2", data: "2026-11-17", perc: 50 }
+      ]
+    };
+    const st1 = TD.statistichePartecipante(cG, cG.partecipanti[0]);
+    const st2 = TD.statistichePartecipante(cG, cG.partecipanti[1]);
+    const st3 = TD.statistichePartecipante(cG, cG.partecipanti[2]);
+    ok(st1.ore === 4.5 && st1.incontri === 3 && st1.quiz === 90 && st1.dal === "2026-11-02" && st1.al === "2026-11-16", "attestati gruppo: ore, presenze, quiz e date della prima persona");
+    ok(st2.ore === 3.5 && st2.incontri === 2 && st2.quiz === 50, "attestati gruppo: ogni persona ha le sue ore e il suo quiz");
+    ok(st3.ore === 0 && st3.incontri === 0 && st3.quiz === null, "attestati gruppo: chi non ha presenze resta a zero");
+    const recs = TD.preparaAttestatiGruppo(cG, ["p1", "p2"], { titolo: "Prova del gruppo", livello: 1 });
+    ok(recs.length === 2 && recs[0].intestatario === "Anna Prova" && recs[1].intestatario === "Bruno Prova", "attestati gruppo: un record per partecipante scelto");
+    ok(recs.every((r) => r.partecipante && r.cliente === cG.id && r.titolo === "Prova del gruppo" && r.pubblico === false), "attestati gruppo: cliente, titolo e nessun consenso pubblico implicito");
+    ok(recs[0].ore === 4.5 && recs[1].ore === 3.5 && recs.every((r) => r.dal === "2026-11-02"), "attestati gruppo: ore dal registro, lezione pianificata esclusa");
+    ok(recs.every((r) => TD.codiceValido(r.codice)) && new Set(recs.map((r) => r.codice)).size === 2, "attestati gruppo: codici validi e diversi tra loro");
+    ok(recs[0].livello === TD.livello(1).nome && recs[0].competenze.indexOf(lez.obiettivi[0]) >= 0 && recs[0].percorsi.indexOf(lez.dev) >= 0, "attestati gruppo: livello, competenze e percorso dalle lezioni svolte");
+    ok(recs[0].esito === "Media dei quiz: 90%" && recs[1].esito === "Media dei quiz: 50%", "attestati gruppo: esito personale");
+    ok(TD.preparaAttestatiGruppo(cG, ["p3"], { livello: 1 })[0].ore === 0, "attestati gruppo: si può attestare anche chi ha zero ore, ma il dato resta zero");
+    const cNessuno = { partecipanti: cG.partecipanti, registro: [{ data: "2026-11-02", stato: "svolta", durata: 60, presenti: [] }], completate: [] };
+    ok(TD.statistichePartecipante(cNessuno, cNessuno.partecipanti[0]).ore === 0, "attestati gruppo: una lezione senza nessun presente non regala ore a tutti");
+    const doc = leggi("assets/js/views-documenti.js");
+    ok(doc.includes('TD.rotta("/attestati-gruppo/:id"') && doc.includes("statistichePartecipante") && doc.includes("preparaAttestatiGruppo"), "attestati gruppo: percorso e dati condivisi con l'attestato singolo");
+    ok(doc.includes("id=\"prevB\"") && doc.includes("Rilascia") && doc.includes("QR di verifica"), "attestati gruppo: anteprima, rilascio e QR nell'interfaccia");
+    ok(leggi("assets/js/views-clienti.js").includes("#/attestati-gruppo/"), "attestati gruppo: link dalla scheda cliente");
+  }
+
   /* 17. editor: lezioni e domande proprie (8) */
   {
     const prima = TD.LEZIONI.length, primaD = TD.DOMANDE.length;
