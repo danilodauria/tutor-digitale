@@ -15,6 +15,8 @@
   const URL_AULA = "https://danilodauria.github.io/tutor-digitale/allievo/#/aula";
   const COLORI = ["#2f7fc0", "#c98a24", "#3f9a63", "#7d55c0"];
   const FORME = ["▲", "◆", "●", "■"];
+  /* dopo quanto un telefono collegato ma senza stato dice che il monitor non risponde */
+  const ATTESA_MONITOR = 8000;
 
   /* ------------------------------------------------------------ calcoli puri (anche per i test) */
   TD.aula = {
@@ -73,6 +75,17 @@
       const omonimi = elenco.filter(function (p) { return TD.aula.nomeChiave(p.nome).split(" ")[0] === primo; });
       return omonimi.length === 1 ? omonimi[0].id : "";
     },
+    /* link del QR: stanza, chiave e indice del broker scelto dal monitor */
+    link: function (stanza, chiave, indice) {
+      const i = Number(indice);
+      return URL_AULA + "?s=" + encodeURIComponent(String(stanza || "")) + "&k=" + encodeURIComponent(String(chiave || "")) +
+        (isFinite(i) && i >= 0 && i < TD.relay.BROKER.length ? "&b=" + Math.floor(i) : "");
+    },
+    /* indice del broker arrivato nel link (se valido) */
+    brokerLink: function (q) {
+      const i = Number(q && q.b);
+      return isFinite(i) && i >= 0 && i < TD.relay.BROKER.length ? Math.floor(i) : -1;
+    },
     /* testo letto ad alta voce: domanda, proposta e risposte con la loro lettera,
        così chi non legge bene può rispondere anche dal telefono in gruppo */
     testoDaLeggere: function (q) {
@@ -86,10 +99,10 @@
   };
 
   /* ================================================================ TUTOR: proiettore */
-  const H = { fase: "pronto", stanza: "", chiave: "", canale: null, domande: [], i: -1, giocatori: Object.create(null), risposte: Object.create(null), abbinamenti: Object.create(null), inizio: 0, tempo: 30, mostra: false, manuale: false, solo: false, max: 1, conta: [], timer: null, pulizia: null, clienteId: "" };
+  const H = { fase: "pronto", stanza: "", chiave: "", broker: -1, canale: null, domande: [], i: -1, giocatori: Object.create(null), risposte: Object.create(null), abbinamenti: Object.create(null), inizio: 0, tempo: 30, mostra: false, manuale: false, solo: false, max: 1, conta: [], timer: null, pulizia: null, clienteId: "" };
   TD.aulaStato = H;
 
-  function linkAula() { return URL_AULA + "?s=" + H.stanza + "&k=" + H.chiave; }
+  function linkAula() { return TD.aula.link(H.stanza, H.chiave, H.broker); }
   function domanda() { return H.domande[H.i]; }
   function trasmetti(obj) { if (H.canale) H.canale.invia(obj).catch(function () {}); }
   function statoPubblico() {
@@ -116,6 +129,7 @@
       scelta = await TD.relay.scegli();
       if (!scelta) throw new Error("Nessun canale raggiungibile: serve Internet su tutti i dispositivi.");
       H.stanza = TD.relay.nuovaStanza(scelta.indice);
+      H.broker = scelta.indice;
       H.canale = await TD.relay.collega({ stanza: H.stanza, chiave: H.chiave, connessione: scelta, suMessaggio: ricevi, suStato: function (s) { if (s === "chiuso" && H.fase !== "pronto") { TD.toast("Canale interrotto: riapri l'aula."); } } });
       H.fase = "attesa"; ridisegna();
       clearInterval(H.eco); H.eco = setInterval(function () { if (H.canale && H.fase !== "pronto") trasmetti(statoPubblico()); }, 4000);
@@ -195,7 +209,7 @@
   function chiudiAula() {
     clearInterval(H.timer); clearInterval(H.eco); clearInterval(H.pulizia);
     if (H.canale) { trasmetti({ t: "stato", fase: "chiusa" }); setTimeout(function () { if (H.canale) H.canale.chiudi(); H.canale = null; }, 300); }
-    Object.assign(H, { fase: "pronto", domande: [], i: -1, giocatori: Object.create(null), risposte: Object.create(null), abbinamenti: Object.create(null), mostra: false, manuale: false, solo: rottaSolo });
+    Object.assign(H, { fase: "pronto", stanza: "", chiave: "", broker: -1, domande: [], i: -1, giocatori: Object.create(null), risposte: Object.create(null), abbinamenti: Object.create(null), mostra: false, manuale: false, solo: rottaSolo });
     TD.trasmissione.ferma(true);
     ridisegna();
   }
@@ -422,7 +436,7 @@
   }
 
   /* ================================================================ ALLIEVO: telefono */
-  const G = { canale: null, stato: null, id: "", nome: "", scelta: -1, n: 0, s: "", k: "", errore: "", attesaPosto: false, posti: 4, ultimo: 0 };
+  const G = { canale: null, stato: null, id: "", nome: "", scelta: -1, n: 0, s: "", k: "", b: -1, errore: "", attesaPosto: false, posti: 4, ultimo: 0, monitorAssente: false, attesaMonitor: null };
   function idGiocatore() {
     try { let v = sessionStorage.getItem("td-aula-id"); if (!v) { v = TD.uid("g"); sessionStorage.setItem("td-aula-id", v); } return v; } catch (e) { return G.id || TD.uid("g"); }
   }
@@ -437,7 +451,7 @@
   async function entraAula() {
     G.id = idGiocatore();
     try {
-      G.canale = await TD.relay.collega({ stanza: G.s, chiave: G.k, suMessaggio: function (m) {
+      G.canale = await TD.relay.collega({ stanza: G.s, chiave: G.k, indice: G.b >= 0 ? G.b : undefined, suMessaggio: function (m) {
         if (m.t === "dentro" && m.id === G.id) {
           if (G.attesaPosto || G.errore) { G.attesaPosto = false; G.errore = ""; ridisegna(); }
           return;
@@ -452,11 +466,16 @@
         if (m.t !== "stato") return;
         G.stato = statoSicuro(m);
         G.ultimo = Date.now();
+        clearTimeout(G.attesaMonitor); G.monitorAssente = false;
         if (G.attesaPosto && G.stato.fase !== "attesa") { G.attesaPosto = false; G.errore = "Il quiz è già iniziato: non è possibile entrare ora. Chiedi al tutor di riaprire l'aula."; }
         if (G.stato.fase === "chiusa") { G.attesaPosto = false; G.errore = ""; }
         if (G.stato.n !== G.n) { G.n = G.stato.n; G.scelta = -1; }
         ridisegna();
-      }, suStato: function (s) { if (s === "chiuso") { G.errore = "Collegamento interrotto. Inquadra di nuovo il QR."; ridisegna(); } } });
+      }, suStato: function (s) { if (s === "chiuso") { clearTimeout(G.attesaMonitor); G.errore = "Collegamento interrotto. Inquadra di nuovo il QR."; ridisegna(); } } });
+      /* il telefono è sul canale, ma non è ancora detto che il monitor risponda:
+         «Ci sei» arriva solo col primo stato, non con la sola connessione */
+      clearTimeout(G.attesaMonitor);
+      G.attesaMonitor = setTimeout(function () { if (!G.stato) { G.monitorAssente = true; ridisegna(); } }, ATTESA_MONITOR);
       await G.canale.invia({ t: "entra", id: G.id, nome: G.nome });
       clearInterval(G.rientra); G.rientra = setInterval(function () {
         if (!G.canale) return;
@@ -465,7 +484,7 @@
            un messaggio perso non lascia il telefono fermo sulla domanda vecchia */
         else if ((G.stato.giocatori || 0) <= 4 && Date.now() - (G.ultimo || 0) > 9000) G.canale.invia({ t: "ping", id: G.id });
       }, 5000);
-    } catch (e) { G.errore = e.message; }
+    } catch (e) { clearTimeout(G.attesaMonitor); G.errore = e.message; }
     ridisegna();
   }
   function disegnaGiocatore() {
@@ -475,7 +494,12 @@
     else if (G.errore) corpo = '<section class="card"><h2>Non riesco a entrare</h2><p>' + E(G.errore) + "</p></section>";
     else if (G.attesaPosto) corpo = '<section class="card"><h2>Aula al completo</h2><p>' + (G.posti === 1 ? "C'è già un partecipante." : "Ci sono già " + G.posti + " partecipanti.") + (G.posti === 1 ? " Resta su questa pagina: appena si libera, entri automaticamente." : " Resta su questa pagina: appena uno esce, entri automaticamente.") + '</p><p class="muted">Controllo ogni pochi secondi…</p></section>';
     else if (!G.canale) corpo = '<form class="card form" id="gForm"><h2>' + I("users") + 'Entra in aula</h2><label class="field"><span>Il tuo nome</span><input name="nome" required maxlength="24" value="' + E(G.nome || (TD.db.allievo && TD.db.allievo.nome) || "") + '" autocomplete="given-name"></label><div class="actions"><button class="btn btn-primary btn-lg" type="submit">' + I("play") + "Entra</button></div></form>";
-    else if (!st || st.fase === "attesa") corpo = '<section class="card aula-tel"><h2>Ci sei, ' + E(G.nome) + '!</h2><p class="aula-grande">Guarda lo schermo del tutor: si comincia tra poco.</p></section>';
+    else if (!st) corpo = G.monitorAssente
+      ? '<section class="card aula-tel"><h2>Il monitor non risponde</h2><p>' + (G.canale.broker && G.b >= 0 && G.canale.broker !== TD.relay.BROKER[G.b]
+        ? "Il telefono è su un canale diverso da quello indicato dal QR: per questo il monitor non ti vede."
+        : "Sei collegato al canale cifrato, ma non arriva lo stato dell'aula: può essere un momento di rete.") + '</p><p class="muted text-small">Controlla che il tutor abbia l\'aula aperta, poi riprova.</p><div class="actions"><button class="btn btn-primary" id="gRiprova">Riprova</button></div></section>'
+      : '<section class="card aula-tel"><h2>In attesa del monitor…</h2><p class="aula-grande">Sei collegato al canale cifrato: aspetto che arrivi lo stato dell\'aula.</p></section>';
+    else if (st.fase === "attesa") corpo = '<section class="card aula-tel"><h2>Ci sei, ' + E(G.nome) + '!</h2><p class="aula-grande">Guarda lo schermo del tutor: si comincia tra poco.</p></section>';
     else if (st.fase === "chiusa") corpo = '<section class="card"><h2>Aula chiusa</h2><p>Grazie per aver partecipato!</p><a class="btn" href="#/">Torna all\'inizio</a></section>';
     else if (st.fase === "domanda" && st.domanda) {
       const q = st.domanda, mostra = st.giusta >= 0;
@@ -494,6 +518,13 @@
     appEl.innerHTML = '<div class="wrap aula-tel-wrap">' + corpo + "</div>";
     const f = document.getElementById("gForm");
     if (f) f.onsubmit = function (e) { e.preventDefault(); G.nome = f.nome.value.trim().slice(0, 24); if (!G.nome) return; f.querySelector("button").disabled = true; entraAula(); };
+    const rp = document.getElementById("gRiprova");
+    if (rp) rp.onclick = function () {
+      clearTimeout(G.attesaMonitor); G.attesaMonitor = null;
+      if (G.canale) G.canale.chiudi();
+      Object.assign(G, { canale: null, stato: null, errore: "", monitorAssente: false, attesaPosto: false });
+      entraAula();
+    };
     const gl = document.getElementById("gLeggi");
     if (gl) gl.onclick = function () { if (G.stato && G.stato.domanda) TD.leggi(TD.aula.testoDaLeggere(G.stato.domanda)); };
     appEl.querySelectorAll("[data-sc]").forEach(function (b) {
@@ -510,7 +541,12 @@
      portano alla stessa pagina: nel programma del tutor si comanda, nell'app
      Allievo si risponde */
   function apriGiocatore(q) {
-    if (q.s && q.k && (q.s !== G.s || q.k !== G.k)) { if (G.canale) G.canale.chiudi(); Object.assign(G, { canale: null, stato: null, s: q.s, k: q.k, errore: "", scelta: -1, n: 0 }); }
+    const b = TD.aula.brokerLink(q);
+    if (q.s && q.k && (q.s !== G.s || q.k !== G.k || b !== G.b)) {
+      clearTimeout(G.attesaMonitor);
+      if (G.canale) G.canale.chiudi();
+      Object.assign(G, { canale: null, stato: null, s: q.s, k: q.k, b: b, errore: "", scelta: -1, n: 0, monitorAssente: false, attesaPosto: false });
+    }
     disegnaGiocatore();
   }
   function rottaAula(app, q, solo) {

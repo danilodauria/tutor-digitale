@@ -442,6 +442,15 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
     ok(JSON.stringify(TD.relay.ordineBroker("abcdefghjkmn")) === JSON.stringify(TD.relay.BROKER), "canale: senza broker nella stanza resta l'ordine di sempre");
     const srcAula = leggi("assets/js/aula.js");
     ok(srcAula.includes("scelta = await TD.relay.scegli();") && srcAula.includes("H.stanza = TD.relay.nuovaStanza(scelta.indice);"), "aula: il monitor sceglie il broker e lo scrive nella stanza");
+    ok(TD.relay.ordineBroker("b1-abcdefghjkmn", 2)[0] === TD.relay.BROKER[2] && TD.relay.ordineBroker("senza-prefisso", 9).length === 3 && TD.relay.ordineBroker("senza-prefisso", 9)[0] === TD.relay.BROKER[0], "canale: l'indice nel link ha la precedenza, ma solo se valido");
+    const linkQr = TD.aula.link("b2-abcdefghjkmn", "chiave-prova", 2);
+    ok(linkQr === "https://danilodauria.github.io/tutor-digitale/allievo/#/aula?s=b2-abcdefghjkmn&k=chiave-prova&b=2", "aula: il link del QR porta il broker scelto (" + linkQr + ")");
+    ok(TD.aula.link("s1", "k1", -1).indexOf("&b=") < 0 && TD.aula.link("s1", "k1", "x").indexOf("&b=") < 0, "aula: senza un broker valido il link resta senza b");
+    ok(TD.aula.brokerLink({ b: "1" }) === 1 && TD.aula.brokerLink({ b: "2" }) === 2 && TD.aula.brokerLink({ b: "9" }) === -1 && TD.aula.brokerLink({}) === -1, "aula: dal link si legge il broker solo se valido");
+    ok(srcAula.includes("H.broker = scelta.indice") && srcAula.includes("TD.aula.link(H.stanza, H.chiave, H.broker)"), "aula: il monitor passa il suo broker al link");
+    ok(srcAula.includes("In attesa del monitor") && srcAula.includes("Il monitor non risponde") && srcAula.includes("ATTESA_MONITOR = 8000"), "aula: il telefono aspetta il primo stato prima di dire «Ci sei»");
+    ok(srcAula.includes("else if (!st)") && srcAula.includes("else if (st.fase === \"attesa\")"), "aula: «Ci sei» compare solo quando arriva lo stato del monitor");
+    ok(srcAula.includes("id=\"gRiprova\"") && srcAula.includes("canale diverso da quello indicato"), "aula: se il ripiego porta su un altro canale, lo dice e offre Riprova");
     /* quiz dal telefono: una sola persona, riepilogo e trasmissione sullo schermo */
     const rs = TD.aula.riepilogoSolo({ g1: { nome: "Piero", punti: 780, giuste: 6 } }, 8);
     ok(rs && rs.perc === 75 && rs.totale === 8 && rs.nome === "Piero", "aula: riepilogo del quiz individuale");
@@ -547,7 +556,9 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
   {
     const idee = leggi("MIGLIORIE.md");
     const voci = [...idee.matchAll(/^(\d+)\.\s+/gm)].map((m) => Number(m[1]));
-    ok(voci.length >= 46 && new Set(voci).size === voci.length, "promemoria: proposte numerate tutte presenti e senza doppioni (" + voci.length + ")");
+    ok(voci.length >= 52 && new Set(voci).size === voci.length, "promemoria: proposte numerate tutte presenti e senza doppioni (" + voci.length + ")");
+    ok([47, 48, 49, 50, 51, 52].every((n) => voci.includes(n)), "promemoria: le sei proposte nuove (47–52) sono in MIGLIORIE.md");
+    ok(/^47\.\s+✅/m.test(idee), "promemoria: il broker nella stanza è segnato come fatto in 1.12.4");
     ok(Array.from({ length: 12 }, (_, i) => 35 + i).every((n) => voci.includes(n)), "promemoria: le dodici proposte dopo la 1.11.1 sono tutte in MIGLIORIE.md");
     ok([35, 36, 37].every((n) => new RegExp("^" + n + "\\.\\s+✅", "m").test(idee)), "promemoria: le proposte realizzate nella 1.12.0 sono segnate con ✅");
     const righe = idee.split(/\r?\n/).filter((r) => /^\d+\.\s+/.test(r));

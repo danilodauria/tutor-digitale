@@ -54,8 +54,10 @@ window.TD = window.TD || {};
   function indiceStanza(stanza) { const m = /^b([0-9])-/.exec(String(stanza || "")); const i = m ? Number(m[1]) : -1; return i >= 0 && i < BROKER.length ? i : -1; }
   /* il broker scritto nella stanza viene provato per primo, poi gli altri a
      giro: se è giù, tutti ripiegano nello stesso ordine e restano insieme */
-  function ordineBroker(stanza) {
-    const i = indiceStanza(stanza);
+  function ordineBroker(stanza, indice) {
+    const n = Number(indice);
+    const esplicito = indice === "" || indice == null || !isFinite(n) || n < 0 || n >= BROKER.length ? -1 : Math.floor(n);
+    const i = esplicito >= 0 ? esplicito : indiceStanza(stanza);
     if (i < 0) return BROKER.slice();
     return BROKER.map(function (_, k) { return BROKER[(i + k) % BROKER.length]; });
   }
@@ -97,7 +99,7 @@ window.TD = window.TD || {};
     if (!window.crypto || !crypto.subtle) throw new Error("Serve una connessione sicura (https) o l'app installata.");
     const io = "td" + nuovaStanza();
     const chiave = await chiaveAes(opz.chiave);
-    const elenco = opz.broker || ordineBroker(opz.stanza);
+    const elenco = opz.broker || ordineBroker(opz.stanza, opz.indice);
     let ws = null, usato = "";
     if (opz.connessione && opz.connessione.ws) { ws = opz.connessione.ws; usato = opz.connessione.broker || ""; }
     else for (const url of elenco) {

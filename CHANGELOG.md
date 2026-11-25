@@ -1,5 +1,9 @@
 # Versioni
 
+## 1.12.5 · 25 novembre 2026
+
+- **«In attesa del monitor» e broker nel link del QR**: il link del QR porta ora anche l'indice del broker (`&b=`), accanto alla stanza che già lo conteneva. Il telefono non dice più «Ci sei» appena si connette: aspetta il primo stato dell'aula. Se dopo 8 secondi non arriva, mostra **«Il monitor non risponde»** con il pulsante **Riprova** e, se il ripiego lo ha portato su un canale diverso da quello del QR, lo dice esplicitamente invece di far finta di essere collegato. Il ripiego resta: prima il broker indicato, poi gli altri nello stesso ordine. Test su link, lettura del broker dal link, precedenza dell'indice e attesa del primo stato. Cache aggiornata alla 1.12.5.
+
 ## 1.12.4 · 25 novembre 2026
 
 - **Stessa stanza, stesso broker**: il monitor sceglie il broker pubblico quando apre l'aula e lo scrive nel nome della stanza (`b1-…`), che viaggia nel QR, nel link e nella pagina dello schermo. Telefoni e schermo provano per primo quel broker, così non capita più che due dispositivi della stessa stanza finiscano su canali diversi e non si vedano. Se il broker scelto non risponde, tutti ripiegano sugli altri nello stesso ordine, restando insieme. Test automatici su stanza, lettura dell'indice, ordine di ripiego e scelta fatta dal monitor. Cache aggiornata alla 1.12.4.

@@ -72,3 +72,37 @@ Le dodici proposte del giro di novembre 2026, ordinate per valore. Le voci ✅ s
 44. **Confronto tra sessioni di gruppo, partecipante per partecipante** ★★ ⏱ — mostra chi è migliorato e chi è fermo, trasformando la media di gruppo in informazione didattica. *Verifica: partecipanti entrati o usciti tra una sessione e l'altra.*
 45. **Quiz di gruppo senza classifica o a squadre, con ripresa della sessione** ★★ ⏱ — un interruttore «solo il gruppo» o «a squadre» evita l'imbarazzo della classifica individuale; il salvataggio automatico permette di riprendere se il browser si chiude. *Verifica: ripresa dopo un ricaricamento e punteggi già assegnati.*
 46. **Conferma di presenza della prossima lezione dall'app Allievo** ★ ⏱⏱ — conferma o richiesta di rinvio con l'esito nell'agenda, senza account né server. *Verifica: allievo senza app installata, appuntamento spostato dal tutor.*
+
+## Dopo la 1.12.4
+
+Le sei idee mai discusse prima, emerse dalle prove reali sul quiz dal telefono e dall'uso quotidiano. La 47 è già stata realizzata nella 1.12.4; le altre restano aperte e numerate, con i rimandi alle proposte collegate.
+
+47. ✅ *fatto in 1.12.4* — **Broker scelto dal monitor e scritto nella stanza** ★★★ ⏱⏱ — il monitor prova i broker pubblici, sceglie quello che risponde e mette l'indice nel nome della stanza (`b1-…`), che viaggia nel QR, nel link e nella pagina dello schermo; telefoni e schermo provano quel broker per primo e, se non risponde, ripiegano sugli altri nello stesso ordine. Così due dispositivi della stessa stanza non finiscono più su canali diversi e non si vedono. *Verifica: fatto — test su stanza, lettura dell'indice, ordine di ripiego e scelta fatta dal monitor; prova reale sul sito con stanza `b0-…` e due telefoni visti dal monitor. Vedi 52 per la diagnosi quando il canale è lento.*
+48. **Presenze automatiche dal quiz di gruppo** ★★★ ⏱⏱ — dopo l'abbinamento dei nomi, un pulsante segna presenti i partecipanti nella lezione di oggi (creandola nel registro se manca), così il gruppo non si ricompila a mano per rendicontare a Comuni e associazioni. *Verifica: telefoni non abbinati o «non in elenco», due quiz nello stesso giorno, partecipante assente all'incontro. Si appoggia all'abbinamento della 35 e al registro presenze della 6; vedi 40 e 42 per il foglio firme e il flusso della lezione.*
+49. **Scelta del partecipante dal telefono all'ingresso** ★★ ⏱⏱ — chi entra sceglie il proprio nome dall'elenco del gruppo (oppure «non in elenco»), così omonimi e refusi non arrivano fino alla schermata finale; il telefono mostra solo i nomi del gruppo a chi ha inquadrato il QR. *Verifica: due partecipanti con lo stesso nome di battesimo, nome fuori elenco, telefono che ricarica a metà partita. Completa la 35; vedi 45 per la ripresa della sessione.*
+50. **Avviso «nuova versione pronta» con aggiornamento in un tocco** ★★ ⏱ — un banner usa il service worker in attesa per proporre «Aggiorna», invece di lasciare l'app su una cache vecchia (il caso del tasto Cerca che sembrava mancare). *Verifica: aggiornamento con l'app aperta, ritorno offline dopo l'aggiornamento, app installata su Android e su desktop. Vedi 39 per la copia di sicurezza prima di aggiornare.*
+51. **Ripasso mirato dopo il quiz, per partecipante** ★★ ⏱⏱ — dalle risposte sbagliate propone le lezioni e le guide collegate e un messaggio pronto per l'allievo; solo dove il collegamento domanda→lezione esiste, senza inventarlo. *Verifica: quiz senza collegamenti, risposte tutte giuste, partecipante fuori elenco. Si appoggia alla correzione della 3 e alle guide della 25; vedi 43 per il documento di fine percorso.*
+52. **Diagnostica dell'aula in un pannello unico** ★★ ⏱ — mostra broker scelto, telefoni collegati, ultimo messaggio ricevuto e un pulsante «prova il canale», per distinguere Internet assente da un broker che accetta ma non consegna. *Verifica: stanza senza telefoni, broker che non risponde, telefono che entra e resta in attesa. Completa il 47; vedi 41 per la richiesta d'aiuto dell'allievo e l'esito della prova sui broker qui sotto.*
+
+## Esito della prova sui broker (25 novembre 2026)
+
+Prova sul sito pubblicato **1.12.4**, con service worker annullato e cache svuotata, da questa macchina cloud. Obiettivo: capire se il caso «monitor e telefoni su broker diversi» è un difetto dell'app o della rete. Non è stato corretto nulla.
+
+**Cosa è successo**
+- Quattro stanze con due telefoni: in tutte la stanza conteneva il broker del monitor (`b1-…` per EMQX, `b0-…` per HiveMQ) e i telefoni lo hanno provato per primo. La scelta indipendente del broker, quella della 1.12.3, non si è più vista.
+- In una stanza su quattro il monitor ha visto entrambi i telefoni; nelle altre tre ne ha visto uno solo. Nei casi falliti il telefono mancante aveva provato HiveMQ, non aveva ricevuto il CONNACK entro 7 secondi ed era ripiegato su EMQX, mentre il monitor restava su HiveMQ. Il telefono mostrava comunque «Ci sei, …!», senza avvisi, e il monitor contava 1 su 2.
+- Riproduzione deterministica: stanza con monitor su EMQX e un telefono a cui è stato bloccato l'host `broker.emqx.io:8084`; il telefono è passato a Mosquitto, ha mostrato «Ci sei» e il monitor ha visto solo l'altro telefono.
+- Prova MQTT diretta (5 CONNECT per broker, senza app): HiveMQ 4 CONNACK su 5 (un timeout a 9 s), EMQX 5 su 5, Mosquitto 3 su 5 (due errori WebSocket). I broker pubblici da questa macchina sono quindi instabili già a livello di connessione, non solo dentro l'app.
+
+**Conclusione**
+- Il difetto della 1.12.3 (ogni dispositivo sceglieva il broker per conto suo) è corretto: la stanza porta il broker del monitor e viene provato per primo.
+- Il caso residuo è reale ma ha due cause distinte: l'instabilità dei broker pubblici da questa macchina (rete/broker, non codice) e il ripiego silenzioso dell'app, che quando un dispositivo non raggiunge il broker della stanza lo sposta su un altro e continua a mostrare «Ci sei» invece di avvisare o riprovare. Non è un problema di cifratura né di abbinamento dei nomi.
+- Correzione candidata, non realizzata: mostrare che il telefono è su un canale diverso dal monitor e offrire «riprova», oppure non ripiegare quando la stanza indica già un broker (voce 52).
+
+**Passi per riprodurlo** (sito pubblicato 1.12.4)
+- Aprire il sito, annullare il service worker e svuotare la cache (DevTools › Application), poi ricaricare.
+- Aprire «Quiz dal telefono», scegliere «Fino a 4 persone», un cliente e aprire la stanza.
+- Controllare che la stanza inizi con `b0-`, `b1-` o `b2-` e che `TD.relay.indiceStanza(TD.aulaStato.stanza)` coincida con `TD.relay.BROKER.indexOf(TD.aulaStato.canale.broker)`.
+- Aprire due telefoni dal link del QR, scrivere il nome e ripetere più stanze: in questa prova 3 su 4 hanno diviso i dispositivi.
+- Nei DevTools dei telefoni guardare la rete: se compare più di un URL `wss://…/mqtt`, il secondo è il ripiego. Se il monitor conta meno telefoni di quelli che mostrano «Ci sei», il caso è riprodotto.
+- Versione deterministica: bloccare l'host del broker del monitor su un solo telefono (estensione o sostituzione di `window.WebSocket` prima del caricamento) e ripetere l'ingresso; il telefono passa al broker successivo e non viene visto.
