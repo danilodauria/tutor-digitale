@@ -108,9 +108,15 @@
     clearInterval(H.timer); clearInterval(H.eco); clearInterval(H.pulizia);
     H.manuale = !!manuale; H.solo = !!solo; H.max = TD.aula.maxPartecipanti(!!solo, max); H.conta = []; H.giocatori = Object.create(null); H.risposte = Object.create(null); H.abbinamenti = Object.create(null); H.i = -1; H.mostra = false;
     if (manuale) { H.fase = "attesa"; ridisegna(); return; }
-    H.stanza = TD.relay.nuovaStanza(); H.chiave = TD.relay.nuovaChiave(); H.fase = "collegamento"; ridisegna();
+    H.chiave = TD.relay.nuovaChiave(); H.stanza = ""; H.fase = "collegamento"; ridisegna();
+    let scelta = null;
     try {
-      H.canale = await TD.relay.collega({ stanza: H.stanza, chiave: H.chiave, suMessaggio: ricevi, suStato: function (s) { if (s === "chiuso" && H.fase !== "pronto") { TD.toast("Canale interrotto: riapri l'aula."); } } });
+      /* un solo broker per tutta la stanza: lo sceglie il monitor e la stanza
+         (quindi il QR, il link e la pagina dello schermo) lo porta con sé */
+      scelta = await TD.relay.scegli();
+      if (!scelta) throw new Error("Nessun canale raggiungibile: serve Internet su tutti i dispositivi.");
+      H.stanza = TD.relay.nuovaStanza(scelta.indice);
+      H.canale = await TD.relay.collega({ stanza: H.stanza, chiave: H.chiave, connessione: scelta, suMessaggio: ricevi, suStato: function (s) { if (s === "chiuso" && H.fase !== "pronto") { TD.toast("Canale interrotto: riapri l'aula."); } } });
       H.fase = "attesa"; ridisegna();
       clearInterval(H.eco); H.eco = setInterval(function () { if (H.canale && H.fase !== "pronto") trasmetti(statoPubblico()); }, 4000);
       /* nella sala d'attesa i telefoni si riannunciano ogni 5 secondi: chi non
@@ -122,7 +128,7 @@
         via.forEach(function (id) { delete H.giocatori[id]; });
         trasmetti(statoPubblico()); ridisegna();
       }, 5000);
-    } catch (e) { H.fase = "pronto"; TD.toast(e.message + " Puoi usare la conta per alzata di mano."); ridisegna(); }
+    } catch (e) { try { if (scelta && scelta.ws) scelta.ws.close(); } catch (x) {} H.fase = "pronto"; TD.toast(e.message + " Puoi usare la conta per alzata di mano."); ridisegna(); }
   }
   function ricevi(m) {
     if (!TD.idOk(m.id)) return;   // identificativi strani (anche «__proto__») si ignorano

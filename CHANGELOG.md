@@ -1,5 +1,9 @@
 # Versioni
 
+## 1.12.4 · 25 novembre 2026
+
+- **Stessa stanza, stesso broker**: il monitor sceglie il broker pubblico quando apre l'aula e lo scrive nel nome della stanza (`b1-…`), che viaggia nel QR, nel link e nella pagina dello schermo. Telefoni e schermo provano per primo quel broker, così non capita più che due dispositivi della stessa stanza finiscano su canali diversi e non si vedano. Se il broker scelto non risponde, tutti ripiegano sugli altri nello stesso ordine, restando insieme. Test automatici su stanza, lettura dell'indice, ordine di ripiego e scelta fatta dal monitor. Cache aggiornata alla 1.12.4.
+
 ## 1.12.3 · 24 novembre 2026
 
 - **Avviso prima di esportare i dati di un cliente**: «Esporta dati» ora chiede conferma ricordando che il file contiene **in chiaro** anagrafica, registro delle lezioni, compiti, quiz, documenti e firme, e che per una copia protetta c'è il backup cifrato con password — lo stesso avviso del backup non cifrato. Se si annulla, non si scarica nulla. Cache aggiornata alla 1.12.3.

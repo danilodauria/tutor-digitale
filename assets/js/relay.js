@@ -48,7 +48,17 @@ window.TD = window.TD || {};
   function b64u(u) { let s = ""; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
   function deb64u(t) { const s = atob(String(t).replace(/-/g, "+").replace(/_/g, "/")); const u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
   function nuovaChiave() { return b64u(crypto.getRandomValues(new Uint8Array(32))); }
-  function nuovaStanza() { const a = "abcdefghjkmnpqrstuvwxyz23456789"; const r = crypto.getRandomValues(new Uint8Array(12)); return Array.from(r).map(function (x) { return a[x % a.length]; }).join(""); }
+  /* la stanza può portare il broker scelto dal monitor (b0-, b1-, b2-):
+     chi apre il QR finisce sullo stesso broker, non su uno a caso */
+  function nuovaStanza(indice) { const a = "abcdefghjkmnpqrstuvwxyz23456789"; const r = crypto.getRandomValues(new Uint8Array(12)); const s = Array.from(r).map(function (x) { return a[x % a.length]; }).join(""); const i = Number(indice); return i >= 0 && i < BROKER.length ? "b" + i + "-" + s : s; }
+  function indiceStanza(stanza) { const m = /^b([0-9])-/.exec(String(stanza || "")); const i = m ? Number(m[1]) : -1; return i >= 0 && i < BROKER.length ? i : -1; }
+  /* il broker scritto nella stanza viene provato per primo, poi gli altri a
+     giro: se è giù, tutti ripiegano nello stesso ordine e restano insieme */
+  function ordineBroker(stanza) {
+    const i = indiceStanza(stanza);
+    if (i < 0) return BROKER.slice();
+    return BROKER.map(function (_, k) { return BROKER[(i + k) % BROKER.length]; });
+  }
   async function chiaveAes(k) { return crypto.subtle.importKey("raw", deb64u(k), { name: "AES-GCM" }, false, ["encrypt", "decrypt"]); }
   async function cifra(chiave, obj) {
     const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -87,9 +97,10 @@ window.TD = window.TD || {};
     if (!window.crypto || !crypto.subtle) throw new Error("Serve una connessione sicura (https) o l'app installata.");
     const io = "td" + nuovaStanza();
     const chiave = await chiaveAes(opz.chiave);
-    const elenco = opz.broker || BROKER;
+    const elenco = opz.broker || ordineBroker(opz.stanza);
     let ws = null, usato = "";
-    for (const url of elenco) {
+    if (opz.connessione && opz.connessione.ws) { ws = opz.connessione.ws; usato = opz.connessione.broker || ""; }
+    else for (const url of elenco) {
       try { ws = await provaBroker(url, io); usato = url; break; } catch (e) { /* prova il successivo */ }
     }
     if (!ws) throw new Error("Nessun canale raggiungibile: serve Internet su entrambi i dispositivi.");
@@ -136,6 +147,15 @@ window.TD = window.TD || {};
     };
   }
 
-  TD.relay = { collega: collega, nuovaChiave: nuovaChiave, nuovaStanza: nuovaStanza, BROKER: BROKER,
+  /* scelta del broker fatta dal monitor: la stanza nasce con l'indice scelto */
+  async function scegli() {
+    const io = "td" + nuovaStanza();
+    for (let i = 0; i < BROKER.length; i++) {
+      try { const ws = await provaBroker(BROKER[i], io); return { indice: i, broker: BROKER[i], ws: ws }; } catch (e) { /* prova il successivo */ }
+    }
+    return null;
+  }
+
+  TD.relay = { collega: collega, nuovaChiave: nuovaChiave, nuovaStanza: nuovaStanza, scegli: scegli, indiceStanza: indiceStanza, ordineBroker: ordineBroker, BROKER: BROKER,
     _test: { connect: connect, subscribe: subscribe, publish: publish, leggiPacchetti: leggiPacchetti, cifra: cifra, decifra: decifra, chiaveAes: chiaveAes } };
 })();

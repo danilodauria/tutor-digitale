@@ -433,6 +433,15 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
     ok((await R.decifra(k1, cif)).x === "àè", "canale: cifratura e decifratura");
     let altra = false; try { await R.decifra(k2, cif); } catch (e) { altra = true; }
     ok(altra, "canale: con un'altra chiave il messaggio è illeggibile");
+    /* stessa stanza = stesso broker: il nome della stanza porta l'indice scelto dal monitor */
+    const st1 = TD.relay.nuovaStanza(1);
+    ok(/^b1-[a-z0-9]{12}$/.test(st1) && /^[a-z0-9]{12}$/.test(TD.relay.nuovaStanza()), "canale: la stanza può portare il broker scelto");
+    ok(TD.relay.indiceStanza("b2-abcdefghjkmn") === 2 && TD.relay.indiceStanza("b9-abcdefghjkmn") === -1 && TD.relay.indiceStanza("abcdefghjkmn") === -1, "canale: il broker si legge dalla stanza solo se valido");
+    const ordineB = TD.relay.ordineBroker(st1);
+    ok(ordineB[0] === TD.relay.BROKER[1] && ordineB[1] === TD.relay.BROKER[2] && ordineB[2] === TD.relay.BROKER[0], "canale: il broker della stanza è il primo, poi gli altri a giro");
+    ok(JSON.stringify(TD.relay.ordineBroker("abcdefghjkmn")) === JSON.stringify(TD.relay.BROKER), "canale: senza broker nella stanza resta l'ordine di sempre");
+    const srcAula = leggi("assets/js/aula.js");
+    ok(srcAula.includes("scelta = await TD.relay.scegli();") && srcAula.includes("H.stanza = TD.relay.nuovaStanza(scelta.indice);"), "aula: il monitor sceglie il broker e lo scrive nella stanza");
     /* quiz dal telefono: una sola persona, riepilogo e trasmissione sullo schermo */
     const rs = TD.aula.riepilogoSolo({ g1: { nome: "Piero", punti: 780, giuste: 6 } }, 8);
     ok(rs && rs.perc === 75 && rs.totale === 8 && rs.nome === "Piero", "aula: riepilogo del quiz individuale");
