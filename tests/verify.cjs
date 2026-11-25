@@ -452,6 +452,8 @@ js.concat(["index.html", "assets/css/styles.css"]).forEach((f) => {
     ok(srcAula.includes("else if (!st)") && srcAula.includes("else if (st.fase === \"attesa\")"), "aula: «Ci sei» compare solo quando arriva lo stato del monitor");
     ok(typeof TD.aula.canaleDiverso === "function" && TD.aula.canaleDiverso(TD.relay.BROKER[1], TD.relay.BROKER[0]) === true && TD.aula.canaleDiverso(TD.relay.BROKER[1], TD.relay.BROKER[1]) === false && TD.aula.canaleDiverso("", TD.relay.BROKER[0]) === false, "aula: il telefono riconosce un canale diverso da quello della stanza");
     ok(srcAula.includes("Sei su un altro canale") && srcAula.includes("id=\"gRiprova\"") && srcAula.indexOf("Sei su un altro canale") < srcAula.indexOf("else if (st.fase === \"attesa\")"), "aula: sul canale sbagliato avvisa e propone Riprova prima di mostrare «Ci sei»");
+    const ramoCanale = srcAula.indexOf("TD.aula.canaleDiverso(brokerAtteso(), G.canale.broker)");
+    ok(ramoCanale > 0 && ramoCanale < srcAula.indexOf("else if (G.attesaPosto)") && ramoCanale < srcAula.indexOf("else if (!st)"), "aula: l'avviso di canale diverso viene prima di attesa e di qualsiasi stato");
     /* quiz dal telefono: una sola persona, riepilogo e trasmissione sullo schermo */
     const rs = TD.aula.riepilogoSolo({ g1: { nome: "Piero", punti: 780, giuste: 6 } }, 8);
     ok(rs && rs.perc === 75 && rs.totale === 8 && rs.nome === "Piero", "aula: riepilogo del quiz individuale");

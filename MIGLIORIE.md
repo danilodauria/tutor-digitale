@@ -86,7 +86,7 @@ Le sei idee mai discusse prima, emerse dalle prove reali sul quiz dal telefono e
 
 ## Esito della prova sui broker (25 novembre 2026)
 
-Prova sul sito pubblicato **1.12.4**, con service worker annullato e cache svuotata, da questa macchina cloud. Obiettivo: capire se il caso «monitor e telefoni su broker diversi» è un difetto dell'app o della rete. Non è stato corretto nulla.
+Prova sul sito pubblicato **1.12.4**, con service worker annullato e cache svuotata, da questa macchina cloud. Obiettivo: capire se il caso «monitor e telefoni su broker diversi» è un difetto dell'app o della rete. In quella prova non è stato corretto nulla; la correzione è arrivata nella **1.12.6** (vedi in fondo).
 
 **Cosa è successo**
 - Quattro stanze con due telefoni: in tutte la stanza conteneva il broker del monitor (`b1-…` per EMQX, `b0-…` per HiveMQ) e i telefoni lo hanno provato per primo. La scelta indipendente del broker, quella della 1.12.3, non si è più vista.
@@ -97,7 +97,12 @@ Prova sul sito pubblicato **1.12.4**, con service worker annullato e cache svuot
 **Conclusione**
 - Il difetto della 1.12.3 (ogni dispositivo sceglieva il broker per conto suo) è corretto: la stanza porta il broker del monitor e viene provato per primo.
 - Il caso residuo è reale ma ha due cause distinte: l'instabilità dei broker pubblici da questa macchina (rete/broker, non codice) e il ripiego silenzioso dell'app, che quando un dispositivo non raggiunge il broker della stanza lo sposta su un altro e continua a mostrare «Ci sei» invece di avvisare o riprovare. Non è un problema di cifratura né di abbinamento dei nomi.
-- Correzione candidata, non realizzata: mostrare che il telefono è su un canale diverso dal monitor e offrire «riprova», oppure non ripiegare quando la stanza indica già un broker (voce 52).
+- ✅ **Corretto in 1.12.6**: se il telefono ripiega su un broker diverso da quello scritto nel QR, mostra subito «Sei su un altro canale» con il pulsante «Riprova», prima di qualsiasi stato e quindi anche prima di «Ci sei». Il confronto è esplicito (`TD.aula.canaleDiverso`) e l'ordine dei rami è coperto da un test.
+
+**Verifica della correzione (1.12.6, 25 novembre 2026)**
+- Telefono normale sulla stanza `b1-…` (EMQX): link con `&b=1`, «Ci sei» dopo il primo stato, monitor con 1 partecipante.
+- Stesso link con l'host `broker.emqx.io:8084` bloccato sul telefono: tentativi EMQX → `test.mosquitto.org`, dopo 2,5 s titolo «Sei su un altro canale», testo «il monitor non ti vede», pulsante «Riprova» presente e nessun «Ci sei». Il telefono ripiegato non è entrato nella stanza.
+- Test automatici: 2299/2299 (confronto canale atteso/reale, precedenza dell'avviso su attesa, aula pieno e «Ci sei»).
 
 **Passi per riprodurlo** (sito pubblicato 1.12.4)
 - Aprire il sito, annullare il service worker e svuotare la cache (DevTools › Application), poi ricaricare.
